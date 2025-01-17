@@ -70,25 +70,25 @@ async function burnTokens() {
       uniqueKey: `january-2025-event-${import.meta.env.VITE_PROJECT_ID}-${Date.now()}`
     }
 
-    const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto)
+    const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto);
     
     const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_API}/BurnTokens`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(signedBurnDto)
-    })
+    });
 
     if (!response.ok) {
-      throw new Error('Failed to burn tokens')
+      throw new Error('Failed to burn tokens');
     }
 
-    success.value = `Successfully burned ${burnAmount.value} GALA`
-    burnAmount.value = null
+    success.value = `Successfully burned ${burnAmount.value} GALA`;
+    burnAmount.value = null;
   } catch (err) {
-    console.error(`Error burning tokens: ${err}`, err)
-    error.value = err instanceof Error ? err.message : 'Failed to burn tokens'
+    console.error(`Error burning tokens: ${err}`, err);
+    error.value = err instanceof Error ? err.message : 'Failed to burn tokens';
   } finally {
-    isProcessing.value = false
+    isProcessing.value = false;
   }
 }
 </script>

@@ -18,7 +18,8 @@
         <Balance :wallet-address="walletAddress" />
         <BurnGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
         <TransferGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
-        <ListByName :wallet-address="walletAddress" :metamask-client="metamaskClient" />
+        <NewPizzaSubmit :wallet-address="walletAddress" :metamask-client="metamaskClient" />
+        <PizzaList :wallet-address="walletAddress" :metamask-client="metamaskClient" />
       </div>
     </div>
   </div>
@@ -32,7 +33,8 @@ import BurnGala from "./components/BurnGala.vue"
 import TransferGala from "./components/TransferGala.vue"
 import InfoPage from "./components/InfoPage.vue"
 
-import ListByName from "./components/ListByName.vue";
+import NewPizzaSubmit from "./components/NewPizzaSubmit.vue";
+import PizzaList from "./components/ListByVotes.vue";
 
 const metamaskClient = new MetamaskConnectClient()
 const isConnected = ref(false)
