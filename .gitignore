@@ -16,5 +16,7 @@ src/coverage
 */lib
 tsconfig.tsbuildinfo
 
+.vite
+
 # pre-built trailbase binary when used locally as docker alternative
 /trail
