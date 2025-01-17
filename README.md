@@ -30,6 +30,8 @@ A lightweight application that allows users to connect their wallet, check their
    VITE_GALASWAP_API=https://api-galaswap.gala.com/galachain
    VITE_PROJECT_ID=<my project id>
    VITE_PROJECT_API=http://localhost:4000
+   VITE_BURN_COST_SUBMIT=10
+   VITE_BURN_COST_VOTE=1
    ```
 
 By default, `trailbase` runs on port 4000. If you configure it to run on another port, or are using a remote URL, edit the `VITE_PROJECT_API` property above accordingly. 
@@ -39,6 +41,9 @@ Create a separate `trailbase.env.js` file for configuration of the `trailbase` b
 ```
 export const BURN_GATEWAY_API="https://gateway-mainnet.galachain.com/api/asset/token-contract"
 export const BURN_GATEWAY_PUBLIC_KEY_API="https://gateway-mainnet.galachain.com/api/asset/public-key-contract";
+export const PROJECT_ID="readwriteburn";
+export const BURN_COST_SUBMIT=10;
+export const BURN_COST_VOTE=1;
 ```
 
 Trailbase supports TypeScript based scripting for custom API routes, which we use to make some HTTP / Fetch calls to the GalaChain Mainnet from our basic backend server. 
