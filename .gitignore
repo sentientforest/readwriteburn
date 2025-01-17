@@ -1,0 +1,22 @@
+*-debug.log
+*-error.log
+/.nyc_output
+/dist
+/lib
+/tmp
+node_modules
+.vscode
+.idea
+.npmrc
+.env
+src/coverage 
+
+/logs
+
+*/lib
+tsconfig.tsbuildinfo
+
+.vite
+
+# pre-built trailbase binary when used locally as docker alternative
+/trail
