@@ -49,14 +49,16 @@ Using Docker:
 
 ```bash
 alias trail="docker run -p 4000:4000 --mount type=bind,source=$PWD/traildepot,target=/app/traildepot trailbase/trailbase /app/trail"
-trail run
+trail run --dev
 ```
 
 Or [download a pre-built binary](https://github.com/trailbaseio/trailbase/releases/) for your architecture locally to the project root and run 
 
 ```
-./trail run 
+./trail run --dev
 ```
+
+The `--dev` flag is useful for local development, to support CORS (Cross-Origin Resource Sharing) from your front end client app running on port 3001 (see below) to the trailbase backend server running on port 4000. 
 
 4. Start the front-end development server:
 
