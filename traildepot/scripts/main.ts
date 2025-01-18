@@ -216,30 +216,6 @@ addRoute(
   })
 );
 
-const samplePizzaRequest = {
-  id: "test",
-  name: "Pepperoni, Pineapple, Jalapeno",
-  contributor: "Billy Bob",
-  description: "",
-  crust:     {
-    id: "AZRHauhlcAKoHiCi4hnU1g==",
-    name: "Thin Crust",
-    description: "A light and thin crust"
-  },
-  sauce:     {
-    id: "AZRHcPZ9etOhFzyMcW9Jtw==",
-    name: "Marinara",
-    description: ""
-  },
-  toppings: [
-    // double pepperoni
-    { "id": "AZRHdI2BeZKlccM-uBvbRQ==", name: "Pepperoni" },
-    { "id": "AZRHdI2BeZKlccM-uBvbRQ==", name: "Pepperoni" },
-    { "id": "AZRHd_AadTODHLUZKyJWwQ==", name: "Pineapple" },
-    { "id": "AZRHeDKvdMGGbe7MsNCFTA==", name: "Jalapeno" }
-  ]
-};
-
 addRoute(
   "GET",
   "/pizzas",
@@ -580,8 +556,6 @@ addRoute(
     }
   })
 );
-
-
 
 addRoute(
   "GET",
