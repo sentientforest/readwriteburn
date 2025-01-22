@@ -12,9 +12,10 @@
   },
   "dependencies": {
     "@gala-chain/connect": "^1.4.2",
-    "vue": "^3.3.4",
     "buffer": "^6.0.3",
-    "vite-plugin-node-polyfills": "^0.9.0"
+    "vite-plugin-node-polyfills": "^0.9.0",
+    "vue": "^3.3.4",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
