@@ -89,6 +89,8 @@ Load the front-end application at [http://localhost:3001](http://localhost:3001)
 - Automatic user registration with GalaChain if needed
 - GALA token balance display (including locked amounts)
 - Token burning functionality
+- Off-chain backend API and sqlite persistence layer using [Trailbase](https://trailbase.io/)
+- Administrative UI, point and click to create new database tables, add indices, delete rows, etc. 
 
 ## Project Structure
 
@@ -97,12 +99,14 @@ Load the front-end application at [http://localhost:3001](http://localhost:3001)
   - `Balance.vue` - Displays GALA balance
   - `BurnGala.vue` - Handles token burning
   - `WalletConnect.vue` - Handles wallet connection
-- Environment variables are defined in `.env`
+- Frontend Environment variables are defined in `.env`
 - Vite configuration in `vite.config.ts`
+- Backend Environment variables are defined in `traildepot/trailbase.env.js`
+- Typescript code for custom backend routes are defined in `traildepot/scripts/main.ts`
 
 ## Usage
 
-1. Open your browser and navigate to `http://localhost:3000`
+1. Open your browser and navigate to `http://localhost:3001`
 2. Click "Connect Wallet" to connect your MetaMask wallet
 3. Once connected, you'll see your GALA balance
 4. Enter the amount of GALA you want to burn
@@ -115,6 +119,7 @@ The application is built with:
 - Vue 3 (Composition API)
 - TypeScript
 - Vite
+- [Trailbase](https://trailbase.io/)
 - GalaChain Connect library
 
 ## Additional Resources

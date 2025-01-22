@@ -1,58 +1,70 @@
 <template>
   <div class="container">
-    <div v-if="showInfo">
-      <InfoPage @back="showInfo = false" />
-    </div>
-    <div v-else>
-      <div class="header">
-        <h1>GalaChain Burn dApp</h1>
-        <button class="info-button" @click="showInfo = true">Info</button>
+    <nav>
+      <RouterLink to="/">Vote</RouterLink>
+      <RouterLink to="/pizza-submission">Submit a Pizza</RouterLink>
+      <RouterLink to="/account">Account/Wallet</RouterLink>
+      <RouterLink to="/about">About</RouterLink>
+    </nav>
+    <div>
+      <h1>GalaChain Burn and Vote dApp</h1>
+      <p>Burn $GALA to upvote a submission. Burn $GALA to submit your own entry.</p>
+  
+      <div v-if="!metamaskSupport">
+        <p>This application uses the GalaConnect API via Metamask to sign transactions and interact 
+          with GalaChain. 
+        </p>
+        <p>Visit this site using a browser with the Metamask web extension installed to use the application.</p>
       </div>
-      
-      <div v-if="!isConnected" class="connect-section">
+      <div v-else-if="!isConnected" class="connect-section">
         <button @click="connectWallet">Connect Wallet</button>
       </div>
-
       <div v-else>
         <p class="wallet-address">Connected: {{ walletAddress }}</p>
-        <Balance :wallet-address="walletAddress" />
-        <BurnGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
-        <TransferGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
-        <NewPizzaSubmit :wallet-address="walletAddress" :metamask-client="metamaskClient" />
-        <PizzaList :wallet-address="walletAddress" :metamask-client="metamaskClient" />
+        <RouterView :wallet-address="walletAddress" :metamask-client="metamaskClient" />
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
+import { createMemoryHistory, createRouter } from "vue-router";
 import { MetamaskConnectClient } from "@gala-chain/connect"
-import Balance from "./components/Balance.vue"
-import BurnGala from "./components/BurnGala.vue"
-import TransferGala from "./components/TransferGala.vue"
 import InfoPage from "./components/InfoPage.vue"
-
+import Account from "./components/Account.vue";
 import NewPizzaSubmit from "./components/NewPizzaSubmit.vue";
 import PizzaList from "./components/ListByVotes.vue";
 
-const metamaskClient = new MetamaskConnectClient()
+const metamaskSupport = ref(true);
+let metamaskClient;
+try {
+  metamaskClient = new MetamaskConnectClient()
+} catch (e) {
+  metamaskSupport.value = false;
+}
+
 const isConnected = ref(false)
 const walletAddress = ref("")
 const showInfo = ref(false)
 
 async function connectWallet() {
+  if (!metamaskSupport.value) {
+    return;
+  }
+
   try {
     await metamaskClient.connect()
     const address = metamaskClient.getWalletAddress
     walletAddress.value = address.startsWith("0x") ? "eth|" + address.slice(2) : address
     
-    // // Check registration
-    // try {
-    //   await checkRegistration()
-    // } catch {
-    //   await registerUser()
-    // }
+    // Check registration
+    try {
+      await checkRegistration()
+    } catch {
+      await registerUser()
+    }
     
     isConnected.value = true
   } catch (err) {
@@ -86,6 +98,34 @@ async function registerUser() {
   padding: 20px;
 }
 
+nav {
+  display: flex;
+  justify-content: center;
+  background-color: #1e00c7;
+  padding: 10px 0; 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+nav a {
+  color: #fff; 
+  text-decoration: none; 
+  padding: 10px 20px; 
+  margin: 0 10px;
+  border-radius: 4px; 
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+nav a:hover {
+  background-color: #575757;
+  color: #f0f0f0;
+}
+
+nav a.active {
+  background-color: #007bff; 
+  color: #fff; 
+  font-weight: bold;
+}
+
 .connect-section {
   text-align: center;
   margin: 40px 0;
@@ -94,27 +134,5 @@ async function registerUser() {
 .wallet-address {
   font-family: monospace;
   word-break: break-all;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.info-button {
-  background-color: transparent;
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.info-button:hover {
-  background-color: var(--primary-color);
-  color: var(--background-color);
 }
 </style>

@@ -7,11 +7,11 @@
       <p><i>Failed to fetch the pizza menu from the server. Please try again later.</i></p>
     </div>
     <div class="pizza-selection-form" v-else>
-      <h1>Customize Your Pizza</h1>
+      <h2>Customize Your Pizza</h2>
       <small class="fee-notice">Submission fee: {{ burnCostSubmit.toFixed()}} GALA</small><br />
       <small class="fee-notice">Network fee: 1 GALA</small>
 
-      <h2>Name your creative submission</h2>
+      <h3>Name your delicious submission</h3>
       <div class="input-group">
         <label for="pizza-name">Name</label>
         <input
@@ -25,7 +25,7 @@
         />
       </div>
 
-      <h2>Describe your creative submission, if you like</h2>
+      <h3>Describe your delicious submission</h3>
       <div class="input-group">
         <label for="pizza-description">Description</label>
         <textarea
@@ -39,21 +39,21 @@
         ></textarea>
       </div>
 
-      <h2>Choose Your Crust</h2>
+      <h3>Choose Your Crust</h3>
       <select v-model="selectedCrust">
         <option v-for="crust in pizzaMenu.crusts" :key="crust.id" :value="crust">
           {{ crust.name }} - {{ crust.description }}
         </option>
       </select>
 
-      <h2>Choose Your Sauce</h2>
+      <h3>Choose Your Sauce</h3>
       <select v-model="selectedSauce">
         <option v-for="sauce in pizzaMenu.sauces" :key="sauce.id" :value="sauce">
           {{ sauce.name }} - {{ sauce.description }}
         </option>
       </select>
 
-      <h2>Choose Your Toppings</h2>
+      <h3>Choose Your Toppings</h3>
       <div v-for="topping in pizzaMenu.toppings" :key="topping.id" class="topping-selector">
         <div class="topping-controls">
           <button 

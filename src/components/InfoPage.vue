@@ -1,6 +1,6 @@
 <template>
   <div class="info-container">
-    <h1>About GalaChain Burn dApp</h1>
+    <h1>About</h1>
     
     <section>
       <h2>Purpose</h2>
@@ -54,7 +54,7 @@
       </ul>
     </section>
 
-    <button class="back-button" @click="$emit('back')">Back to Main Page</button>
+    <RouterLink to="/">Back to the main page</RouterLink>
   </div>
 </template>
 
