@@ -191,7 +191,7 @@ function verifyBurnDto(burnDto: BurnGalaDto, burnCost: number) {
 
 addRoute(
   "GET",
-  "/pizza-menu",
+  "/api/pizza-menu",
   jsonHandler(async (req) => {
     const crustRows = await query(
       `SELECT id, name, description FROM pizza_crust_styles`,
@@ -218,7 +218,7 @@ addRoute(
 
 addRoute(
   "GET",
-  "/pizzas",
+  "/api/pizzas",
   jsonHandler(async (req) => {
     const searchParams = parsePath(req.uri).query;
 
@@ -287,7 +287,7 @@ addRoute(
 
 addRoute(
   "POST",
-  "/pizzas",
+  "/api/pizzas",
   jsonHandler(async (req) => {
     let dto: BurnAndSavePizzaSelectionDto;
 
@@ -402,7 +402,7 @@ addRoute(
 
 addRoute(
   "GET",
-  "/pizzas/:id",
+  "/api/pizzas/:id",
   jsonHandler(async (req) => {
     const pizzaId = req.params.id;
 
@@ -461,7 +461,7 @@ addRoute(
 
 addRoute(
   "POST",
-  "/pizzas/:id/vote",
+  "/api/pizzas/:id/vote",
   jsonHandler(async (req) => {
     const pizzaId = req.params.id;
 
@@ -537,51 +537,3 @@ addRoute(
     return dto;
   })
 );
-
-addRoute(
-  "GET",
-  "/test",
-  jsonHandler(async (req) => {
-    const data = await fetch("https://gateway-mainnet.galachain.com/api/asset/token-contract/FetchTokenSwapsByInstanceOffered", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({"collection": "GALA"})
-    })
-      .then((response) => response.json())
-      .then((data) => data);
-
-    return {
-      status: 200,
-      menu: data
-    }
-  })
-);
-
-addRoute(
-  "GET",
-  "/id",
-  jsonHandler(async (req) => {
-    const pizza: any = {
-      id: convertIdToHex("AZRt06YlddOUwgWl19zcvg=="),
-    };
-
-    const toppings = await query(`
-      SELECT pa.quantity, pt.id, pt.name 
-      FROM pizza_topping_associations pa 
-      LEFT JOIN pizza_toppings pt ON pt.id = pa.topping_id 
-      WHERE pa.pizza_id = X'${pizza.id}';
-      `, []);
-
-    pizza.toppings = toppings.map((t) => {
-      const topping: AssociativeEntity = {
-        quantity: t[0] as number, 
-        id: t[1] as string,
-        name: t[2] as string
-      };
-
-      return topping;
-    });
-
-    return pizza;
-  })
-)

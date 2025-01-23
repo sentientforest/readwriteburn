@@ -141,7 +141,7 @@ async function fetchPizzaMenu() {
   loading.value = true;
   error.value = false;
 
-  await fetch(`${apiBase}/pizza-menu`)
+  await fetch(`${apiBase}/api/pizza-menu`)
     .then((response) => {
       if (!response.ok) throw new Error(`Failed to fetch pizza menu`);
 
@@ -215,7 +215,7 @@ async function submitSelection() {
   isProcessing.value = true;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/pizzas`, {
+    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/pizzas`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dto)
