@@ -9,6 +9,7 @@ node_modules
 .idea
 .npmrc
 .env
+.env.production
 src/coverage 
 
 /logs

@@ -91,7 +91,7 @@ async function fetchVoteList() {
   loading.value = true;
   loadError.value = false
   
-  await fetch(`${apiBase}/pizzas`)
+  await fetch(`${apiBase}/api/pizzas`)
     .then((response) => {
       if (!response.ok) throw new Error(`Failed to fetch pizza list for voting`);
 
@@ -170,7 +170,7 @@ async function submitVote(item) {
   isProcessing.value = true;
 
   try {
-    const response = await fetch(`${apiBase}/pizzas/${pizzaId}/vote`, {
+    const response = await fetch(`${apiBase}/api/pizzas/${pizzaId}/vote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dto)
