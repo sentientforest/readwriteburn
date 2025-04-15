@@ -21,3 +21,6 @@ tsconfig.tsbuildinfo
 
 # pre-built trailbase binary when used locally as docker alternative
 /trail
+
+# database
+readwriteburn.db
