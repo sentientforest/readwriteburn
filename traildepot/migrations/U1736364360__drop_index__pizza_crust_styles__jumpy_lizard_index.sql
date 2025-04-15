@@ -1,1 +1,0 @@
-DROP INDEX IF EXISTS _pizza_crust_styles__jumpy_lizard_index;
