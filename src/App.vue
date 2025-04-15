@@ -38,7 +38,7 @@ import NewPizzaSubmit from "./components/NewPizzaSubmit.vue";
 import PizzaList from "./components/ListByVotes.vue";
 
 const metamaskSupport = ref(true);
-let metamaskClient;
+let metamaskClient: MetamaskConnectClient;
 try {
   metamaskClient = new MetamaskConnectClient()
 } catch (e) {
