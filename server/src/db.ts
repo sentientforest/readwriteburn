@@ -1,132 +1,264 @@
 import Database from 'better-sqlite3';
-import { AssociativeEntity, PizzaResDto } from './types';
+import { SubmissionDto, SubmissionResDto, SubfireDto, SubfireResDto } from './types';
 
 const db = new Database('readwriteburn.db');
 
 export function initializeDatabase() {
   db.exec(`
-    CREATE TABLE IF NOT EXISTS pizza_crust_styles (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT
+    -- Create tables
+    CREATE TABLE IF NOT EXISTS subfires (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    CREATE TABLE IF NOT EXISTS pizza_sauces (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT
+    CREATE TABLE IF NOT EXISTS subfire_roles (
+      subfire_id INTEGER NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('authority', 'moderator')),
+      PRIMARY KEY (subfire_id, user_id, role),
+      FOREIGN KEY (subfire_id) REFERENCES subfires(id)
     );
 
-    CREATE TABLE IF NOT EXISTS pizza_toppings (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS pizzas (
-      id TEXT PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       contributor TEXT,
       description TEXT,
-      crust_id TEXT NOT NULL,
-      sauce_id TEXT NOT NULL,
-      votes INTEGER DEFAULT 0,
-      FOREIGN KEY (crust_id) REFERENCES pizza_crust_styles(id),
-      FOREIGN KEY (sauce_id) REFERENCES pizza_sauces(id)
+      url TEXT,
+      subfire_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (subfire_id) REFERENCES subfires(id)
     );
 
-    CREATE TABLE IF NOT EXISTS pizza_toppings_junction (
-      pizza_id TEXT NOT NULL,
-      topping_id TEXT NOT NULL,
-      quantity INTEGER DEFAULT 1,
-      PRIMARY KEY (pizza_id, topping_id),
-      FOREIGN KEY (pizza_id) REFERENCES pizzas(id),
-      FOREIGN KEY (topping_id) REFERENCES pizza_toppings(id)
+    CREATE TABLE IF NOT EXISTS votes (
+      submission_id INTEGER NOT NULL,
+      count INTEGER DEFAULT 0,
+      PRIMARY KEY (submission_id),
+      FOREIGN KEY (submission_id) REFERENCES submissions(id)
     );
+
+    -- Create indexes for subfires
+    CREATE INDEX IF NOT EXISTS idx_subfires_name ON subfires(name);
+    CREATE INDEX IF NOT EXISTS idx_subfires_created_at ON subfires(created_at);
+
+    -- Create indexes for subfire_roles
+    CREATE INDEX IF NOT EXISTS idx_subfire_roles_subfire_id ON subfire_roles(subfire_id);
+    CREATE INDEX IF NOT EXISTS idx_subfire_roles_user_id ON subfire_roles(user_id);
+    CREATE INDEX IF NOT EXISTS idx_subfire_roles_role ON subfire_roles(role);
+
+    -- Create indexes for submissions
+    CREATE INDEX IF NOT EXISTS idx_submissions_name ON submissions(name);
+    CREATE INDEX IF NOT EXISTS idx_submissions_contributor ON submissions(contributor);
+    CREATE INDEX IF NOT EXISTS idx_submissions_url ON submissions(url);
+    CREATE INDEX IF NOT EXISTS idx_submissions_subfire_id ON submissions(subfire_id);
+    CREATE INDEX IF NOT EXISTS idx_submissions_created_at ON submissions(created_at);
+
+    -- Create indexes for votes
+    CREATE INDEX IF NOT EXISTS idx_votes_submission_id ON votes(submission_id);
+    CREATE INDEX IF NOT EXISTS idx_votes_count ON votes(count);
   `);
 }
 
-export function mapBasicRow(row: any): AssociativeEntity {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description
-  };
-}
-
 export const dbService = {
-  getCrustStyles: (): AssociativeEntity[] => {
-    return db.prepare('SELECT id, name, description FROM pizza_crust_styles')
-      .all() as AssociativeEntity[];
-  },
-
-  getSauces: (): AssociativeEntity[]=> {
-    return db.prepare('SELECT id, name, description FROM pizza_sauces')
-      .all() as AssociativeEntity[];
-  },
-
-  getToppings: () => {
-    return db.prepare('SELECT id, name, description FROM pizza_toppings')
-      .all() as AssociativeEntity[];
-  },
-
-  getPizza: (id: string): PizzaResDto | null => {
-    const pizza = db.prepare(`
-      SELECT p.*, c.name as crust, s.name as sauce
-      FROM pizzas p
-      JOIN pizza_crust_styles c ON p.crust_id = c.id
-      JOIN pizza_sauces s ON p.sauce_id = s.id
-      WHERE p.id = ?
-    `).get(id);
-
-    if (pizza) {
-      const toppings = db.prepare(`
-        SELECT t.id, t.name, t.description, j.quantity
-        FROM pizza_toppings t
-        JOIN pizza_toppings_junction j ON t.id = j.topping_id
-        WHERE j.pizza_id = ?
-      `).all(id);
-
-      return { ...pizza, toppings: toppings as AssociativeEntity[] } as PizzaResDto;
-    }
-    return null;
-  },
-
-  getAllPizzas: () => {
-    return db.prepare(`
-      SELECT p.*, c.name as crust, s.name as sauce
-      FROM pizzas p
-      JOIN pizza_crust_styles c ON p.crust_id = c.id
-      JOIN pizza_sauces s ON p.sauce_id = s.id
-    `).all();
-  },
-
-  savePizza: (pizza: any) => {
-    const insertPizza = db.prepare(`
-      INSERT INTO pizzas (id, name, contributor, description, crust_id, sauce_id)
-      VALUES (?, ?, ?, ?, ?, ?)
+  // Subfire methods
+  createSubfire: (subfire: SubfireDto): SubfireResDto => {
+    const insertSubfire = db.prepare(`
+      INSERT INTO subfires (name, description)
+      VALUES (?, ?)
     `);
 
-    const insertTopping = db.prepare(`
-      INSERT INTO pizza_toppings_junction (pizza_id, topping_id, quantity)
+    const insertRole = db.prepare(`
+      INSERT INTO subfire_roles (subfire_id, user_id, role)
       VALUES (?, ?, ?)
     `);
 
-    const { id, name, contributor, description, crust, sauce, toppings } = pizza;
+    const subfireId = db.transaction(() => {
+      const result = insertSubfire.run(subfire.name, subfire.description);
+      const newId = result.lastInsertRowid as number;
+
+      // Add authorities
+      for (const authority of subfire.authorities) {
+        insertRole.run(newId, authority, 'authority');
+      }
+
+      // Add moderators
+      for (const moderator of subfire.moderators) {
+        insertRole.run(newId, moderator, 'moderator');
+      }
+
+      return newId;
+    })();
+
+    return dbService.getSubfire(subfireId)!;
+  },
+
+  getSubfire: (id: number): SubfireResDto | null => {
+    const subfire = db.prepare(`
+      SELECT id, name, description
+      FROM subfires
+      WHERE id = ?
+    `).get(id);
+
+    if (!subfire) return null;
+
+    interface RoleRow {
+      user_id: string;
+    }
+
+    const authorities = db.prepare(`
+      SELECT user_id
+      FROM subfire_roles
+      WHERE subfire_id = ? AND role = 'authority'
+    `).all(id).map((row) => (row as RoleRow).user_id);
+
+    const moderators = db.prepare(`
+      SELECT user_id
+      FROM subfire_roles
+      WHERE subfire_id = ? AND role = 'moderator'
+    `).all(id).map((row) => (row as RoleRow).user_id);
+
+    return {
+      ...subfire,
+      authorities,
+      moderators
+    } as SubfireResDto;
+  },
+
+  getAllSubfires: (): SubfireResDto[] => {
+    interface SubfireRow {
+      id: number;
+    }
+    const subfires = db.prepare('SELECT id FROM subfires').all();
+    return subfires.map((s) => dbService.getSubfire((s as SubfireRow).id)!);
+  },
+
+  updateSubfire: (id: number, subfire: SubfireDto): SubfireResDto => {
+    const updateSubfire = db.prepare(`
+      UPDATE subfires
+      SET name = ?, description = ?
+      WHERE id = ?
+    `);
+
+    const deleteRoles = db.prepare(`
+      DELETE FROM subfire_roles
+      WHERE subfire_id = ?
+    `);
+
+    const insertRole = db.prepare(`
+      INSERT INTO subfire_roles (subfire_id, user_id, role)
+      VALUES (?, ?, ?)
+    `);
 
     db.transaction(() => {
-      insertPizza.run(id, name, contributor, description, crust.id, sauce.id);
-      
-      for (const topping of toppings) {
-        insertTopping.run(id, topping.id, topping.quantity || 1);
+      updateSubfire.run(subfire.name, subfire.description, id);
+      deleteRoles.run(id);
+
+      for (const authority of subfire.authorities) {
+        insertRole.run(id, authority, 'authority');
+      }
+      for (const moderator of subfire.moderators) {
+        insertRole.run(id, moderator, 'moderator');
       }
     })();
 
-    return dbService.getPizza(id);
+    return dbService.getSubfire(id)!;
   },
 
-  votePizza: (id: string) => {
-    return db.prepare('UPDATE pizzas SET votes = votes + 1 WHERE id = ?').run(id);
+  deleteSubfire: (id: number): boolean => {
+    const deleteSubfire = db.prepare('DELETE FROM subfires WHERE id = ?');
+    const result = deleteSubfire.run(id);
+    return result.changes > 0;
+  },
+
+  // Submission methods
+  saveSubmission: (submission: SubmissionDto): SubmissionResDto => {
+    const insertSubmission = db.prepare(`
+      INSERT INTO submissions (name, contributor, description, url, subfire_id)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    const insertVotes = db.prepare(`
+      INSERT INTO votes (submission_id, count)
+      VALUES (?, 0)
+    `);
+
+    const submissionId = db.transaction(() => {
+      const result = insertSubmission.run(
+        submission.name,
+        submission.contributor,
+        submission.description,
+        submission.url,
+        submission.subfire
+      );
+      const newId = result.lastInsertRowid as number;
+      insertVotes.run(newId);
+      return newId;
+    })();
+
+    return dbService.getSubmission(submissionId)!;
+  },
+
+  // Get a submission by ID
+  getSubmission: (id: number): SubmissionResDto | null => {
+    return db.prepare(`
+      SELECT s.*, v.count as votes
+      FROM submissions s
+      LEFT JOIN votes v ON s.id = v.submission_id
+      WHERE s.id = ?
+    `).get(id) as SubmissionResDto | null;
+  },
+
+  // Get all submissions
+  getAllSubmissions: (): SubmissionResDto[] => {
+    return db.prepare(`
+      SELECT 
+        s.id,
+        s.name,
+        s.contributor,
+        s.description,
+        s.url,
+        sf.name as subfire,
+        v.count as votes,
+        s.created_at
+      FROM submissions s
+      LEFT JOIN votes v ON s.id = v.submission_id
+      JOIN subfires sf ON s.subfire_id = sf.id
+      ORDER BY s.created_at DESC
+    `).all() as SubmissionResDto[];
+  },
+  // Vote for a submission
+  voteSubmission: (id: number) => {
+    const result = db.prepare(`
+      INSERT INTO votes (submission_id, count)
+      VALUES (?, 1)
+      ON CONFLICT(submission_id) DO UPDATE SET
+      count = count + 1
+      WHERE submission_id = ?
+    `).run(id, id);
+    
+    return result.changes > 0;
+  },
+
+  // Get submissions by subfire
+  getSubmissionsBySubfire: (subfireId: number): SubmissionResDto[] => {
+    return db.prepare(`
+      SELECT 
+        s.id,
+        s.name,
+        s.contributor,
+        s.description,
+        s.url,
+        sf.name as subfire,
+        v.count as votes,
+        s.created_at
+      FROM submissions s
+      LEFT JOIN votes v ON s.id = v.submission_id
+      JOIN subfires sf ON s.subfire_id = sf.id
+      WHERE s.subfire_id = ?
+      ORDER BY s.created_at DESC
+    `).all(subfireId) as SubmissionResDto[];
   }
 };
 
