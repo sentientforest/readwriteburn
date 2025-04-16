@@ -32,7 +32,7 @@ export interface SubfireDto {
 }
 
 export interface SubfireResDto {
-  id: string;
+  id: number;
   name: string;
   description?: string;
   authorities: string[];

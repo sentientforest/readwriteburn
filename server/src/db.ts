@@ -1,9 +1,25 @@
 import Database from 'better-sqlite3';
 import { SubmissionDto, SubmissionResDto, SubfireDto, SubfireResDto } from './types';
 
-const db = new Database('readwriteburn.db');
+let db: Database.Database;
+
+function getDb() {
+  if (!db) {
+    const dbFile = process.env.DB_FILE || 'readwriteburn.db';
+    db = new Database(dbFile);
+  }
+  return db;
+}
+
+export function closeDatabase() {
+  if (db) {
+    db.close();
+    db = null as any;
+  }
+}
 
 export function initializeDatabase() {
+  const db = getDb();
   db.exec(`
     -- Create tables
     CREATE TABLE IF NOT EXISTS subfires (
@@ -62,9 +78,10 @@ export function initializeDatabase() {
 }
 
 export const dbService = {
+  closeDatabase,
   // Subfire methods
   createSubfire: (subfire: SubfireDto): SubfireResDto => {
-    const insertSubfire = db.prepare(`
+    const insertSubfire = getDb().prepare(`
       INSERT INTO subfires (name, description)
       VALUES (?, ?)
     `);
@@ -74,7 +91,7 @@ export const dbService = {
       VALUES (?, ?, ?)
     `);
 
-    const subfireId = db.transaction(() => {
+    const subfireId = getDb().transaction(() => {
       const result = insertSubfire.run(subfire.name, subfire.description);
       const newId = result.lastInsertRowid as number;
 
@@ -95,7 +112,7 @@ export const dbService = {
   },
 
   getSubfire: (id: number): SubfireResDto | null => {
-    const subfire = db.prepare(`
+    const subfire = getDb().prepare(`
       SELECT id, name, description
       FROM subfires
       WHERE id = ?
@@ -107,17 +124,17 @@ export const dbService = {
       user_id: string;
     }
 
-    const authorities = db.prepare(`
+    const authorities = getDb().prepare(`
       SELECT user_id
       FROM subfire_roles
       WHERE subfire_id = ? AND role = 'authority'
-    `).all(id).map((row) => (row as RoleRow).user_id);
+    `).all(id).map((row: unknown) => (row as RoleRow).user_id);
 
-    const moderators = db.prepare(`
+    const moderators = getDb().prepare(`
       SELECT user_id
       FROM subfire_roles
       WHERE subfire_id = ? AND role = 'moderator'
-    `).all(id).map((row) => (row as RoleRow).user_id);
+    `).all(id).map((row: unknown) => (row as RoleRow).user_id);
 
     return {
       ...subfire,
@@ -130,18 +147,18 @@ export const dbService = {
     interface SubfireRow {
       id: number;
     }
-    const subfires = db.prepare('SELECT id FROM subfires').all();
-    return subfires.map((s) => dbService.getSubfire((s as SubfireRow).id)!);
+    const subfires = getDb().prepare('SELECT id FROM subfires').all();
+    return subfires.map((s: unknown) => dbService.getSubfire((s as SubfireRow).id)!);
   },
 
   updateSubfire: (id: number, subfire: SubfireDto): SubfireResDto => {
-    const updateSubfire = db.prepare(`
+    const updateSubfire = getDb().prepare(`
       UPDATE subfires
       SET name = ?, description = ?
       WHERE id = ?
     `);
 
-    const deleteRoles = db.prepare(`
+    const deleteRoles = getDb().prepare(`
       DELETE FROM subfire_roles
       WHERE subfire_id = ?
     `);
@@ -151,7 +168,7 @@ export const dbService = {
       VALUES (?, ?, ?)
     `);
 
-    db.transaction(() => {
+    getDb().transaction(() => {
       updateSubfire.run(subfire.name, subfire.description, id);
       deleteRoles.run(id);
 
@@ -167,24 +184,34 @@ export const dbService = {
   },
 
   deleteSubfire: (id: number): boolean => {
+    const db = getDb();
+    const deleteRoles = db.prepare('DELETE FROM subfire_roles WHERE subfire_id = ?');
+    const deleteVotes = db.prepare('DELETE FROM votes WHERE submission_id IN (SELECT id FROM submissions WHERE subfire_id = ?)');
+    const deleteSubmissions = db.prepare('DELETE FROM submissions WHERE subfire_id = ?');
     const deleteSubfire = db.prepare('DELETE FROM subfires WHERE id = ?');
-    const result = deleteSubfire.run(id);
-    return result.changes > 0;
+    
+    return db.transaction(() => {
+      deleteRoles.run(id);
+      deleteVotes.run(id);
+      deleteSubmissions.run(id);
+      const result = deleteSubfire.run(id);
+      return result.changes > 0;
+    })();
   },
 
   // Submission methods
   saveSubmission: (submission: SubmissionDto): SubmissionResDto => {
-    const insertSubmission = db.prepare(`
+    const insertSubmission = getDb().prepare(`
       INSERT INTO submissions (name, contributor, description, url, subfire_id)
       VALUES (?, ?, ?, ?, ?)
     `);
 
-    const insertVotes = db.prepare(`
+    const insertVotes = getDb().prepare(`
       INSERT INTO votes (submission_id, count)
       VALUES (?, 0)
     `);
 
-    const submissionId = db.transaction(() => {
+    const submissionId = getDb().transaction(() => {
       const result = insertSubmission.run(
         submission.name,
         submission.contributor,
@@ -242,6 +269,18 @@ export const dbService = {
   },
 
   // Get submissions by subfire
+  deleteSubmission: (id: number): boolean => {
+    const db = getDb();
+    const deleteVotes = db.prepare('DELETE FROM votes WHERE submission_id = ?');
+    const deleteSubmission = db.prepare('DELETE FROM submissions WHERE id = ?');
+    
+    return db.transaction(() => {
+      deleteVotes.run(id);
+      const result = deleteSubmission.run(id);
+      return result.changes > 0;
+    })();
+  },
+
   getSubmissionsBySubfire: (subfireId: number): SubmissionResDto[] => {
     return db.prepare(`
       SELECT 
