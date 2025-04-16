@@ -23,18 +23,18 @@ export function initializeDatabase() {
   db.exec(`
     -- Create tables
     CREATE TABLE IF NOT EXISTS subfires (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT PRIMARY KEY,
       name TEXT NOT NULL UNIQUE,
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS subfire_roles (
-      subfire_id INTEGER NOT NULL,
+      subfire_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
       role TEXT NOT NULL CHECK(role IN ('authority', 'moderator')),
       PRIMARY KEY (subfire_id, user_id, role),
-      FOREIGN KEY (subfire_id) REFERENCES subfires(id)
+      FOREIGN KEY (subfire_id) REFERENCES subfires(slug)
     );
 
     CREATE TABLE IF NOT EXISTS submissions (
@@ -43,9 +43,9 @@ export function initializeDatabase() {
       contributor TEXT,
       description TEXT,
       url TEXT,
-      subfire_id INTEGER NOT NULL,
+      subfire_id TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (subfire_id) REFERENCES subfires(id)
+      FOREIGN KEY (subfire_id) REFERENCES subfires(slug)
     );
 
     CREATE TABLE IF NOT EXISTS votes (
@@ -82,8 +82,8 @@ export const dbService = {
   // Subfire methods
   createSubfire: (subfire: SubfireDto): SubfireResDto => {
     const insertSubfire = getDb().prepare(`
-      INSERT INTO subfires (name, description)
-      VALUES (?, ?)
+      INSERT INTO subfires (slug, name, description)
+      VALUES (?, ?, ?)
     `);
 
     const insertRole = db.prepare(`
@@ -91,32 +91,31 @@ export const dbService = {
       VALUES (?, ?, ?)
     `);
 
-    const subfireId = getDb().transaction(() => {
-      const result = insertSubfire.run(subfire.name, subfire.description);
-      const newId = result.lastInsertRowid as number;
+    getDb().transaction(() => {
+      insertSubfire.run(subfire.slug, subfire.name, subfire.description);
 
       // Add authorities
       for (const authority of subfire.authorities) {
-        insertRole.run(newId, authority, 'authority');
+        insertRole.run(subfire.slug, authority, 'authority');
       }
 
       // Add moderators
       for (const moderator of subfire.moderators) {
-        insertRole.run(newId, moderator, 'moderator');
+        insertRole.run(subfire.slug, moderator, 'moderator');
       }
 
-      return newId;
+      return subfire.slug;
     })();
 
-    return dbService.getSubfire(subfireId)!;
+    return dbService.getSubfire(subfire.slug)!;
   },
 
-  getSubfire: (id: number): SubfireResDto | null => {
+  getSubfire: (slug: string): SubfireResDto | null => {
     const subfire = getDb().prepare(`
-      SELECT id, name, description
+      SELECT *
       FROM subfires
-      WHERE id = ?
-    `).get(id);
+      WHERE slug = ?
+    `).get(slug);
 
     if (!subfire) return null;
 
@@ -128,13 +127,13 @@ export const dbService = {
       SELECT user_id
       FROM subfire_roles
       WHERE subfire_id = ? AND role = 'authority'
-    `).all(id).map((row: unknown) => (row as RoleRow).user_id);
+    `).all(slug).map((row: unknown) => (row as RoleRow).user_id);
 
     const moderators = getDb().prepare(`
       SELECT user_id
       FROM subfire_roles
       WHERE subfire_id = ? AND role = 'moderator'
-    `).all(id).map((row: unknown) => (row as RoleRow).user_id);
+    `).all(slug).map((row: unknown) => (row as RoleRow).user_id);
 
     return {
       ...subfire,
@@ -145,17 +144,17 @@ export const dbService = {
 
   getAllSubfires: (): SubfireResDto[] => {
     interface SubfireRow {
-      id: number;
+      slug: string;
     }
-    const subfires = getDb().prepare('SELECT id FROM subfires').all();
-    return subfires.map((s: unknown) => dbService.getSubfire((s as SubfireRow).id)!);
+    const subfires = getDb().prepare('SELECT slug FROM subfires').all();
+    return subfires.map((s: unknown) => dbService.getSubfire((s as SubfireRow).slug)!);
   },
 
-  updateSubfire: (id: number, subfire: SubfireDto): SubfireResDto => {
+  updateSubfire: (slug: string, subfire: SubfireDto): SubfireResDto => {
     const updateSubfire = getDb().prepare(`
       UPDATE subfires
       SET name = ?, description = ?
-      WHERE id = ?
+      WHERE slug = ?
     `);
 
     const deleteRoles = getDb().prepare(`
@@ -169,32 +168,32 @@ export const dbService = {
     `);
 
     getDb().transaction(() => {
-      updateSubfire.run(subfire.name, subfire.description, id);
-      deleteRoles.run(id);
+      updateSubfire.run(subfire.name, subfire.description ?? "", slug);
+      deleteRoles.run(slug);
 
       for (const authority of subfire.authorities) {
-        insertRole.run(id, authority, 'authority');
+        insertRole.run(slug, authority, 'authority');
       }
       for (const moderator of subfire.moderators) {
-        insertRole.run(id, moderator, 'moderator');
+        insertRole.run(slug, moderator, 'moderator');
       }
     })();
 
-    return dbService.getSubfire(id)!;
+    return dbService.getSubfire(slug)!;
   },
 
-  deleteSubfire: (id: number): boolean => {
+  deleteSubfire: (slug: string): boolean => {
     const db = getDb();
     const deleteRoles = db.prepare('DELETE FROM subfire_roles WHERE subfire_id = ?');
     const deleteVotes = db.prepare('DELETE FROM votes WHERE submission_id IN (SELECT id FROM submissions WHERE subfire_id = ?)');
     const deleteSubmissions = db.prepare('DELETE FROM submissions WHERE subfire_id = ?');
-    const deleteSubfire = db.prepare('DELETE FROM subfires WHERE id = ?');
+    const deleteSubfire = db.prepare('DELETE FROM subfires WHERE slug = ?');
     
     return db.transaction(() => {
-      deleteRoles.run(id);
-      deleteVotes.run(id);
-      deleteSubmissions.run(id);
-      const result = deleteSubfire.run(id);
+      deleteRoles.run(slug);
+      deleteVotes.run(slug);
+      deleteSubmissions.run(slug);
+      const result = deleteSubfire.run(slug);
       return result.changes > 0;
     })();
   },
@@ -281,7 +280,7 @@ export const dbService = {
     })();
   },
 
-  getSubmissionsBySubfire: (subfireId: number): SubmissionResDto[] => {
+  getSubmissionsBySubfire: (subfireId: string): SubmissionResDto[] => {
     return db.prepare(`
       SELECT 
         s.id,
@@ -294,7 +293,7 @@ export const dbService = {
         s.created_at
       FROM submissions s
       LEFT JOIN votes v ON s.id = v.submission_id
-      JOIN subfires sf ON s.subfire_id = sf.id
+      JOIN subfires sf ON s.subfire_id = sf.slug
       WHERE s.subfire_id = ?
       ORDER BY s.created_at DESC
     `).all(subfireId) as SubmissionResDto[];

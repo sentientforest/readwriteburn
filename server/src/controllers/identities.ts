@@ -57,7 +57,7 @@ export async function registerRandomEthUser(req: Request, res: Response) {
   }
 
   res.json({
-    response: chainRes.json(),
+    response: (await chainRes.json()),
     user: newUser
   });
 }
@@ -95,7 +95,7 @@ export async function registerEthUser(req: Request, res: Response) {
     return res.status(500).send({
       url: url,
       status: chainRes.status,
-      body: chainRes.body,
+      body: (await chainRes.json()),
       dto: dto.serialize(),
     });
   }

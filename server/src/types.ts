@@ -17,14 +17,16 @@ export interface SubmissionDto {
 }
 
 export interface SubmissionResDto {
-  id: string;
+  id: number;
   name: string;
   contributor: string;
   description: string;
   url: string;
+  votes: number;
 }
 
 export interface SubfireDto {
+  slug: string;
   name: string;
   description?: string;
   authorities: string[];
@@ -32,7 +34,7 @@ export interface SubfireDto {
 }
 
 export interface SubfireResDto {
-  id: number;
+  slug: string;
   name: string;
   description?: string;
   authorities: string[];

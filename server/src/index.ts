@@ -71,9 +71,9 @@ app.get('/api/subfires', async (req, res, next) => {
   }
 });
 
-app.get('/api/subfires/:id', async (req, res, next) => {
+app.get('/api/subfires/:slug', async (req, res, next) => {
   try {
-    const subfire = dbService.getSubfire(parseInt(req.params.id));
+    const subfire = dbService.getSubfire(req.params.slug);
     if (!subfire) {
       return res.status(404).json({ error: 'Subfire not found' });
     }
@@ -83,19 +83,19 @@ app.get('/api/subfires/:id', async (req, res, next) => {
   }
 });
 
-app.put('/api/subfires/:id', async (req, res, next) => {
+app.put('/api/subfires/:slug', async (req, res, next) => {
   try {
     const subfire = req.body as SubfireDto;
-    const updated = dbService.updateSubfire(parseInt(req.params.id), subfire);
+    const updated = dbService.updateSubfire(req.params.slug, subfire);
     res.json(updated);
   } catch (error) {
     next(error);
   }
 });
 
-app.delete('/api/subfires/:id', async (req, res, next) => {
+app.delete('/api/subfires/:slug', async (req, res, next) => {
   try {
-    const success = dbService.deleteSubfire(parseInt(req.params.id));
+    const success = dbService.deleteSubfire(req.params.slug);
     if (!success) {
       return res.status(404).json({ error: 'Subfire not found' });
     }
@@ -155,9 +155,9 @@ app.post('/api/submissions/:id/vote', async (req, res, next) => {
   }
 });
 
-app.get('/api/subfires/:id/submissions', async (req, res, next) => {
+app.get('/api/subfires/:slug/submissions', async (req, res, next) => {
   try {
-    const submissions = dbService.getSubmissionsBySubfire(parseInt(req.params.id));
+    const submissions = dbService.getSubmissionsBySubfire(req.params.slug);
     res.json(submissions);
   } catch (error) {
     next(error);
