@@ -6,6 +6,12 @@ export async function proxy(req: Request, res: Response) {
   const contract = req.params.contract;
   const method = req.params.method;
   
+  if (!apiBase) {
+    const msg = "Missing CHAIN_API environment variable";
+    console.log(msg);
+    return res.status(500).json({ error: msg });
+  }
+
   const url = `${apiBase}/api/${channel}/${contract}/${method}`
 
   console.log(`proxy request to: ${url}`)

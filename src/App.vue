@@ -1,14 +1,13 @@
 <template>
   <div class="container">
     <nav>
-      <RouterLink to="/">Vote</RouterLink>
-      <RouterLink to="/pizza-submission">Submit a Pizza</RouterLink>
+      <RouterLink to="/">Fires</RouterLink>
       <RouterLink to="/account">Account/Wallet</RouterLink>
       <RouterLink to="/about">About</RouterLink>
     </nav>
     <div>
       <h1>GalaChain Burn and Vote dApp</h1>
-      <p>Burn $GALA to upvote a submission. Burn $GALA to submit your own entry.</p>
+      <p>Let's burn! Browse subfires, submit content, and burn $GALA to upvote submissions you like.</p>
   
       <div v-if="!metamaskSupport">
         <p>This application uses the GalaConnect API via Metamask to sign transactions and interact 
@@ -34,8 +33,6 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import { MetamaskConnectClient } from "@gala-chain/connect"
 import InfoPage from "./components/InfoPage.vue"
 import Account from "./components/Account.vue";
-import NewPizzaSubmit from "./components/NewPizzaSubmit.vue";
-import PizzaList from "./components/ListByVotes.vue";
 
 const metamaskSupport = ref(true);
 let metamaskClient: MetamaskConnectClient;
