@@ -8,36 +8,37 @@ export interface AssociativeEntity extends AssociativeId {
   description?: string;
 }
 
-export interface SavePizzaSelectionDto {
-  id: string;
+export interface SubmissionDto {
   name: string;
+  subfire: string;
   contributor?: string;
   description?: string;
-  crust: AssociativeId;
-  sauce: AssociativeId;
-  toppings: AssociativeId[];
+  url?: string;
 }
 
-export interface PizzaSelectionResDto {
-  id: string;
-  name: string;
-  contributor: string;
-  crust: AssociativeEntity;
-  sauce: AssociativeEntity;
-  toppings: AssociativeEntity[];
-}
-
-export interface PizzaResDto {
-  id: string;
+export interface SubmissionResDto {
+  id: number;
   name: string;
   contributor: string;
   description: string;
-  crust: string;
-  crust_id: string;
-  sauce: string;
-  sauce_id: string;
-  toppings: AssociativeEntity[];
-  votes?: number;
+  url: string;
+  votes: number;
+}
+
+export interface SubfireDto {
+  slug: string;
+  name: string;
+  description?: string;
+  authorities: string[];
+  moderators: string[];
+}
+
+export interface SubfireResDto {
+  slug: string;
+  name: string;
+  description?: string;
+  authorities: string[];
+  moderators: string[];
 }
 
 export interface TokenInstanceKey {
@@ -60,8 +61,8 @@ export interface BurnGalaDto {
   signature: string;
 }
 
-export interface BurnAndSavePizzaSelectionDto {
-  pizza: SavePizzaSelectionDto;
+export interface BurnAndSubmitDto {
+  submission: SubmissionDto;
   burnDto: BurnGalaDto;
 }
 

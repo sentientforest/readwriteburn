@@ -1,1 +1,0 @@
-CREATE INDEX _pizza_toppings__name_index ON pizza_toppings (id DESC);

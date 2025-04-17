@@ -1,1 +1,0 @@
-CREATE INDEX _pizza_topping_associations__topping_index ON pizza_topping_associations (topping_id DESC);
