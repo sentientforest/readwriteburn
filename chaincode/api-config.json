@@ -1,0 +1,26 @@
+{
+  "channels": [
+    {
+      "pathFragment": "product",
+      "channelName": "product-channel",
+      "asLocalHost": true,
+      "contracts": [
+        {
+          "pathFragment": "AppleContract",
+          "chaincodeName": "basic-product",
+          "contractName": "AppleContract"
+        },
+        {
+          "pathFragment": "GalaChainToken",
+          "chaincodeName": "basic-product",
+          "contractName": "GalaChainToken"
+        },
+        {
+          "pathFragment": "PublicKeyContract",
+          "chaincodeName": "basic-product",
+          "contractName": "PublicKeyContract"
+        }
+      ]
+    }
+  ]
+}
