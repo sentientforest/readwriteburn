@@ -1,1 +1,0 @@
-CREATE INDEX _pizza_votes_by_user_identity_index ON pizza_votes_by_user (identity DESC);

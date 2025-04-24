@@ -8,7 +8,9 @@ let adminPrivateKeyPath: string | undefined = process.env.CHAIN_ADMIN_SECRET_KEY
 
 export function getAdminPrivateKey() {
   if (!adminPrivateKeyString && !adminPrivateKeyPath) {
-    throw new Error('Admin private key not found');
+    const msg = 'Admin private key not found';
+    console.log(msg);
+    return "";
   }
 
   if (adminPrivateKeyString) {
@@ -28,6 +30,10 @@ export function randomUniqueKey(): string {
 
 export async function registerRandomEthUser(req: Request, res: Response) {
   const adminPrivateKeyString = getAdminPrivateKey();
+
+  if (!adminPrivateKeyString) {
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
 
   const apiBase = process.env.CHAIN_API;
   const channel = process.env.PRODUCT_CHANNEL ?? 'product'
@@ -57,7 +63,7 @@ export async function registerRandomEthUser(req: Request, res: Response) {
   }
 
   res.json({
-    response: chainRes.json(),
+    response: (await chainRes.json()),
     user: newUser
   });
 }
@@ -65,6 +71,10 @@ export async function registerRandomEthUser(req: Request, res: Response) {
 export async function registerEthUser(req: Request, res: Response) {
 
   const adminPrivateKeyString = getAdminPrivateKey();
+
+  if (!adminPrivateKeyString) {
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
 
   const apiBase = process.env.CHAIN_API
   const channel = process.env.PRODUCT_CHANNEL ?? 'product';
@@ -95,7 +105,7 @@ export async function registerEthUser(req: Request, res: Response) {
     return res.status(500).send({
       url: url,
       status: chainRes.status,
-      body: chainRes.body,
+      body: (await chainRes.json()),
       dto: dto.serialize(),
     });
   }
