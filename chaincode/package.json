@@ -1,5 +1,5 @@
 {
-  "name": "@gala-chain/chaincode",
+  "name": "readwriteburn-chaincode",
   "version": "2.2.0",
   "description": "Product Chaincode",
   "main": "lib/src/index.js",
