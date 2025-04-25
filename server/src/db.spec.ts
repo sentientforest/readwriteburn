@@ -1,16 +1,17 @@
-import 'mocha';
-import assert from 'assert';
-import { dbService, initializeDatabase } from './db';
-import { SubfireDto, SubfireResDto, SubmissionDto } from './types';
-import { unlinkSync } from 'fs';
-import Database from 'better-sqlite3';
+import assert from "assert";
+import Database from "better-sqlite3";
+import { unlinkSync } from "fs";
+import { existsSync } from "fs";
+import "mocha";
+
+import { dbService, initializeDatabase } from "./db";
+import { SubfireDto, SubfireResDto, SubmissionDto } from "./types";
 
 let db: Database.Database;
-import { existsSync } from 'fs';
 
-const TEST_DB = 'test.db';
+const TEST_DB = "test.db";
 
-describe('Database Service', () => {
+describe("Database Service", () => {
   beforeEach(() => {
     // Delete test database if it exists
     if (existsSync(TEST_DB)) {
@@ -31,14 +32,14 @@ describe('Database Service', () => {
     }
   });
 
-  describe('Subfire Management', () => {
-    it('should create a subfire with authorities and moderators', () => {
+  describe("Subfire Management", () => {
+    it("should create a subfire with authorities and moderators", () => {
       const subfire: SubfireDto = {
-        slug: 'test-subfire-create',
-        name: 'TestSubfire-Create',
-        description: 'A test subfire',
-        authorities: ['auth1', 'auth2'],
-        moderators: ['mod1', 'mod2']
+        slug: "test-subfire-create",
+        name: "TestSubfire-Create",
+        description: "A test subfire",
+        authorities: ["auth1", "auth2"],
+        moderators: ["mod1", "mod2"]
       };
 
       const result = dbService.createSubfire(subfire);
@@ -50,13 +51,13 @@ describe('Database Service', () => {
       assert.deepStrictEqual(new Set(result.moderators), new Set(subfire.moderators));
     });
 
-    it('should get a subfire by id', () => {
+    it("should get a subfire by id", () => {
       const subfire: SubfireDto = {
-        slug: 'test-subfire-get',
-        name: 'TestSubfire-Get',
-        description: 'A test subfire',
-        authorities: ['auth1'],
-        moderators: ['mod1']
+        slug: "test-subfire-get",
+        name: "TestSubfire-Get",
+        description: "A test subfire",
+        authorities: ["auth1"],
+        moderators: ["mod1"]
       };
 
       const created: SubfireResDto = dbService.createSubfire(subfire);
@@ -67,28 +68,28 @@ describe('Database Service', () => {
       assert.strictEqual(result!.name, subfire.name);
     });
 
-    it('should return null for non-existent subfire', () => {
-      const result = dbService.getSubfire('999');
+    it("should return null for non-existent subfire", () => {
+      const result = dbService.getSubfire("999");
       assert.strictEqual(result, null);
     });
 
-    it('should update a subfire', () => {
+    it("should update a subfire", () => {
       const subfire: SubfireDto = {
-        slug: 'test-subfire-update',
-        name: 'TestSubfire-Update',
-        description: 'Original description',
-        authorities: ['auth1'],
-        moderators: ['mod1']
+        slug: "test-subfire-update",
+        name: "TestSubfire-Update",
+        description: "Original description",
+        authorities: ["auth1"],
+        moderators: ["mod1"]
       };
 
       const created = dbService.createSubfire(subfire);
-      
+
       const updated: SubfireDto = {
-        slug: 'test-subfire-update-new',
-        name: 'TestSubfire-Update-New',
-        description: 'Updated description',
-        authorities: ['auth2'],
-        moderators: ['mod2']
+        slug: "test-subfire-update-new",
+        name: "TestSubfire-Update-New",
+        description: "Updated description",
+        authorities: ["auth2"],
+        moderators: ["mod2"]
       };
 
       const result = dbService.updateSubfire(created.slug, updated);
@@ -99,19 +100,19 @@ describe('Database Service', () => {
       assert.deepStrictEqual(new Set(result.moderators), new Set(updated.moderators));
     });
 
-    it('should delete a subfire', () => {
+    it("should delete a subfire", () => {
       const subfire: SubfireDto = {
-        slug: 'test-subfire-delete',
-        name: 'TestSubfire-Delete',
-        description: 'A test subfire',
-        authorities: ['auth1'],
-        moderators: ['mod1']
+        slug: "test-subfire-delete",
+        name: "TestSubfire-Delete",
+        description: "A test subfire",
+        authorities: ["auth1"],
+        moderators: ["mod1"]
       };
 
       const created: SubfireResDto = dbService.createSubfire(subfire);
       // Create and then delete a submission to test cascade
       const submission: SubmissionDto = {
-        name: 'Test Submission',
+        name: "Test Submission",
         subfire: created.slug
       };
       const savedSubmission = dbService.saveSubmission(submission);
@@ -126,7 +127,7 @@ describe('Database Service', () => {
     });
   });
 
-  describe('Submission Management', () => {
+  describe("Submission Management", () => {
     let testSubfireId: string;
     let testCounter = 0;
 
@@ -134,19 +135,19 @@ describe('Database Service', () => {
       const subfire = dbService.createSubfire({
         slug: `TestSubfire-Submission-${++testCounter}`,
         name: `TestSubfire-Submission-${++testCounter}`,
-        description: 'Test subfire for submissions',
+        description: "Test subfire for submissions",
         authorities: [],
         moderators: []
       });
       testSubfireId = subfire.slug;
     });
 
-    it('should create a submission', () => {
+    it("should create a submission", () => {
       const submission: SubmissionDto = {
-        name: 'Test Submission',
-        description: 'A test submission',
-        contributor: 'tester',
-        url: 'http://test.com',
+        name: "Test Submission",
+        description: "A test submission",
+        contributor: "tester",
+        url: "http://test.com",
         subfire: `${testSubfireId}`
       };
 
@@ -160,12 +161,12 @@ describe('Database Service', () => {
       assert.strictEqual(result.votes, 0);
     });
 
-    it('should get a submission by id', () => {
+    it("should get a submission by id", () => {
       const submission: SubmissionDto = {
-        name: 'Test Submission',
-        description: 'A test submission',
-        contributor: 'tester',
-        url: 'http://test.com',
+        name: "Test Submission",
+        description: "A test submission",
+        contributor: "tester",
+        url: "http://test.com",
         subfire: `${testSubfireId}`
       };
 
@@ -177,12 +178,12 @@ describe('Database Service', () => {
       assert.strictEqual(result!.name, submission.name);
     });
 
-    it('should vote on a submission', () => {
+    it("should vote on a submission", () => {
       const submission: SubmissionDto = {
-        name: 'Test Submission',
-        description: 'A test submission',
-        contributor: 'tester',
-        url: 'http://test.com',
+        name: "Test Submission",
+        description: "A test submission",
+        contributor: "tester",
+        url: "http://test.com",
         subfire: `${testSubfireId}`
       };
 
@@ -194,14 +195,14 @@ describe('Database Service', () => {
       assert.strictEqual(updated!.votes, 1);
     });
 
-    it('should get submissions by subfire', () => {
+    it("should get submissions by subfire", () => {
       const submission1: SubmissionDto = {
-        name: 'Test Submission 1',
+        name: "Test Submission 1",
         subfire: `${testSubfireId}`
       };
 
       const submission2: SubmissionDto = {
-        name: 'Test Submission 2',
+        name: "Test Submission 2",
         subfire: `${testSubfireId}`
       };
 
@@ -212,7 +213,7 @@ describe('Database Service', () => {
 
       assert.strictEqual(results.length, 2);
       assert.deepStrictEqual(
-        new Set(results.map(s => s.name)),
+        new Set(results.map((s) => s.name)),
         new Set([submission1.name, submission2.name])
       );
     });

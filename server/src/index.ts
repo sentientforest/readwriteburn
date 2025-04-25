@@ -1,15 +1,12 @@
-import 'dotenv/config'
-import express from 'express';
-import cors from 'cors';
-import { dbService } from './db';
-import { registerRandomEthUser, registerEthUser } from './controllers/identities';
+import "dotenv/config";
+
+import cors from "cors";
+import express from "express";
+
+import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
-import type { 
-  BurnAndSubmitDto,
-  BurnAndVoteDto,
-  BurnGalaDto,
-  SubfireDto
-} from './types';
+import { dbService } from "./db";
+import type { BurnAndSubmitDto, BurnAndVoteDto, BurnGalaDto, SubfireDto } from "./types";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -21,7 +18,7 @@ app.use(express.json());
 // Basic error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ error: "Something went wrong!" });
 });
 
 // Helper function to verify burn DTO
@@ -46,13 +43,13 @@ function verifyBurnDto(burnDto: BurnGalaDto, burnCost: number): number {
 }
 
 // Identity routes
-app.get('/api/identities/new-random-user', registerRandomEthUser);
-app.post('/api/identities/register', registerEthUser);
-app.post('/identities/CreateHeadlessWallet', registerEthUser);
-app.post('/api/:channel/:contract/:method', proxy);
+app.get("/api/identities/new-random-user", registerRandomEthUser);
+app.post("/api/identities/register", registerEthUser);
+app.post("/identities/CreateHeadlessWallet", registerEthUser);
+app.post("/api/:channel/:contract/:method", proxy);
 
 // Subfire routes
-app.post('/api/subfires', async (req, res, next) => {
+app.post("/api/subfires", async (req, res, next) => {
   try {
     const subfire = req.body as SubfireDto;
     const created = dbService.createSubfire(subfire);
@@ -62,7 +59,7 @@ app.post('/api/subfires', async (req, res, next) => {
   }
 });
 
-app.get('/api/subfires', async (req, res, next) => {
+app.get("/api/subfires", async (req, res, next) => {
   try {
     const subfires = dbService.getAllSubfires();
     res.json(subfires);
@@ -71,11 +68,11 @@ app.get('/api/subfires', async (req, res, next) => {
   }
 });
 
-app.get('/api/subfires/:slug', async (req, res, next) => {
+app.get("/api/subfires/:slug", async (req, res, next) => {
   try {
     const subfire = dbService.getSubfire(req.params.slug);
     if (!subfire) {
-      return res.status(404).json({ error: 'Subfire not found' });
+      return res.status(404).json({ error: "Subfire not found" });
     }
     res.json(subfire);
   } catch (error) {
@@ -83,7 +80,7 @@ app.get('/api/subfires/:slug', async (req, res, next) => {
   }
 });
 
-app.put('/api/subfires/:slug', async (req, res, next) => {
+app.put("/api/subfires/:slug", async (req, res, next) => {
   try {
     const subfire = req.body as SubfireDto;
     const updated = dbService.updateSubfire(req.params.slug, subfire);
@@ -93,11 +90,11 @@ app.put('/api/subfires/:slug', async (req, res, next) => {
   }
 });
 
-app.delete('/api/subfires/:slug', async (req, res, next) => {
+app.delete("/api/subfires/:slug", async (req, res, next) => {
   try {
     const success = dbService.deleteSubfire(req.params.slug);
     if (!success) {
-      return res.status(404).json({ error: 'Subfire not found' });
+      return res.status(404).json({ error: "Subfire not found" });
     }
     res.json({ success: true });
   } catch (error) {
@@ -106,7 +103,7 @@ app.delete('/api/subfires/:slug', async (req, res, next) => {
 });
 
 // Submission routes
-app.get('/api/submissions', async (req, res, next) => {
+app.get("/api/submissions", async (req, res, next) => {
   try {
     const submissions = dbService.getAllSubmissions();
     res.json(submissions);
@@ -115,11 +112,11 @@ app.get('/api/submissions', async (req, res, next) => {
   }
 });
 
-app.get('/api/submissions/:id', async (req, res, next) => {
+app.get("/api/submissions/:id", async (req, res, next) => {
   try {
     const submission = dbService.getSubmission(parseInt(req.params.id));
     if (!submission) {
-      return res.status(404).json({ error: 'Submission not found' });
+      return res.status(404).json({ error: "Submission not found" });
     }
     res.json(submission);
   } catch (error) {
@@ -127,11 +124,11 @@ app.get('/api/submissions/:id', async (req, res, next) => {
   }
 });
 
-app.post('/api/submissions', async (req, res, next) => {
+app.post("/api/submissions", async (req, res, next) => {
   try {
     const dto = req.body as BurnAndSubmitDto;
-    
-    verifyBurnDto(dto.burnDto, 10); 
+
+    verifyBurnDto(dto.burnDto, 10);
 
     const saved = dbService.saveSubmission(dto.submission);
     res.status(201).json(saved);
@@ -140,14 +137,14 @@ app.post('/api/submissions', async (req, res, next) => {
   }
 });
 
-app.post('/api/submissions/:id/vote', async (req, res, next) => {
+app.post("/api/submissions/:id/vote", async (req, res, next) => {
   try {
     const dto = req.body as BurnAndVoteDto;
-    
-    verifyBurnDto(dto.burnDto, 5); 
+
+    verifyBurnDto(dto.burnDto, 5);
     const success = dbService.voteSubmission(parseInt(req.params.id));
     if (!success) {
-      return res.status(404).json({ error: 'Submission not found' });
+      return res.status(404).json({ error: "Submission not found" });
     }
     res.json({ success: true });
   } catch (error) {
@@ -155,7 +152,7 @@ app.post('/api/submissions/:id/vote', async (req, res, next) => {
   }
 });
 
-app.get('/api/subfires/:slug/submissions', async (req, res, next) => {
+app.get("/api/subfires/:slug/submissions", async (req, res, next) => {
   try {
     const submissions = dbService.getSubmissionsBySubfire(req.params.slug);
     res.json(submissions);

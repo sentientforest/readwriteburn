@@ -1,14 +1,15 @@
-import fs from 'fs';
-import { Request, Response } from 'express';
-import { createValidDTO, createValidSubmitDTO, RegisterEthUserDto } from '@gala-chain/api'
+import { RegisterEthUserDto, createValidDTO, createValidSubmitDTO } from "@gala-chain/api";
+import { Request, Response } from "express";
+import fs from "fs";
+
 import { ChainUser } from "../ChainUser";
 
-let adminPrivateKeyString: string = process.env.CHAIN_ADMIN_SECRET_KEY ?? '';
-let adminPrivateKeyPath: string | undefined = process.env.CHAIN_ADMIN_SECRET_KEY_PATH;
+let adminPrivateKeyString: string = process.env.CHAIN_ADMIN_SECRET_KEY ?? "";
+const adminPrivateKeyPath: string | undefined = process.env.CHAIN_ADMIN_SECRET_KEY_PATH;
 
 export function getAdminPrivateKey() {
   if (!adminPrivateKeyString && !adminPrivateKeyPath) {
-    const msg = 'Server identity private key not found';
+    const msg = "Server identity private key not found";
     console.log(msg);
     return "";
   }
@@ -16,9 +17,7 @@ export function getAdminPrivateKey() {
   if (adminPrivateKeyString) {
     return adminPrivateKeyString;
   } else if (adminPrivateKeyPath) {
-    adminPrivateKeyString = fs
-      .readFileSync(adminPrivateKeyPath)
-      .toString();
+    adminPrivateKeyString = fs.readFileSync(adminPrivateKeyPath).toString();
   }
 
   return adminPrivateKeyString;
@@ -32,12 +31,12 @@ export async function registerRandomEthUser(req: Request, res: Response) {
   const adminPrivateKeyString = getAdminPrivateKey();
 
   if (!adminPrivateKeyString) {
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 
   const apiBase = process.env.CHAIN_API;
-  const channel = process.env.PRODUCT_CHANNEL ?? 'product'
-  const url = `${apiBase}/api/${channel}/PublicKeyContract/RegisterEthUser`
+  const channel = process.env.PRODUCT_CHANNEL ?? "product";
+  const url = `${apiBase}/api/${channel}/PublicKeyContract/RegisterEthUser`;
 
   const newUser = ChainUser.withRandomKeys();
 
@@ -63,24 +62,23 @@ export async function registerRandomEthUser(req: Request, res: Response) {
   }
 
   res.json({
-    response: (await chainRes.json()),
+    response: await chainRes.json(),
     user: newUser
   });
 }
 
 export async function registerEthUser(req: Request, res: Response) {
-
   const adminPrivateKeyString = getAdminPrivateKey();
 
   if (!adminPrivateKeyString) {
-    return res.status(500).json({ message: 'Internal Server Error' });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 
-  const apiBase = process.env.CHAIN_API
-  const channel = process.env.PRODUCT_CHANNEL ?? 'product';
-  const url = `${apiBase}/api/${channel}/PublicKeyContract/RegisterEthUser`
+  const apiBase = process.env.CHAIN_API;
+  const channel = process.env.PRODUCT_CHANNEL ?? "product";
+  const url = `${apiBase}/api/${channel}/PublicKeyContract/RegisterEthUser`;
 
-  console.log(req.headers)
+  console.log(req.headers);
 
   const requestBody = req.body;
 
@@ -105,8 +103,8 @@ export async function registerEthUser(req: Request, res: Response) {
     return res.status(500).send({
       url: url,
       status: chainRes.status,
-      body: (await chainRes.json()),
-      dto: dto.serialize(),
+      body: await chainRes.json(),
+      dto: dto.serialize()
     });
   }
 
