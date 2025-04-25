@@ -1,12 +1,12 @@
 import { createMemoryHistory, createRouter } from "vue-router";
-import SubfireList from "./components/SubfireList.vue";
-import SubmissionList from "./components/SubmissionList.vue";
-import NewSubmission from "./components/NewSubmission.vue";
-import Account from "./components/Account.vue";
-import InfoPage from "./components/InfoPage.vue";
-import FireStarter from "./components/FireStarter.vue";
 
 import "./assets/main.css";
+import Account from "./components/Account.vue";
+import FireStarter from "./components/FireStarter.vue";
+import InfoPage from "./components/InfoPage.vue";
+import NewSubmission from "./components/NewSubmission.vue";
+import SubfireList from "./components/SubfireList.vue";
+import SubmissionList from "./components/SubmissionList.vue";
 
 const routes = [
   { path: "/", component: SubfireList },
