@@ -8,7 +8,7 @@ let adminPrivateKeyPath: string | undefined = process.env.CHAIN_ADMIN_SECRET_KEY
 
 export function getAdminPrivateKey() {
   if (!adminPrivateKeyString && !adminPrivateKeyPath) {
-    const msg = 'Admin private key not found';
+    const msg = 'Server identity private key not found';
     console.log(msg);
     return "";
   }

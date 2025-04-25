@@ -1,7 +1,8 @@
 <template>
   <div class="container">
     <nav>
-      <RouterLink to="/">Fires</RouterLink>
+      <RouterLink to="/">Find Fires</RouterLink>
+      <RouterLink to="/firestarter">Let's Burn</RouterLink>
       <RouterLink to="/account">Account/Wallet</RouterLink>
       <RouterLink to="/about">About</RouterLink>
     </nav>

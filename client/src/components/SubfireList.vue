@@ -7,10 +7,15 @@
     <div v-else-if="loadError">
       <p><i>Failed to fetch subfires from the server. Please try again later.</i></p>
     </div>
-    <div v-else class="subfire-board">
-      <div v-for="subfire in subfires" :key="subfire.slug" class="subfire-item" @click="selectSubfire(subfire)">
-        <h3 class="subfire-title">{{ subfire.name }}</h3>
-        <p class="subfire-description">{{ subfire.description }}</p>
+    <div v-else>
+      <div v-if="subfires.length === 0" class="no-subfires">
+        <p>No subfires created yet</p>
+      </div>
+      <div v-else class="subfire-board">
+        <div v-for="subfire in subfires" :key="subfire.slug" class="subfire-item" @click="selectSubfire(subfire)">
+          <h3 class="subfire-title">{{ subfire.name }}</h3>
+          <p class="subfire-description">{{ subfire.description }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -88,5 +93,13 @@ onMounted(async () => {
 .subfire-description {
   margin: 0.5rem 0 0;
   color: #666;
+}
+
+.no-subfires {
+  text-align: center;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #6c757d;
 }
 </style>

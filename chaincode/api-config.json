@@ -1,6 +1,28 @@
 {
   "channels": [
     {
+      "pathFragment": "asset",
+      "channelName": "asset-channel",
+      "asLocalHost": true,
+      "contracts": [
+        {
+          "pathFragment": "public-key-contract",
+          "chaincodeName": "basic-asset",
+          "contractName": "PublicKeyContract"
+        },
+        {
+          "pathFragment": "token-contract",
+          "chaincodeName": "basic-asset",
+          "contractName": "GalaChainToken"
+        },
+        {
+          "pathFragment": "fee-contract",
+          "chaincodeName": "basic-asset",
+          "contractName": "GalaChainFee"
+        }
+      ]
+    },
+    {
       "pathFragment": "product",
       "channelName": "product-channel",
       "asLocalHost": true,

@@ -4,11 +4,13 @@ import SubmissionList from "./components/SubmissionList.vue";
 import NewSubmission from "./components/NewSubmission.vue";
 import Account from "./components/Account.vue";
 import InfoPage from "./components/InfoPage.vue";
+import FireStarter from "./components/FireStarter.vue";
 
 import "./assets/main.css";
 
 const routes = [
   { path: "/", component: SubfireList },
+  { path: "/firestarter", component: FireStarter },
   { path: "/f/:slug", component: SubmissionList },
   { path: "/f/:slug/submit", component: NewSubmission },
   { path: "/account", component: Account },
