@@ -1,7 +1,7 @@
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import "./assets/main.css";
-import Account from "./components/Account.vue";
+import AccountDetails from "./components/AccountDetails.vue";
 import FireStarter from "./components/FireStarter.vue";
 import InfoPage from "./components/InfoPage.vue";
 import NewSubmission from "./components/NewSubmission.vue";
@@ -13,7 +13,7 @@ const routes = [
   { path: "/firestarter", component: FireStarter },
   { path: "/f/:slug", component: SubmissionList },
   { path: "/f/:slug/submit", component: NewSubmission },
-  { path: "/account", component: Account },
+  { path: "/account", component: AccountDetails },
   { path: "/about", component: InfoPage }
 ];
 

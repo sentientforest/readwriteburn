@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build --mode production",
-    "lint": "eslint . --ext .ts,.js",
-    "fix": "eslint . --ext .ts,.js --fix",
+    "lint": "eslint . --ext .ts,.js,.vue",
+    "fix": "eslint . --ext .ts,.js,.vue --fix",
     "serve": "vite preview",
     "type-check": "vue-tsc --noEmit",
     "deploy": "sh deploy.sh"
@@ -24,9 +24,10 @@
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
     "@vitejs/plugin-vue": "^4.2.3",
-    "eslint": "^8.30.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-vue": "^10.0.0",
     "eslint-prettier-config": "^1.0.1",
     "prettier": "^3.1.1",
     "typescript": "^5.1.3",

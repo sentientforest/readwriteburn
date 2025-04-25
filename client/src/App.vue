@@ -9,12 +9,15 @@
     <div>
       <h1>GalaChain Burn and Vote dApp</h1>
       <p>Let's burn! Browse subfires, submit content, and burn $GALA to upvote submissions you like.</p>
-  
+
       <div v-if="!metamaskSupport">
-        <p>This application uses the GalaConnect API via Metamask to sign transactions and interact 
-          with GalaChain. 
+        <p>
+          This application uses the GalaConnect API via Metamask to sign transactions and interact with
+          GalaChain.
         </p>
-        <p>Visit this site using a browser with the Metamask web extension installed to use the application.</p>
+        <p>
+          Visit this site using a browser with the Metamask web extension installed to use the application.
+        </p>
       </div>
       <div v-else-if="!isConnected" class="connect-section">
         <button @click="connectWallet">Connect Wallet</button>
@@ -23,29 +26,29 @@
         <p class="wallet-address">Connected: {{ walletAddress }}</p>
         <RouterView :wallet-address="walletAddress" :metamask-client="metamaskClient" />
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { MetamaskConnectClient } from "@gala-chain/connect";
+import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
-import { MetamaskConnectClient } from "@gala-chain/connect"
-import InfoPage from "./components/InfoPage.vue"
-import Account from "./components/Account.vue";
+
+import AccountDetails from "./components/AccountDetails.vue";
+import InfoPage from "./components/InfoPage.vue";
 
 const metamaskSupport = ref(true);
 let metamaskClient: MetamaskConnectClient;
 try {
-  metamaskClient = new MetamaskConnectClient()
+  metamaskClient = new MetamaskConnectClient();
 } catch (e) {
   metamaskSupport.value = false;
 }
 
-const isConnected = ref(false)
-const walletAddress = ref("")
-const showInfo = ref(false)
+const isConnected = ref(false);
+const walletAddress = ref("");
+const showInfo = ref(false);
 
 async function connectWallet() {
   if (!metamaskSupport.value) {
@@ -53,20 +56,20 @@ async function connectWallet() {
   }
 
   try {
-    await metamaskClient.connect()
-    const address = metamaskClient.getWalletAddress
-    walletAddress.value = address.startsWith("0x") ? "eth|" + address.slice(2) : address
-    
+    await metamaskClient.connect();
+    const address = metamaskClient.getWalletAddress;
+    walletAddress.value = address.startsWith("0x") ? "eth|" + address.slice(2) : address;
+
     // Check registration
     try {
-      await checkRegistration()
+      await checkRegistration();
     } catch {
-      await registerUser()
+      await registerUser();
     }
-    
-    isConnected.value = true
+
+    isConnected.value = true;
   } catch (err) {
-    console.error("Error connecting wallet:", err)
+    console.error("Error connecting wallet:", err);
   }
 }
 
@@ -75,17 +78,17 @@ async function checkRegistration() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ user: walletAddress.value })
-  })
-  if (!response.ok) throw new Error("User not registered")
+  });
+  if (!response.ok) throw new Error("User not registered");
 }
 
 async function registerUser() {
-  const publicKey = await metamaskClient.getPublicKey()
+  const publicKey = await metamaskClient.getPublicKey();
   await fetch(`${import.meta.env.VITE_GALASWAP_API}/CreateHeadlessWallet`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ publicKey: publicKey.publicKey })
-  })
+  });
 }
 </script>
 
@@ -100,17 +103,19 @@ nav {
   display: flex;
   justify-content: center;
   background-color: #1e00c7;
-  padding: 10px 0; 
+  padding: 10px 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 nav a {
-  color: #fff; 
-  text-decoration: none; 
-  padding: 10px 20px; 
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
   margin: 0 10px;
-  border-radius: 4px; 
-  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 4px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 nav a:hover {
@@ -119,8 +124,8 @@ nav a:hover {
 }
 
 nav a.active {
-  background-color: #007bff; 
-  color: #fff; 
+  background-color: #007bff;
+  color: #fff;
   font-weight: bold;
 }
 

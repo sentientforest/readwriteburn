@@ -12,7 +12,12 @@
         <p>No subfires created yet</p>
       </div>
       <div v-else class="subfire-board">
-        <div v-for="subfire in subfires" :key="subfire.slug" class="subfire-item" @click="selectSubfire(subfire)">
+        <div
+          v-for="subfire in subfires"
+          :key="subfire.slug"
+          class="subfire-item"
+          @click="selectSubfire(subfire)"
+        >
           <h3 class="subfire-title">{{ subfire.name }}</h3>
           <p class="subfire-description">{{ subfire.description }}</p>
         </div>
@@ -22,7 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
+
 import type { SubfireResDto } from "../types";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
@@ -34,19 +40,19 @@ const loadError = ref(false);
 async function fetchSubfires() {
   loading.value = true;
   loadError.value = false;
-  
+
   try {
     const response = await fetch(`${apiBase}/api/subfires`);
     if (!response.ok) throw new Error(`Failed to fetch subfires`);
-    
+
     const data = await response.json();
     if (!Array.isArray(data)) {
-      throw new Error('Invalid response format');
+      throw new Error("Invalid response format");
     }
-    
+
     subfires.value = data;
   } catch (error) {
-    console.error('Error fetching subfires:', error);
+    console.error("Error fetching subfires:", error);
     loadError.value = true;
   } finally {
     loading.value = false;

@@ -1,10 +1,13 @@
 <template>
   <div class="info-container">
     <h1>About</h1>
-    
+
     <section>
       <h2>Purpose</h2>
-      <p>This dApp serves as a template and reference implementation for building applications on GalaChain. It demonstrates core functionality including:</p>
+      <p>
+        This dApp serves as a template and reference implementation for building applications on GalaChain. It
+        demonstrates core functionality including:
+      </p>
       <ul>
         <li>Wallet connection and authentication</li>
         <li>User registration flow</li>
@@ -59,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-defineEmits(['back'])
+defineEmits(["back"]);
 </script>
 
 <style scoped>
@@ -83,7 +86,8 @@ h2 {
   margin-bottom: 15px;
 }
 
-ul, ol {
+ul,
+ol {
   margin-left: 20px;
   line-height: 1.6;
 }

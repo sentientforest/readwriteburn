@@ -5,36 +5,30 @@
       <p>🔥 Creating a new fire requires burning 100 $GALA</p>
     </div>
 
-    <form @submit.prevent="handleSubmit" class="fire-form">
+    <form class="fire-form" @submit.prevent="handleSubmit">
       <div class="form-group">
         <label for="name">Fire Name</label>
-        <input 
-          type="text" 
-          id="name" 
-          v-model="formData.name" 
-          required
-          placeholder="Give your fire a name"
-        >
+        <input id="name" v-model="formData.name" type="text" required placeholder="Give your fire a name" />
       </div>
 
       <div class="form-group">
         <label for="slug">URL Slug</label>
-        <input 
-          type="text" 
-          id="slug" 
-          v-model="formData.slug" 
+        <input
+          id="slug"
+          v-model="formData.slug"
+          type="text"
           required
           placeholder="unique-url-friendly-name"
           pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
           title="Lowercase letters, numbers, and hyphens only"
-        >
+        />
       </div>
 
       <div class="form-group">
         <label for="description">Description</label>
-        <textarea 
-          id="description" 
-          v-model="formData.description" 
+        <textarea
+          id="description"
+          v-model="formData.description"
           required
           placeholder="What's this fire about?"
           rows="4"
@@ -43,7 +37,7 @@
 
       <div class="form-actions">
         <button type="submit" :disabled="isSubmitting">
-          {{ isSubmitting ? 'Creating...' : 'Start Fire 🔥' }}
+          {{ isSubmitting ? "Creating..." : "Start Fire 🔥" }}
         </button>
       </div>
 
@@ -55,44 +49,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 const formData = ref({
-  name: '',
-  slug: '',
-  description: ''
+  name: "",
+  slug: "",
+  description: ""
 });
 
 const isSubmitting = ref(false);
-const error = ref('');
+const error = ref("");
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
 async function handleSubmit() {
   isSubmitting.value = true;
-  error.value = '';
+  error.value = "";
 
   try {
     const response = await fetch(`${apiBase}/api/subfires`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(formData.value)
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create fire');
+      throw new Error(errorData.message || "Failed to create fire");
     }
 
     const newFire = await response.json();
     router.push(`/subfires/${newFire.slug}`);
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An unexpected error occurred';
+    error.value = err instanceof Error ? err.message : "An unexpected error occurred";
   } finally {
     isSubmitting.value = false;
   }
@@ -134,7 +128,8 @@ label {
   color: #333;
 }
 
-input, textarea {
+input,
+textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;
@@ -176,4 +171,5 @@ button:disabled {
   color: #dc3545;
   text-align: center;
 }
-</style>]]>
+</style>
+]]>

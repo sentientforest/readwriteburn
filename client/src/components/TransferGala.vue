@@ -4,16 +4,16 @@
     <div class="transfer-form">
       <div class="input-group">
         <input
-          type="text"
           v-model="recipientAddress"
+          type="text"
           placeholder="Recipient Address (client|... or eth|...)"
           :disabled="isProcessing"
         />
       </div>
       <div class="input-group">
         <input
-          type="number"
           v-model="transferAmount"
+          type="number"
           :min="0"
           step="1"
           placeholder="Amount to transfer"
@@ -23,11 +23,8 @@
       </div>
       <small class="fee-notice">Network fee: 1 GALA</small>
 
-      <button 
-        @click="transferTokens" 
-        :disabled="!isValidTransfer || isProcessing"
-      >
-        {{ isProcessing ? 'Processing...' : 'Transfer Tokens' }}
+      <button :disabled="!isValidTransfer || isProcessing" @click="transferTokens">
+        {{ isProcessing ? "Processing..." : "Transfer Tokens" }}
       </button>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -37,36 +34,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { MetamaskConnectClient } from '@gala-chain/connect'
+import type { MetamaskConnectClient } from "@gala-chain/connect";
+import { computed, ref } from "vue";
 
 const props = defineProps<{
-  walletAddress: string
-  metamaskClient: MetamaskConnectClient
-}>()
+  walletAddress: string;
+  metamaskClient: MetamaskConnectClient;
+}>();
 
-const recipientAddress = ref('')
-const transferAmount = ref<number | null>(null)
-const isProcessing = ref(false)
-const error = ref('')
-const success = ref('')
+const recipientAddress = ref("");
+const transferAmount = ref<number | null>(null);
+const isProcessing = ref(false);
+const error = ref("");
+const success = ref("");
 
 const isValidTransfer = computed(() => {
   return (
     recipientAddress.value &&
-    (recipientAddress.value.startsWith('client|') || recipientAddress.value.startsWith('eth|')) &&
+    (recipientAddress.value.startsWith("client|") || recipientAddress.value.startsWith("eth|")) &&
     transferAmount.value !== null &&
     transferAmount.value > 0 &&
     recipientAddress.value.toLowerCase() !== props.walletAddress.toLowerCase()
-  )
-})
+  );
+});
 
 async function transferTokens() {
-  if (!isValidTransfer.value || !props.walletAddress) return
-  
-  error.value = ''
-  success.value = ''
-  isProcessing.value = true
+  if (!isValidTransfer.value || !props.walletAddress) return;
+
+  error.value = "";
+  success.value = "";
+  isProcessing.value = true;
 
   try {
     const transferTokensDto = {
@@ -81,28 +78,28 @@ async function transferTokens() {
         instance: "0"
       },
       uniqueKey: `january-2025-event-${import.meta.env.VITE_PROJECT_ID}-${Date.now()}`
-    }
+    };
 
-    const signedTransferDto = await props.metamaskClient.sign("TransferTokens", transferTokensDto)
-    
+    const signedTransferDto = await props.metamaskClient.sign("TransferTokens", transferTokensDto);
+
     const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_API}/TransferToken`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(signedTransferDto)
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`Failed to transfer tokens: ${JSON.stringify(response)}`)
+      throw new Error(`Failed to transfer tokens: ${JSON.stringify(response)}`);
     }
 
-    success.value = `Successfully transferred ${transferAmount.value} GALA to ${recipientAddress.value}`
-    transferAmount.value = null
-    recipientAddress.value = ''
+    success.value = `Successfully transferred ${transferAmount.value} GALA to ${recipientAddress.value}`;
+    transferAmount.value = null;
+    recipientAddress.value = "";
   } catch (err) {
-    console.error(`Error transferring tokens: ${err}`, err)
-    error.value = err instanceof Error ? err.message : 'Failed to transfer tokens'
+    console.error(`Error transferring tokens: ${err}`, err);
+    error.value = err instanceof Error ? err.message : "Failed to transfer tokens";
   } finally {
-    isProcessing.value = false
+    isProcessing.value = false;
   }
 }
 </script>
@@ -148,7 +145,7 @@ input[type="number"] {
 
 button {
   padding: 10px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -166,7 +163,7 @@ button:disabled {
 }
 
 .success {
-  color: #4CAF50;
+  color: #4caf50;
   text-align: center;
 }
 
@@ -176,4 +173,4 @@ button:disabled {
   text-align: right;
   margin-top: -10px;
 }
-</style> 
+</style>
