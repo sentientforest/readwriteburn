@@ -1,3 +1,7 @@
+import { ChainCallDTO, FeeAuthorization, FeeAuthorizationDto, SubmitCallDTO } from "@gala-chain/api";
+import { Type } from "class-transformer";
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+
 export interface AssociativeId {
   id: string;
   quantity?: number;
@@ -8,9 +12,47 @@ export interface AssociativeEntity extends AssociativeId {
   description?: string;
 }
 
-export interface SubmissionDto {
+export interface TokenInstanceKey {
+  collection: string;
+  category: string;
+  type: string;
+  additionalKey: string;
+  instance: string;
+}
+
+export class FireDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  public slug: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public name: string;
+
+  @IsOptional()
+  @IsString()
+  public description?: string;
+
+  @IsString({ each: true })
+  public authorities: string[];
+
+  @IsString({ each: true })
+  public moderators: string[];
+}
+
+export class FireStarterDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => FireDto)
+  public fire: FireDto;
+
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee: FeeAuthorizationDto;
+}
+
+export class SubmissionDto extends ChainCallDTO {
   name: string;
-  subfire: string;
+  fire: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -25,48 +67,22 @@ export interface SubmissionResDto {
   votes: number;
 }
 
-export interface SubfireDto {
-  slug: string;
-  name: string;
-  description?: string;
-  authorities: string[];
-  moderators: string[];
-}
-
-export interface SubfireResDto {
-  slug: string;
-  name: string;
-  description?: string;
-  authorities: string[];
-  moderators: string[];
-}
-
-export interface TokenInstanceKey {
-  collection: string;
-  category: string;
-  type: string;
-  additionalKey: string;
-  instance: string;
-}
-
-export interface BurnTokenQuantity {
-  tokenInstanceKey: TokenInstanceKey;
-  quantity: string;
-}
-
-export interface BurnGalaDto {
-  tokenInstances: Array<BurnTokenQuantity>;
-  owner: string;
-  uniqueKey: string;
-  signature: string;
-}
-
-export interface BurnAndSubmitDto {
+export class ContributeSubmissionDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => SubmissionDto)
   submission: SubmissionDto;
-  burnDto: BurnGalaDto;
+
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  fee: FeeAuthorizationDto;
 }
 
-export interface BurnAndVoteDto {
-  item_id: string;
-  burnDto: BurnGalaDto;
+export class CastVoteDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  entry: string;
+
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  fee: FeeAuthorizationDto;
 }

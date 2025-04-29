@@ -1,12 +1,13 @@
 import "dotenv/config";
 
+import { FeeAuthorizationDto } from "@gala-chain/api";
 import cors from "cors";
 import express from "express";
 
 import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
 import { dbService } from "./db";
-import type { BurnAndSubmitDto, BurnAndVoteDto, BurnGalaDto, SubfireDto } from "./types";
+import type { CastVoteDto, ContributeSubmissionDto, FireDto } from "./types";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -22,24 +23,13 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Helper function to verify burn DTO
-function verifyBurnDto(burnDto: BurnGalaDto, burnCost: number): number {
-  if (!Array.isArray(burnDto.tokenInstances) || burnDto.tokenInstances.length !== 1) {
-    throw new Error("Invalid burnDto.tokenInstances length");
+function verifyBurnDto(fee: FeeAuthorizationDto, burnCost: number): number {
+  // todo: execute a dry run query to retrive actual fee amount from chain
+  if (fee.quantity.isLessThan(burnCost)) {
+    throw new Error(`Insufficient $GALA burn quantity: ${fee.quantity}, required: ${burnCost}`);
   }
 
-  const galaQty = burnDto.tokenInstances[0];
-  const { collection, category, type, additionalKey } = galaQty.tokenInstanceKey;
-
-  if (collection !== "GALA" || category !== "Unit" || type !== "none" || additionalKey !== "none") {
-    throw new Error("Incorrect burnDto $GALA TokenInstanceKey");
-  }
-
-  const burnQuantity = +galaQty.quantity;
-  if (!(burnQuantity >= burnCost)) {
-    throw new Error(`Insufficient $GALA burn quantity: ${galaQty.quantity}, required: ${burnCost}`);
-  }
-
-  return burnQuantity;
+  return fee.quantity.toNumber();
 }
 
 // Identity routes
@@ -51,7 +41,7 @@ app.post("/api/:channel/:contract/:method", proxy);
 // Subfire routes
 app.post("/api/subfires", async (req, res, next) => {
   try {
-    const subfire = req.body as SubfireDto;
+    const subfire = req.body as FireDto;
     const created = dbService.createSubfire(subfire);
     res.status(201).json(created);
   } catch (error) {
@@ -82,7 +72,7 @@ app.get("/api/subfires/:slug", async (req, res, next) => {
 
 app.put("/api/subfires/:slug", async (req, res, next) => {
   try {
-    const subfire = req.body as SubfireDto;
+    const subfire = req.body as FireDto;
     const updated = dbService.updateSubfire(req.params.slug, subfire);
     res.json(updated);
   } catch (error) {
@@ -126,9 +116,9 @@ app.get("/api/submissions/:id", async (req, res, next) => {
 
 app.post("/api/submissions", async (req, res, next) => {
   try {
-    const dto = req.body as BurnAndSubmitDto;
+    const dto = req.body as ContributeSubmissionDto;
 
-    verifyBurnDto(dto.burnDto, 10);
+    verifyBurnDto(dto.fee, 10);
 
     const saved = dbService.saveSubmission(dto.submission);
     res.status(201).json(saved);
@@ -139,9 +129,9 @@ app.post("/api/submissions", async (req, res, next) => {
 
 app.post("/api/submissions/:id/vote", async (req, res, next) => {
   try {
-    const dto = req.body as BurnAndVoteDto;
+    const dto = req.body as CastVoteDto;
 
-    verifyBurnDto(dto.burnDto, 5);
+    verifyBurnDto(dto.fee, 5);
     const success = dbService.voteSubmission(parseInt(req.params.id));
     if (!success) {
       return res.status(404).json({ error: "Submission not found" });

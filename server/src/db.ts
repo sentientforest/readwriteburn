@@ -1,6 +1,6 @@
 import Database from "better-sqlite3";
 
-import { SubfireDto, SubfireResDto, SubmissionDto, SubmissionResDto } from "./types";
+import { FireDto, SubmissionDto, SubmissionResDto } from "./types";
 
 let db: Database.Database;
 
@@ -81,7 +81,7 @@ export function initializeDatabase() {
 export const dbService = {
   closeDatabase,
   // Subfire methods
-  createSubfire: (subfire: SubfireDto): SubfireResDto => {
+  createSubfire: (subfire: FireDto): FireDto => {
     const insertSubfire = getDb().prepare(`
       INSERT INTO subfires (slug, name, description)
       VALUES (?, ?, ?)
@@ -111,8 +111,8 @@ export const dbService = {
     return dbService.getSubfire(subfire.slug)!;
   },
 
-  getSubfire: (slug: string): SubfireResDto | null => {
-    const subfire = getDb()
+  getSubfire: (slug: string): FireDto | null => {
+    const fire = getDb()
       .prepare(
         `
       SELECT *
@@ -122,7 +122,7 @@ export const dbService = {
       )
       .get(slug);
 
-    if (!subfire) return null;
+    if (!fire) return null;
 
     interface RoleRow {
       user_id: string;
@@ -151,21 +151,21 @@ export const dbService = {
       .map((row: unknown) => (row as RoleRow).user_id);
 
     return {
-      ...subfire,
+      ...fire,
       authorities,
       moderators
-    } as SubfireResDto;
+    } as FireDto;
   },
 
-  getAllSubfires: (): SubfireResDto[] => {
-    interface SubfireRow {
+  getAllSubfires: (): FireDto[] => {
+    interface FireRow {
       slug: string;
     }
     const subfires = getDb().prepare("SELECT slug FROM subfires").all();
-    return subfires.map((s: unknown) => dbService.getSubfire((s as SubfireRow).slug)!);
+    return subfires.map((s: unknown) => dbService.getSubfire((s as FireRow).slug)!);
   },
 
-  updateSubfire: (slug: string, subfire: SubfireDto): SubfireResDto => {
+  updateSubfire: (slug: string, subfire: FireDto): FireDto => {
     const updateSubfire = getDb().prepare(`
       UPDATE subfires
       SET name = ?, description = ?
@@ -233,7 +233,7 @@ export const dbService = {
         submission.contributor,
         submission.description,
         submission.url,
-        submission.subfire
+        submission.fire
       );
       const newId = result.lastInsertRowid as number;
       insertVotes.run(newId);
@@ -262,7 +262,7 @@ export const dbService = {
     return db
       .prepare(
         `
-      SELECT 
+      SELECT
         s.id,
         s.name,
         s.contributor,
@@ -313,7 +313,7 @@ export const dbService = {
     return db
       .prepare(
         `
-      SELECT 
+      SELECT
         s.id,
         s.name,
         s.contributor,
