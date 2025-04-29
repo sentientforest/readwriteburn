@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { MetamaskConnectClient } from "@gala-chain/connect";
+import { BrowserConnectClient } from "@gala-chain/connect";
 import { ref } from "vue";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -39,9 +39,9 @@ import AccountDetails from "./components/AccountDetails.vue";
 import InfoPage from "./components/InfoPage.vue";
 
 const metamaskSupport = ref(true);
-let metamaskClient: MetamaskConnectClient;
+let metamaskClient: BrowserConnectClient;
 try {
-  metamaskClient = new MetamaskConnectClient();
+  metamaskClient = new BrowserConnectClient();
 } catch (e) {
   metamaskSupport.value = false;
 }
@@ -57,8 +57,7 @@ async function connectWallet() {
 
   try {
     await metamaskClient.connect();
-    const address = metamaskClient.getWalletAddress;
-    walletAddress.value = address.startsWith("0x") ? "eth|" + address.slice(2) : address;
+    walletAddress.value = metamaskClient.galaChainAddress;
 
     // Check registration
     try {

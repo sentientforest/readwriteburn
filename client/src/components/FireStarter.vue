@@ -49,10 +49,19 @@
 </template>
 
 <script setup lang="ts">
+import { DryRunDto, FeeAuthorizationDto, asValidUserRef, createValidDTO } from "@gala-chain/api";
+import BigNumber from "bignumber.js";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
+import { FireDto, FireStarterDto } from "../types";
+import { randomUniqueKey } from "../utils";
+
 const router = useRouter();
+
+const props = defineProps<{
+  walletAddress: string;
+}>();
 
 const formData = ref({
   name: "",
@@ -69,13 +78,56 @@ async function handleSubmit() {
   isSubmitting.value = true;
   error.value = "";
 
+  const fire = await createValidDTO(FireDto, {
+    ...formData.value,
+    // todo: allow pre-configuration of additional authorities/moderators
+    authorities: [props.walletAddress],
+    moderators: [props.walletAddress]
+  });
+
+  let expectedFee: BigNumber;
+
+  const dryRun = await createValidDTO(DryRunDto, {
+    callerPublicKey: props.walletAddress,
+    method: "FireStarter",
+    dto: fire
+  });
+
+  const response = await fetch(`${apiBase}/api/product/readwriteburn/DryRun`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: dryRun.serialize()
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to estimate fee from dry run");
+  }
+
+  console.log(`dryrun response successful`);
+
+  const dryRunResponse = await response.json();
+
+  // todo: parse dryRunResponse, determine fee
+  expectedFee = new BigNumber("100");
+
+  const fee = await createValidDTO(FeeAuthorizationDto, {
+    authority: asValidUserRef(props.walletAddress),
+    quantity: expectedFee,
+    uniqueKey: randomUniqueKey()
+  });
+
+  const dto = await createValidDTO(FireStarterDto, { fire, fee });
+
   try {
-    const response = await fetch(`${apiBase}/api/subfires`, {
+    const response = await fetch(`${apiBase}/api/fires`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(formData.value)
+      body: dto.serialize()
     });
 
     if (!response.ok) {
@@ -83,8 +135,10 @@ async function handleSubmit() {
       throw new Error(errorData.message || "Failed to create fire");
     }
 
-    const newFire = await response.json();
-    router.push(`/subfires/${newFire.slug}`);
+    console.log(`dryrun response successful`);
+
+    const dryRunResponse = await response.json();
+    router.push(`/fires/${fire.slug}`);
   } catch (err) {
     error.value = err instanceof Error ? err.message : "An unexpected error occurred";
   } finally {

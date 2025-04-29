@@ -1,15 +1,15 @@
 <template>
   <div class="subfire-list">
-    <h2>Subfires</h2>
+    <h2>Fires</h2>
     <div v-if="loading">
-      <p><i>Loading subfires...</i></p>
+      <p><i>Loading fires...</i></p>
     </div>
     <div v-else-if="loadError">
-      <p><i>Failed to fetch subfires from the server. Please try again later.</i></p>
+      <p><i>Failed to fetch fires from the server. Please try again later.</i></p>
     </div>
     <div v-else>
       <div v-if="subfires.length === 0" class="no-subfires">
-        <p>No subfires created yet</p>
+        <p>No fires created yet</p>
       </div>
       <div v-else class="subfire-board">
         <div
