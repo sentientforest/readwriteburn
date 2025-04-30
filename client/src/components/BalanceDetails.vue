@@ -10,22 +10,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
-  walletAddress: string
-}>()
+  walletAddress: string;
+}>();
 
-const availableBalance = ref(0)
-const lockedBalance = ref(0)
+const availableBalance = ref(0);
+const lockedBalance = ref(0);
 
 async function fetchBalance() {
-  if (!props.walletAddress) return
-  
+  if (!props.walletAddress) return;
+
   try {
     const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_API}/FetchBalances`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         owner: props.walletAddress,
         collection: "GALA",
@@ -34,29 +34,30 @@ async function fetchBalance() {
         additionalKey: "none",
         instance: "0"
       })
-    })
+    });
 
-    const data = await response.json()
+    const data = await response.json();
     if (data.Data.length > 0) {
-      const total = parseFloat(data.Data[0].quantity)
+      const total = parseFloat(data.Data[0].quantity);
       lockedBalance.value = data.Data[0].lockedHolds.reduce(
-        (acc: number, hold: any) => acc + parseFloat(hold.quantity), 0
-      )
-      availableBalance.value = total - lockedBalance.value
+        (acc: number, hold: any) => acc + parseFloat(hold.quantity),
+        0
+      );
+      availableBalance.value = total - lockedBalance.value;
     }
   } catch (err) {
-    console.error('Error fetching balance:', err)
+    console.error("Error fetching balance:", err);
   }
 }
 
 function formatBalance(balance: number): string {
-  return balance.toLocaleString(undefined, { maximumFractionDigits: 2 })
+  return balance.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
-const refreshBalance = () => fetchBalance()
+const refreshBalance = () => fetchBalance();
 
-watch(() => props.walletAddress, fetchBalance)
-onMounted(fetchBalance)
+watch(() => props.walletAddress, fetchBalance);
+onMounted(fetchBalance);
 </script>
 
 <style scoped>

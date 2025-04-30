@@ -1,7 +1,6 @@
-
 // todo: duplicated from chain-client/src/generic/ChainUser.ts
-// chain-client breaks some bundlers unless fabric-client is installed 
-// this type should be moved to chain-api for easier usage 
+// chain-client breaks some bundlers unless fabric-client is installed
+// this type should be moved to chain-api for easier usage
 import { UserAlias, signatures } from "@gala-chain/api";
 
 /**

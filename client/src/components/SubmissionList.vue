@@ -1,6 +1,6 @@
 <template>
   <div class="submission-list">
-    <h2>{{ subfire?.name || 'Submissions' }}</h2>
+    <h2>{{ subfire?.name || "Submissions" }}</h2>
     <div v-if="loading">
       <p><i>Loading submissions...</i></p>
     </div>
@@ -10,14 +10,14 @@
     <div v-else class="submission-board">
       <div v-for="submission in submissions" :key="submission.id" class="submission-item">
         <div class="votes">
-          <div class="vote-count">        
+          <div class="vote-count">
             <p>{{ submission.votes ?? 0 }}</p>
           </div>
           <div class="vote-form">
             <div class="input-group">
-              <input 
-                type="number" 
-                v-model="submission.userVoteQty" 
+              <input
+                v-model="submission.userVoteQty"
+                type="number"
                 :min="0"
                 step="1"
                 placeholder="🔥🔥🔥"
@@ -28,11 +28,11 @@
             <small class="fee-notice">Network fee: 1 GALA</small>
 
             <span class="vote-submit">
-              <button 
-                @click="submitVote(submission)" 
+              <button
                 :disabled="!submission.userVoteQty || isProcessing || !props.walletAddress"
+                @click="submitVote(submission)"
               >
-                {{ isProcessing ? 'Processing...' : 'Burn & Vote' }}
+                {{ isProcessing ? "Processing..." : "Burn & Vote" }}
               </button>
             </span>
 
@@ -43,7 +43,9 @@
         <div class="item-content">
           <h3 class="item-title">{{ submission.name }}</h3>
           <p class="item-description">{{ submission.description }}</p>
-          <a v-if="submission.url" :href="submission.url" target="_blank" rel="noopener noreferrer">View Source</a>
+          <a v-if="submission.url" :href="submission.url" target="_blank" rel="noopener noreferrer"
+            >View Source</a
+          >
         </div>
       </div>
     </div>
@@ -51,22 +53,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
 import type { MetamaskConnectClient } from "@gala-chain/connect";
-import type { SubmissionResDto, SubfireResDto } from "../types";
+import BigNumber from "bignumber.js";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+
+import type { SubfireResDto, SubmissionResDto } from "../types";
 
 interface ExtendedSubmissionResDto extends SubmissionResDto {
   userVoteQty: number | null;
 }
-import BigNumber from "bignumber.js";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 const burnCostVote = ref(new BigNumber(import.meta.env.VITE_BURN_COST_VOTE ?? 1));
 
 const props = defineProps<{
-  walletAddress: string,
-  metamaskClient: MetamaskConnectClient
+  walletAddress: string;
+  metamaskClient: MetamaskConnectClient;
 }>();
 
 const route = useRoute();
@@ -83,7 +86,7 @@ const success = ref("");
 async function fetchSubmissions() {
   loading.value = true;
   loadError.value = false;
-  
+
   try {
     // Fetch subfire details
     const subfireRes = await fetch(`${apiBase}/api/subfires/${subfireSlug}`);
@@ -93,18 +96,18 @@ async function fetchSubmissions() {
     // Fetch submissions for this subfire
     const submissionsRes = await fetch(`${apiBase}/api/subfires/${subfireSlug}/submissions`);
     if (!submissionsRes.ok) throw new Error(`Failed to fetch submissions`);
-    
+
     const data = await submissionsRes.json();
     if (!Array.isArray(data)) {
-      throw new Error('Invalid response format');
+      throw new Error("Invalid response format");
     }
-    
-    submissions.value = data.map(submission => ({
+
+    submissions.value = data.map((submission) => ({
       ...submission,
       userVoteQty: null
     }));
   } catch (error) {
-    console.error('Error fetching submissions:', error);
+    console.error("Error fetching submissions:", error);
     loadError.value = true;
   } finally {
     loading.value = false;
@@ -113,16 +116,16 @@ async function fetchSubmissions() {
 
 async function submitVote(submission: ExtendedSubmissionResDto) {
   if (!submission.userVoteQty || isProcessing.value) return;
-  
+
   isProcessing.value = true;
   submitError.value = "";
   success.value = "";
 
   try {
     const response = await fetch(`${apiBase}/api/submissions/${submission.id}/vote`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         amount: submission.userVoteQty
@@ -130,15 +133,15 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to submit vote');
+      throw new Error("Failed to submit vote");
     }
 
-    success.value = 'Vote submitted successfully!';
+    success.value = "Vote submitted successfully!";
     submission.userVoteQty = null;
     await fetchSubmissions(); // Refresh the list
   } catch (error) {
-    console.error('Error submitting vote:', error);
-    submitError.value = 'Failed to submit vote. Please try again.';
+    console.error("Error submitting vote:", error);
+    submitError.value = "Failed to submit vote. Please try again.";
   } finally {
     isProcessing.value = false;
   }
@@ -210,7 +213,7 @@ onMounted(async () => {
 
 .vote-submit button {
   padding: 0.5rem 1rem;
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -243,7 +246,7 @@ onMounted(async () => {
 }
 
 .success {
-  color: #4CAF50;
+  color: #4caf50;
   margin: 0.5rem 0;
 }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div class="burn-container">
     <h2>Burn GALA</h2>
-    
+
     <div class="burn-form">
       <div class="input-group">
-        <input 
-          type="number" 
-          v-model="burnAmount" 
+        <input
+          v-model="burnAmount"
+          type="number"
           :min="0"
           step="1"
           placeholder="Amount to burn"
@@ -16,11 +16,8 @@
       </div>
       <small class="fee-notice">Network fee: 1 GALA</small>
 
-      <button 
-        @click="burnTokens" 
-        :disabled="!isValidAmount || isProcessing"
-      >
-        {{ isProcessing ? 'Processing...' : 'Burn Tokens' }}
+      <button :disabled="!isValidAmount || isProcessing" @click="burnTokens">
+        {{ isProcessing ? "Processing..." : "Burn Tokens" }}
       </button>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -30,63 +27,65 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { MetamaskConnectClient } from '@gala-chain/connect'
+import type { MetamaskConnectClient } from "@gala-chain/connect";
+import { computed, ref } from "vue";
 
 const props = defineProps<{
-  walletAddress: string
-  metamaskClient: MetamaskConnectClient
-}>()
+  walletAddress: string;
+  metamaskClient: MetamaskConnectClient;
+}>();
 
-const burnAmount = ref<number | null>(null)
-const isProcessing = ref(false)
-const error = ref('')
-const success = ref('')
+const burnAmount = ref<number | null>(null);
+const isProcessing = ref(false);
+const error = ref("");
+const success = ref("");
 
 const isValidAmount = computed(() => {
-  return burnAmount.value !== null && burnAmount.value > 0
-})
+  return burnAmount.value !== null && burnAmount.value > 0;
+});
 
 async function burnTokens() {
-  if (!isValidAmount.value || !props.walletAddress) return
-  
-  error.value = ''
-  success.value = ''
-  isProcessing.value = true
+  if (!isValidAmount.value || !props.walletAddress) return;
+
+  error.value = "";
+  success.value = "";
+  isProcessing.value = true;
 
   try {
     const burnTokensDto = {
       owner: props.walletAddress,
-      tokenInstances: [{
-        quantity: burnAmount.value?.toString(),
-        tokenInstanceKey: {
-          collection: "GALA",
-          category: "Unit",
-          type: "none",
-          additionalKey: "none",
-          instance: "0"
+      tokenInstances: [
+        {
+          quantity: burnAmount.value?.toString(),
+          tokenInstanceKey: {
+            collection: "GALA",
+            category: "Unit",
+            type: "none",
+            additionalKey: "none",
+            instance: "0"
+          }
         }
-      }],
+      ],
       uniqueKey: `january-2025-event-${import.meta.env.VITE_PROJECT_ID}-${Date.now()}`
-    }
+    };
 
     const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto);
-    
+
     const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_API}/BurnTokens`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(signedBurnDto)
     });
 
     if (!response.ok) {
-      throw new Error('Failed to burn tokens');
+      throw new Error("Failed to burn tokens");
     }
 
     success.value = `Successfully burned ${burnAmount.value} GALA`;
     burnAmount.value = null;
   } catch (err) {
     console.error(`Error burning tokens: ${err}`, err);
-    error.value = err instanceof Error ? err.message : 'Failed to burn tokens';
+    error.value = err instanceof Error ? err.message : "Failed to burn tokens";
   } finally {
     isProcessing.value = false;
   }
@@ -131,7 +130,7 @@ input {
 
 button {
   padding: 10px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -149,7 +148,7 @@ button:disabled {
 }
 
 .success {
-  color: #4CAF50;
+  color: #4caf50;
   text-align: center;
 }
 

@@ -10,7 +10,7 @@ node_modules
 .npmrc
 .env
 .env.production
-src/coverage 
+src/coverage
 
 /logs
 
@@ -19,8 +19,8 @@ tsconfig.tsbuildinfo
 
 .vite
 
-# pre-built trailbase binary when used locally as docker alternative
-/trail
-
 # database
 readwriteburn.db
+
+# contextual development resources
+/ctx

@@ -1,1 +1,1 @@
-export * from "./subfire";
+export * from "./fire";
