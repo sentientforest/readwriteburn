@@ -1,5 +1,5 @@
 <template>
-  <div class="subfire-list">
+  <div class="fire-list">
     <h2>Fires</h2>
     <div v-if="loading">
       <p><i>Loading fires...</i></p>
@@ -8,18 +8,13 @@
       <p><i>Failed to fetch fires from the server. Please try again later.</i></p>
     </div>
     <div v-else>
-      <div v-if="subfires.length === 0" class="no-subfires">
+      <div v-if="fires.length === 0" class="no-fires">
         <p>No fires created yet</p>
       </div>
-      <div v-else class="subfire-board">
-        <div
-          v-for="subfire in subfires"
-          :key="subfire.slug"
-          class="subfire-item"
-          @click="selectSubfire(subfire)"
-        >
-          <h3 class="subfire-title">{{ subfire.name }}</h3>
-          <p class="subfire-description">{{ subfire.description }}</p>
+      <div v-else class="fire-board">
+        <div v-for="fire in fires" :key="fire.slug" class="fire-item" @click="selectFire(fire)">
+          <h3 class="fire-title">{{ fire.name }}</h3>
+          <p class="fire-description">{{ fire.description }}</p>
         </div>
       </div>
     </div>
@@ -29,54 +24,54 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import type { SubfireResDto } from "../types";
+import type { FireDto } from "../types";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
-const subfires = ref<SubfireResDto[]>([]);
+const fires = ref<FireDto[]>([]);
 const loading = ref(false);
 const loadError = ref(false);
 
-async function fetchSubfires() {
+async function fetchFires() {
   loading.value = true;
   loadError.value = false;
 
   try {
-    const response = await fetch(`${apiBase}/api/subfires`);
-    if (!response.ok) throw new Error(`Failed to fetch subfires`);
+    const response = await fetch(`${apiBase}/api/fires`);
+    if (!response.ok) throw new Error(`Failed to fetch fires`);
 
     const data = await response.json();
     if (!Array.isArray(data)) {
       throw new Error("Invalid response format");
     }
 
-    subfires.value = data;
+    fires.value = data;
   } catch (error) {
-    console.error("Error fetching subfires:", error);
+    console.error("Error fetching fires:", error);
     loadError.value = true;
   } finally {
     loading.value = false;
   }
 }
 
-function selectSubfire(subfire: SubfireResDto) {
-  window.location.href = `/subfires/${subfire.slug}`;
+function selectFire(fire: FireDto) {
+  window.location.href = `/f/${fire.slug}`;
 }
 
 onMounted(async () => {
-  await fetchSubfires();
+  await fetchFires();
 });
 </script>
 
 <style>
-.subfire-board {
+.fire-board {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
 }
 
-.subfire-item {
+.fire-item {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -85,23 +80,23 @@ onMounted(async () => {
   transition: all 0.2s ease;
 }
 
-.subfire-item:hover {
+.fire-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.subfire-title {
+.fire-title {
   margin: 0;
   font-size: 1.25rem;
   color: #333;
 }
 
-.subfire-description {
+.fire-description {
   margin: 0.5rem 0 0;
   color: #666;
 }
 
-.no-subfires {
+.no-fires {
   text-align: center;
   padding: 2rem;
   background: #f8f9fa;
