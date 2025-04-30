@@ -1,4 +1,11 @@
-import { ChainCallDTO, FeeAuthorization, FeeAuthorizationDto, SubmitCallDTO } from "@gala-chain/api";
+import {
+  ChainCallDTO,
+  FeeAuthorization,
+  FeeAuthorizationDto,
+  IsUserRef,
+  SubmitCallDTO,
+  UserRef
+} from "@gala-chain/api";
 import { Type } from "class-transformer";
 import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
@@ -28,6 +35,9 @@ export class FireDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
   public name: string;
+
+  @IsUserRef()
+  public starter: UserRef;
 
   @IsOptional()
   @IsString()
