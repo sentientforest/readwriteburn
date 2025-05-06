@@ -32,7 +32,7 @@ export class FireDto extends ChainCallDTO {
   public moderators: UserRef[];
 }
 
-export class FireStarterDto extends ChainCallDTO {
+export class FireStarterDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => FireDto)
   public fire: FireDto;
@@ -43,10 +43,24 @@ export class FireStarterDto extends ChainCallDTO {
 }
 
 export class SubmissionDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
   name: string;
+
+  @IsNotEmpty()
+  @IsString()
   fire: string;
+
+  @IsOptional()
+  @IsString()
   contributor?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
   url?: string;
 }
 
@@ -59,14 +73,14 @@ export interface SubmissionResDto {
   votes: number;
 }
 
-export class ContributeSubmissionDto extends ChainCallDTO {
+export class ContributeSubmissionDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => SubmissionDto)
   submission: SubmissionDto;
 
   @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  @Type(() => FeeVerificationDto)
+  fee: FeeVerificationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {
@@ -75,6 +89,6 @@ export class CastVoteDto extends ChainCallDTO {
   entry: string;
 
   @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  @Type(() => FeeVerificationDto)
+  fee: FeeVerificationDto;
 }

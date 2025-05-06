@@ -8,7 +8,8 @@ import {
 } from "@gala-chain/chaincode";
 
 import { version } from "../../package.json";
-import { FireStarterDto } from "./dtos";
+import { contributeSubmission } from "./contributeSubmission";
+import { ContributeSubmissionDto, FireStarterDto } from "./dtos";
 import { fireStarter } from "./fireStarter";
 
 export class ReadWriteBurnContract extends GalaContract {
@@ -16,13 +17,17 @@ export class ReadWriteBurnContract extends GalaContract {
     super("ReadWriteBurn", version);
   }
 
-  @GalaTransaction({
-    type: SUBMIT,
-    verifySignature: true,
-    enforceUniqueKey: true,
+  @Submit({
     in: FireStarterDto
   })
   public async FireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<void> {
     return fireStarter(ctx, dto);
+  }
+
+  @Submit({
+    in: ContributeSubmissionDto
+  })
+  public async ContributeSubmission(ctx: GalaChainContext, dto: ContributeSubmissionDto): Promise<void> {
+    return contributeSubmission(ctx, dto);
   }
 }
