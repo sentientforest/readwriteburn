@@ -17,14 +17,14 @@ import "dotenv/config";
 
 import { GalaContract, GalaJSONSerializer } from "@gala-chain/chaincode";
 
-import { AppleContract } from "./apples";
 import { GalaChainTokenContract } from "./token";
 import { PublicKeyContract } from "./pk";
+import { ReadWriteBurnContract } from "./readwriteburn";
 
 export const contracts: { new (): GalaContract }[] = [
   PublicKeyContract,
   GalaChainTokenContract,
-  AppleContract
+  ReadWriteBurnContract
 ];
 
 export const serializers = {

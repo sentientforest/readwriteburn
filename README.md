@@ -1,8 +1,12 @@
 # readwriteburn - Sample GalaChain Burn dApp
 
-**Work in progress**. Non-trivial sample application. 
+**Work in progress**. Non-trivial sample application.
 
-Burn $GALA to upvote. Submit links, comments, upvotes. Create subtopics. Let's burn!
+Wanna turn up the heat? Slammin!
+
+Burn $GALA to upvote. Submit links, comments, upvotes. Create subtopics.
+
+Let's burn!
 
 The project consists of three main components:
 
@@ -102,4 +106,3 @@ The application is built with:
 
 - [GalaChain Documentation](https://docs.galachain.com)
 - [GalaChain Connect Library](https://github.com/GalaChain/sdk)
-

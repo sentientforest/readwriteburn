@@ -28,9 +28,9 @@
       "asLocalHost": true,
       "contracts": [
         {
-          "pathFragment": "AppleContract",
+          "pathFragment": "ReadWriteBurn",
           "chaincodeName": "basic-product",
-          "contractName": "AppleContract"
+          "contractName": "ReadWriteBurn"
         },
         {
           "pathFragment": "GalaChainToken",
