@@ -1,13 +1,26 @@
 import {
+  BigNumberIsPositive,
+  BigNumberProperty,
   ChainCallDTO,
-  FeeAuthorizationDto,
   FeeVerificationDto,
   IsUserRef,
   SubmitCallDTO,
   UserRef
 } from "@gala-chain/api";
+import BigNumber from "bignumber.js";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested
+} from "class-validator";
+import { JSONSchema } from "class-validator-jsonschema";
+
+import { Vote } from "./Vote";
 
 export class FireDto extends ChainCallDTO {
   @IsNotEmpty()
@@ -83,12 +96,87 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
   fee: FeeVerificationDto;
 }
 
-export class CastVoteDto extends ChainCallDTO {
+export class VoteDto extends SubmitCallDTO {
   @IsNotEmpty()
   @IsString()
   entry: string;
 
+  @BigNumberIsPositive()
+  @BigNumberProperty()
+  quantity: BigNumber;
+}
+
+export class CastVoteDto extends SubmitCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  vote: VoteDto;
+
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   fee: FeeVerificationDto;
+}
+
+export class FetchVotesDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  fire?: string;
+
+  @IsOptional()
+  @IsString()
+  submission?: string;
+
+  @JSONSchema({ description: "Next page bookmark." })
+  @IsOptional()
+  @IsNotEmpty()
+  bookmark?: string;
+
+  @JSONSchema({
+    description: "Limit number of results. Useful for pagination queries."
+  })
+  @IsOptional()
+  @IsNumber()
+  limit?: number;
+}
+
+@JSONSchema({
+  description: "Vote Object Value with Chain Key."
+})
+export class VoteResult extends ChainCallDTO {
+  @JSONSchema({ description: "Chain key identifying object on chain." })
+  key: string;
+
+  @JSONSchema({ description: "Chain entry value identified by corresponding key on chain." })
+  @ValidateNested()
+  @Type(() => Vote)
+  value: Vote;
+}
+
+@JSONSchema({
+  description: "Response DTO from a successful FetchVotes request."
+})
+export class FetchVotesResDto extends ChainCallDTO {
+  @JSONSchema({ description: "List of vote results." })
+  @ValidateNested({ each: true })
+  @Type(() => VoteResult)
+  results: VoteResult[];
+
+  @JSONSchema({ description: "Next page bookmark." })
+  @IsOptional()
+  @IsNotEmpty()
+  nextPageBookmark?: string;
+}
+
+export class CountVotesDto extends SubmitCallDTO {
+  @IsOptional()
+  @IsString()
+  fire?: string;
+
+  @IsOptional()
+  @IsString()
+  submission?: string;
+
+  @ArrayNotEmpty()
+  @ArrayMaxSize(1000)
+  @IsString({ each: true })
+  votes: string[];
 }

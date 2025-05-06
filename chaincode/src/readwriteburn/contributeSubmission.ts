@@ -1,7 +1,6 @@
 import { ConflictError, ValidationFailedError } from "@gala-chain/api";
 import { GalaChainContext, inverseTime, objectExists, putChainObject } from "@gala-chain/chaincode";
 
-import { Fire } from "./Fire";
 import { Submission } from "./Submission";
 import { ContributeSubmissionDto } from "./dtos";
 
