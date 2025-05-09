@@ -19,6 +19,7 @@ import {
   FetchVotesResDto,
   FireStarterDto
 } from "./dtos";
+import { fetchVotes } from "./fetchVotes";
 import { fireStarter } from "./fireStarter";
 
 export class ReadWriteBurnContract extends GalaContract {
@@ -52,5 +53,13 @@ export class ReadWriteBurnContract extends GalaContract {
   })
   public async CountVotes(ctx: GalaChainContext, dto: CountVotesDto): Promise<void> {
     return countVotes(ctx, dto);
+  }
+
+  @Evaluate({
+    in: FetchVotesDto,
+    out: FetchVotesResDto
+  })
+  public async FetchVotes(ctx: GalaChainContext, dto: FetchVotesDto): Promise<FetchVotesResDto> {
+    return fetchVotes(ctx, dto);
   }
 }

@@ -20,7 +20,12 @@ import {
 } from "class-validator";
 import { JSONSchema } from "class-validator-jsonschema";
 
+import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
+import { Submission } from "./Submission";
 import { Vote } from "./Vote";
+import { VoteCount } from "./VoteCount";
+import { VoteRanking } from "./VoteRanking";
+import { VoterReceipt } from "./VoterReceipt";
 
 export class FireDto extends ChainCallDTO {
   @IsNotEmpty()
@@ -54,6 +59,41 @@ export class FireStarterDto extends SubmitCallDTO {
   @Type(() => FeeVerificationDto)
   public fee: FeeVerificationDto;
 }
+
+export class FetchFiresDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public slug?: string;
+
+  @IsOptional()
+  @IsString()
+  public bookmark?: string;
+
+  @IsOptional()
+  @IsNumber()
+  public limit?: number;
+}
+
+export class FireResDto extends ChainCallDTO {
+  metadata: Fire;
+  starter: FireStarter;
+  authorities: FireAuthority[];
+  moderators: FireModerator[];
+}
+
+export class FetchFiresResDto extends ChainCallDTO {
+  @JSONSchema({ description: "List of results." })
+  @ValidateNested({ each: true })
+  @Type(() => Fire)
+  results: Fire[];
+
+  @JSONSchema({ description: "Next page bookmark." })
+  @IsOptional()
+  @IsNotEmpty()
+  nextPageBookmark?: string;
+}
+
+export class FetchSubmissionsDto extends ChainCallDTO {}
 
 export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
@@ -97,6 +137,13 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
 }
 
 export class VoteDto extends SubmitCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  entryType: string;
+
+  @IsString()
+  entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   entry: string;

@@ -17,9 +17,15 @@ export async function countVotes(ctx: GalaChainContext, dto: CountVotesDto): Pro
   for (const id of dto.votes) {
     const vote: Vote = await getObjectByKey(ctx, Vote, id);
 
-    const count: VoteCount = await getObjectByKey(ctx, VoteCount, vote.submission).catch((e) => {
+    const countKey = VoteCount.getCompositeKeyFromParts(VoteCount.INDEX_KEY, [
+      vote.entryType,
+      vote.entryParent,
+      vote.entry
+    ]);
+
+    const count: VoteCount = await getObjectByKey(ctx, VoteCount, countKey).catch((e) => {
       if (e instanceof ObjectNotFoundError) {
-        return new VoteCount(vote.submission, new BigNumber("0"));
+        return new VoteCount(vote.entryType, vote.entryParent, vote.entry, new BigNumber("0"));
       } else {
         throw e;
       }
@@ -32,7 +38,12 @@ export async function countVotes(ctx: GalaChainContext, dto: CountVotesDto): Pro
       deleteChainObject(ctx, previousRanking);
     }
 
-    const ranking: VoteRanking = new VoteRanking(count.quantity);
+    const ranking: VoteRanking = new VoteRanking(
+      vote.entryType,
+      vote.entryParent,
+      count.quantity,
+      vote.entry
+    );
     count.ranking = ranking.getCompositeKey();
 
     const receipt = new VoterReceipt(vote.voter, vote.getCompositeKey(), vote.quantity);
