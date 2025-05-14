@@ -48,6 +48,25 @@ export class FireDto extends ChainCallDTO {
 
   @IsString({ each: true })
   public moderators: UserRef[];
+
+  constructor(
+    slug: string,
+    name: string,
+    starter: UserRef,
+    description?: string,
+    authorities?: UserRef[],
+    moderators?: UserRef[],
+    uniqueKey?: string
+  ) {
+    super();
+    this.slug = slug;
+    this.name = name;
+    this.starter = starter;
+    this.description = description;
+    this.authorities = authorities ?? [];
+    this.moderators = moderators ?? [];
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 export class FireStarterDto extends SubmitCallDTO {
@@ -58,6 +77,13 @@ export class FireStarterDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   public fee: FeeVerificationDto;
+
+  constructor(fire: FireDto, fee: FeeVerificationDto, uniqueKey: string) {
+    super();
+    this.fire = fire;
+    this.fee = fee;
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 export class FetchFiresDto extends ChainCallDTO {
@@ -72,6 +98,13 @@ export class FetchFiresDto extends ChainCallDTO {
   @IsOptional()
   @IsNumber()
   public limit?: number;
+
+  constructor(slug?: string, bookmark?: string, limit?: number) {
+    super();
+    this.slug = slug;
+    this.bookmark = bookmark;
+    this.limit = limit;
+  }
 }
 
 export class FireResDto extends ChainCallDTO {
@@ -91,9 +124,34 @@ export class FetchFiresResDto extends ChainCallDTO {
   @IsOptional()
   @IsNotEmpty()
   nextPageBookmark?: string;
+
+  constructor(results: Fire[], nextPageBookmark?: string) {
+    super();
+    this.results = results;
+    this.nextPageBookmark = nextPageBookmark;
+  }
 }
 
-export class FetchSubmissionsDto extends ChainCallDTO {}
+export class FetchSubmissionsDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public fire?: string;
+
+  @IsOptional()
+  @IsString()
+  public bookmark?: string;
+
+  @IsOptional()
+  @IsNumber()
+  public limit?: number;
+
+  constructor(fire?: string, bookmark?: string, limit?: number) {
+    super();
+    this.fire = fire;
+    this.bookmark = bookmark;
+    this.limit = limit;
+  }
+}
 
 export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
@@ -115,6 +173,23 @@ export class SubmissionDto extends ChainCallDTO {
   @IsOptional()
   @IsString()
   url?: string;
+
+  constructor(
+    name: string,
+    fire: string,
+    contributor?: string,
+    description?: string,
+    url?: string,
+    uniqueKey?: string
+  ) {
+    super();
+    this.name = name;
+    this.fire = fire;
+    this.contributor = contributor;
+    this.description = description;
+    this.url = url;
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 export interface SubmissionResDto {
@@ -134,6 +209,13 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   fee: FeeVerificationDto;
+
+  constructor(submission: SubmissionDto, fee: FeeVerificationDto, uniqueKey: string) {
+    super();
+    this.submission = submission;
+    this.fee = fee;
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 export class VoteDto extends SubmitCallDTO {
@@ -151,6 +233,14 @@ export class VoteDto extends SubmitCallDTO {
   @BigNumberIsPositive()
   @BigNumberProperty()
   quantity: BigNumber;
+
+  constructor(entryType: string, entryParent: string, entry: string, quantity: BigNumber) {
+    super();
+    this.entryType = entryType;
+    this.entryParent = entryParent;
+    this.entry = entry;
+    this.quantity = quantity;
+  }
 }
 
 export class CastVoteDto extends SubmitCallDTO {
@@ -161,6 +251,13 @@ export class CastVoteDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   fee: FeeVerificationDto;
+
+  constructor(vote: VoteDto, fee: FeeVerificationDto, uniqueKey: string) {
+    super();
+    this.vote = vote;
+    this.fee = fee;
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 export class FetchVotesDto extends ChainCallDTO {
@@ -183,6 +280,15 @@ export class FetchVotesDto extends ChainCallDTO {
   @IsOptional()
   @IsNumber()
   limit?: number;
+
+  constructor(fire?: string, submission?: string, bookmark?: string, limit?: number, uniqueKey?: string) {
+    super();
+    this.fire = fire;
+    this.submission = submission;
+    this.bookmark = bookmark;
+    this.limit = limit;
+    this.uniqueKey = uniqueKey;
+  }
 }
 
 @JSONSchema({
@@ -196,6 +302,12 @@ export class VoteResult extends ChainCallDTO {
   @ValidateNested()
   @Type(() => Vote)
   value: Vote;
+
+  constructor(key: string, value: Vote) {
+    super();
+    this.key = key;
+    this.value = value;
+  }
 }
 
 @JSONSchema({
@@ -211,6 +323,12 @@ export class FetchVotesResDto extends ChainCallDTO {
   @IsOptional()
   @IsNotEmpty()
   nextPageBookmark?: string;
+
+  constructor(results: VoteResult[], nextPageBookmark?: string) {
+    super();
+    this.results = results;
+    this.nextPageBookmark = nextPageBookmark;
+  }
 }
 
 export class CountVotesDto extends SubmitCallDTO {
@@ -226,4 +344,12 @@ export class CountVotesDto extends SubmitCallDTO {
   @ArrayMaxSize(1000)
   @IsString({ each: true })
   votes: string[];
+
+  constructor(votes: string[], uniqueKey: string, fire?: string, submission?: string) {
+    super();
+    this.fire = fire;
+    this.submission = submission;
+    this.votes = votes;
+    this.uniqueKey = uniqueKey;
+  }
 }
