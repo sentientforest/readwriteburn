@@ -1,10 +1,31 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "..",
     "noEmit": true,
     "strictNullChecks": true,
     "declarationMap": true,
-    "sourceMap": true
-  }
+    "sourceMap": true,
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "target": "ES2019",
+    "lib": ["ES2019"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "strictPropertyInitialization": false
+  },
+  "exclude": ["node_modules"],
+  "include": [
+    "package.json",
+    "**/*.ts",
+    "../src/**/*.ts"
+  ]
 }
