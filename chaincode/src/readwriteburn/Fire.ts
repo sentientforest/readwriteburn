@@ -25,7 +25,12 @@ export class Fire extends ChainObject {
   @IsUserRef()
   public starter: UserRef;
 
-  constructor(slug: string, name: string, starter: UserRef, description: string | undefined) {
+  constructor(
+    slug: string,
+    name: string,
+    starter: UserRef,
+    description: string | undefined
+  ) {
     super();
     this.slug = slug;
     this.name = name;

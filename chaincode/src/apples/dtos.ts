@@ -103,7 +103,13 @@ export class FetchTreesDto extends ChainCallDTO {
   @IsOptional()
   public readonly limit?: number;
 
-  constructor(plantedBy?: string, variety?: Variety, index?: number, bookmark?: string, limit?: number) {
+  constructor(
+    plantedBy?: string,
+    variety?: Variety,
+    index?: number,
+    bookmark?: string,
+    limit?: number
+  ) {
     super();
     this.plantedBy = plantedBy;
     this.variety = variety;

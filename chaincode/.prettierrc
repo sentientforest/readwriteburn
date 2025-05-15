@@ -1,6 +1,6 @@
 {
   "singleQuote": false,
-  "printWidth": 110,
+  "printWidth": 90,
   "tabWidth": 2,
   "trailingComma": "none",
   "importOrder": ["^@oclif/(.*)$", "^dotenv/(.*)$", "^dd-trace(.*)$", "tracer(.*)$", "<THIRD_PARTY_MODULES>", "^[./]"],

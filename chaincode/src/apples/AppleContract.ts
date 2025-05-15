@@ -15,7 +15,13 @@
 import { Evaluate, GalaChainContext, GalaContract, Submit } from "@gala-chain/chaincode";
 
 import { version } from "../../package.json";
-import { FetchTreesDto, PagedTreesDto, PickAppleDto, PlantAppleTreeDto, PlantAppleTreesDto } from "./dtos";
+import {
+  FetchTreesDto,
+  PagedTreesDto,
+  PickAppleDto,
+  PlantAppleTreeDto,
+  PlantAppleTreesDto
+} from "./dtos";
 import { fetchTrees } from "./fetchTrees";
 import { pickApple } from "./pickApple";
 import { plantTree, plantTrees } from "./plantTrees";
@@ -43,7 +49,10 @@ export class AppleContract extends GalaContract {
     in: FetchTreesDto,
     out: PagedTreesDto
   })
-  public async FetchTrees(ctx: GalaChainContext, dto: FetchTreesDto): Promise<PagedTreesDto> {
+  public async FetchTrees(
+    ctx: GalaChainContext,
+    dto: FetchTreesDto
+  ): Promise<PagedTreesDto> {
     return await fetchTrees(ctx, dto);
   }
 

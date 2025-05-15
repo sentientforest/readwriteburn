@@ -1,4 +1,9 @@
-import { BigNumberIsPositive, BigNumberProperty, ChainKey, ChainObject } from "@gala-chain/api";
+import {
+  BigNumberIsPositive,
+  BigNumberProperty,
+  ChainKey,
+  ChainObject
+} from "@gala-chain/api";
 import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
@@ -30,7 +35,13 @@ export class VoteCount extends ChainObject {
   @IsString()
   ranking?: string;
 
-  constructor(entryType: string, entryParent: string, entry: string, quantity: BigNumber, ranking?: string) {
+  constructor(
+    entryType: string,
+    entryParent: string,
+    entry: string,
+    quantity: BigNumber,
+    ranking?: string
+  ) {
     super();
     this.entryType = entryType;
     this.entryParent = entryParent;

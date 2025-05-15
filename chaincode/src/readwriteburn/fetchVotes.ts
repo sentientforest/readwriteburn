@@ -8,7 +8,10 @@ import { plainToInstance } from "class-transformer";
 import { Vote } from "./Vote";
 import { FetchVotesDto, FetchVotesResDto, VoteResult } from "./dtos";
 
-export async function fetchVotes(ctx: GalaChainContext, dto: FetchVotesDto): Promise<FetchVotesResDto> {
+export async function fetchVotes(
+  ctx: GalaChainContext,
+  dto: FetchVotesDto
+): Promise<FetchVotesResDto> {
   const { bookmark, limit } = dto;
 
   const attributes = takeUntilUndefined(dto.fire, dto.submission);

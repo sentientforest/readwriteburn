@@ -21,7 +21,10 @@ import {
 import { AppleTree } from "./AppleTree";
 import { FetchTreesDto, PagedTreesDto } from "./dtos";
 
-export async function fetchTrees(ctx: GalaChainContext, dto: FetchTreesDto): Promise<PagedTreesDto> {
+export async function fetchTrees(
+  ctx: GalaChainContext,
+  dto: FetchTreesDto
+): Promise<PagedTreesDto> {
   const keyParts = takeUntilUndefined(dto.plantedBy, dto.variety, dto.index?.toString());
 
   const { results, metadata } = await getObjectsByPartialCompositeKeyWithPagination(

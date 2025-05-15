@@ -18,16 +18,24 @@ import { GalaChainContext, getObjectByKey, putChainObject } from "@gala-chain/ch
 import { AppleTree } from "./AppleTree";
 import { AppleTreeDto, PlantAppleTreesDto } from "./dtos";
 
-export async function plantTrees(ctx: GalaChainContext, dto: PlantAppleTreesDto): Promise<AppleTree[]> {
+export async function plantTrees(
+  ctx: GalaChainContext,
+  dto: PlantAppleTreesDto
+): Promise<AppleTree[]> {
   const ops = dto.trees.map((tree) => plantTree(ctx, tree));
 
   return await Promise.all(ops);
 }
 
-export async function plantTree(ctx: GalaChainContext, dto: AppleTreeDto): Promise<AppleTree> {
+export async function plantTree(
+  ctx: GalaChainContext,
+  dto: AppleTreeDto
+): Promise<AppleTree> {
   const tree = new AppleTree(ctx.callingUser, dto.variety, dto.index, ctx.txUnixTime);
 
-  const existingTree = await getObjectByKey(ctx, AppleTree, tree.getCompositeKey()).catch(() => undefined);
+  const existingTree = await getObjectByKey(ctx, AppleTree, tree.getCompositeKey()).catch(
+    () => undefined
+  );
 
   if (existingTree !== undefined) {
     throw new ConflictError("Tree already exists on chain", existingTree.toPlainObject());

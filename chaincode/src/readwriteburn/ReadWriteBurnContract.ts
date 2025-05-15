@@ -36,7 +36,10 @@ export class ReadWriteBurnContract extends GalaContract {
     in: FireStarterDto,
     out: FireResDto
   })
-  public async FireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<FireResDto> {
+  public async FireStarter(
+    ctx: GalaChainContext,
+    dto: FireStarterDto
+  ): Promise<FireResDto> {
     return fireStarter(ctx, dto);
   }
 
@@ -44,14 +47,20 @@ export class ReadWriteBurnContract extends GalaContract {
     in: FetchFiresDto,
     out: FetchFiresResDto
   })
-  public async FetchFires(ctx: GalaChainContext, dto: FetchFiresDto): Promise<FetchFiresResDto> {
+  public async FetchFires(
+    ctx: GalaChainContext,
+    dto: FetchFiresDto
+  ): Promise<FetchFiresResDto> {
     return fetchFires(ctx, dto);
   }
 
   @Submit({
     in: ContributeSubmissionDto
   })
-  public async ContributeSubmission(ctx: GalaChainContext, dto: ContributeSubmissionDto): Promise<void> {
+  public async ContributeSubmission(
+    ctx: GalaChainContext,
+    dto: ContributeSubmissionDto
+  ): Promise<void> {
     return contributeSubmission(ctx, dto);
   }
 
@@ -73,7 +82,10 @@ export class ReadWriteBurnContract extends GalaContract {
     in: FetchVotesDto,
     out: FetchVotesResDto
   })
-  public async FetchVotes(ctx: GalaChainContext, dto: FetchVotesDto): Promise<FetchVotesResDto> {
+  public async FetchVotes(
+    ctx: GalaChainContext,
+    dto: FetchVotesDto
+  ): Promise<FetchVotesResDto> {
     return fetchVotes(ctx, dto);
   }
 }

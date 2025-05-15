@@ -13,7 +13,10 @@ import { VoteRanking } from "./VoteRanking";
 import { VoterReceipt } from "./VoterReceipt";
 import { CountVotesDto } from "./dtos";
 
-export async function countVotes(ctx: GalaChainContext, dto: CountVotesDto): Promise<void> {
+export async function countVotes(
+  ctx: GalaChainContext,
+  dto: CountVotesDto
+): Promise<void> {
   for (const id of dto.votes) {
     const vote: Vote = await getObjectByKey(ctx, Vote, id);
 
@@ -25,7 +28,12 @@ export async function countVotes(ctx: GalaChainContext, dto: CountVotesDto): Pro
 
     const count: VoteCount = await getObjectByKey(ctx, VoteCount, countKey).catch((e) => {
       if (e instanceof ObjectNotFoundError) {
-        return new VoteCount(vote.entryType, vote.entryParent, vote.entry, new BigNumber("0"));
+        return new VoteCount(
+          vote.entryType,
+          vote.entryParent,
+          vote.entry,
+          new BigNumber("0")
+        );
       } else {
         throw e;
       }

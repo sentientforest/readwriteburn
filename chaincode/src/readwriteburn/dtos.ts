@@ -383,7 +383,9 @@ export class VoteResult extends ChainCallDTO {
   @JSONSchema({ description: "Chain key identifying object on chain." })
   key: string;
 
-  @JSONSchema({ description: "Chain entry value identified by corresponding key on chain." })
+  @JSONSchema({
+    description: "Chain entry value identified by corresponding key on chain."
+  })
   @ValidateNested()
   @Type(() => Vote)
   value: Vote;

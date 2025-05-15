@@ -4,7 +4,10 @@ import { GalaChainContext, objectExists, putChainObject } from "@gala-chain/chai
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
 import { FireResDto, FireStarterDto, IFireResDto } from "./dtos";
 
-export async function fireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<FireResDto> {
+export async function fireStarter(
+  ctx: GalaChainContext,
+  dto: FireStarterDto
+): Promise<FireResDto> {
   const { slug, name, starter, description, authorities, moderators } = dto.fire;
 
   const fire = new Fire(slug, name, starter, description);

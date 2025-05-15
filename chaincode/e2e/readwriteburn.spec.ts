@@ -10,7 +10,12 @@ import {
   commonContractAPI,
   randomUniqueKey
 } from "@gala-chain/api";
-import { AdminChainClients, TestClients, transactionErrorKey, transactionSuccess } from "@gala-chain/test";
+import {
+  AdminChainClients,
+  TestClients,
+  transactionErrorKey,
+  transactionSuccess
+} from "@gala-chain/test";
 import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
@@ -214,27 +219,41 @@ interface ReadWriteBurnContractAPI {
   FetchVotes(dto: FetchVotesDto): Promise<GalaChainResponse<FetchVotesResDto>>;
 }
 
-function readwriteburnContractAPI(client: ChainClient): ReadWriteBurnContractAPI & CommonContractAPI {
+function readwriteburnContractAPI(
+  client: ChainClient
+): ReadWriteBurnContractAPI & CommonContractAPI {
   return {
     ...commonContractAPI(client),
 
     FireStarter(dto: FireStarterDto) {
-      return client.submitTransaction("FireStarter", dto) as Promise<GalaChainResponse<FireResDto>>;
+      return client.submitTransaction("FireStarter", dto) as Promise<
+        GalaChainResponse<FireResDto>
+      >;
     },
     FetchFires(dto: FetchFiresDto) {
-      return client.evaluateTransaction("FetchFires", dto) as Promise<GalaChainResponse<FetchFiresResDto>>;
+      return client.evaluateTransaction("FetchFires", dto) as Promise<
+        GalaChainResponse<FetchFiresResDto>
+      >;
     },
     ContributeSubmission(dto: ContributeSubmissionDto) {
-      return client.submitTransaction("ContributeSubmission", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("ContributeSubmission", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     },
     CastVote(dto: CastVoteDto) {
-      return client.submitTransaction("CastVote", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("CastVote", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     },
     CountVotes(dto: CountVotesDto) {
-      return client.submitTransaction("CountVotes", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("CountVotes", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     },
     FetchVotes(dto: FetchVotesDto) {
-      return client.submitTransaction("FetchVotes", dto) as Promise<GalaChainResponse<FetchVotesResDto>>;
+      return client.submitTransaction("FetchVotes", dto) as Promise<
+        GalaChainResponse<FetchVotesResDto>
+      >;
     }
   };
 }

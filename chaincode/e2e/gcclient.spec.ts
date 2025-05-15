@@ -51,7 +51,10 @@ describeIfNonMockedChaincode("Chaincode client (PartnerOrg1)", () => {
       orgMsp: "PartnerOrg1",
       userId: "admin",
       userSecret: "adminpw",
-      connectionProfilePath: path.resolve(networkRoot(), "connection-profiles/cpp-partner.json")
+      connectionProfilePath: path.resolve(
+        networkRoot(),
+        "connection-profiles/cpp-partner.json"
+      )
     };
 
     const contract = {
@@ -60,7 +63,10 @@ describeIfNonMockedChaincode("Chaincode client (PartnerOrg1)", () => {
       contract: "PublicKeyContract"
     };
 
-    client = gcclient.forConnectionProfile(params).forContract(contract).extendAPI(customAPI);
+    client = gcclient
+      .forConnectionProfile(params)
+      .forContract(contract)
+      .extendAPI(customAPI);
   });
 
   afterAll(async () => {
@@ -70,13 +76,17 @@ describeIfNonMockedChaincode("Chaincode client (PartnerOrg1)", () => {
   it("should get user profile", async () => {
     // Given
     const adminPrivateKey = getAdminPrivateKey();
-    const adminEthAddress = signatures.getEthAddress(signatures.getPublicKey(adminPrivateKey));
+    const adminEthAddress = signatures.getEthAddress(
+      signatures.getPublicKey(adminPrivateKey)
+    );
 
     // When
     const profile = await client.GetProfile(adminPrivateKey);
 
     // Then
-    expect(profile).toEqual(expect.objectContaining({ alias: "client|admin", ethAddress: adminEthAddress }));
+    expect(profile).toEqual(
+      expect.objectContaining({ alias: "client|admin", ethAddress: adminEthAddress })
+    );
   });
 });
 
@@ -88,7 +98,10 @@ describeIfNonMockedChaincode("Chaincode client (CuratorOrg)", () => {
       orgMsp: "CuratorOrg",
       userId: "admin",
       userSecret: "adminpw",
-      connectionProfilePath: path.resolve(networkRoot(), "connection-profiles/cpp-curator.json")
+      connectionProfilePath: path.resolve(
+        networkRoot(),
+        "connection-profiles/cpp-curator.json"
+      )
     };
 
     const contract: ContractConfig = {
@@ -125,7 +138,10 @@ describeIfNonMockedChaincode("Chaincode client (CuratorOrg)", () => {
 
     const newUserProfile = await client.GetProfile(newUser.privateKey);
     expect(newUserProfile).toEqual(
-      expect.objectContaining({ alias: newUser.identityKey, ethAddress: newUser.ethAddress })
+      expect.objectContaining({
+        alias: newUser.identityKey,
+        ethAddress: newUser.ethAddress
+      })
     );
   });
 });
@@ -159,13 +175,17 @@ describe.skip("REST API client", () => {
   it("should get user profile", async () => {
     // Given
     const adminPrivateKey = getAdminPrivateKey();
-    const adminEthAddress = signatures.getEthAddress(signatures.getPublicKey(adminPrivateKey));
+    const adminEthAddress = signatures.getEthAddress(
+      signatures.getPublicKey(adminPrivateKey)
+    );
 
     // When
     const profile = await client.GetProfile(adminPrivateKey);
 
     // Then
-    expect(profile).toEqual(expect.objectContaining({ alias: "client|admin", ethAddress: adminEthAddress }));
+    expect(profile).toEqual(
+      expect.objectContaining({ alias: "client|admin", ethAddress: adminEthAddress })
+    );
   });
 });
 

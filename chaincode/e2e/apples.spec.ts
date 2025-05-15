@@ -22,7 +22,12 @@ import {
   commonContractAPI,
   randomUniqueKey
 } from "@gala-chain/api";
-import { AdminChainClients, TestClients, transactionErrorKey, transactionSuccess } from "@gala-chain/test";
+import {
+  AdminChainClients,
+  TestClients,
+  transactionErrorKey,
+  transactionSuccess
+} from "@gala-chain/test";
 import { plainToInstance } from "class-transformer";
 
 import {
@@ -90,8 +95,16 @@ describe("Apple trees", () => {
     expect(response).toEqual(
       transactionSuccess({
         trees: [
-          expect.objectContaining({ plantedBy: user.identityKey, variety: Variety.GALA, index: 1 }),
-          expect.objectContaining({ plantedBy: user.identityKey, variety: Variety.GALA, index: 3 })
+          expect.objectContaining({
+            plantedBy: user.identityKey,
+            variety: Variety.GALA,
+            index: 1
+          }),
+          expect.objectContaining({
+            plantedBy: user.identityKey,
+            variety: Variety.GALA,
+            index: 3
+          })
         ],
         bookmark: ""
       })
@@ -100,9 +113,12 @@ describe("Apple trees", () => {
 
   test("Fail to pick a GOLDEN_DELICIOUS apple because tree is too young", async () => {
     // Given
-    const dto = new PickAppleDto(user.identityKey, Variety.GOLDEN_DELICIOUS, 2, randomUniqueKey()).signed(
-      user.privateKey
-    );
+    const dto = new PickAppleDto(
+      user.identityKey,
+      Variety.GOLDEN_DELICIOUS,
+      2,
+      randomUniqueKey()
+    ).signed(user.privateKey);
 
     // When
     const response = await client.apples.PickApple(dto);
@@ -114,7 +130,12 @@ describe("Apple trees", () => {
   test("Support Dry Run operations", async () => {
     // Given
     const dto = new PlantAppleTreeDto(Variety.HONEYCRISP, 10, randomUniqueKey());
-    const saved = new AppleTree(user.identityKey, Variety.HONEYCRISP, 10, new Date().getTime());
+    const saved = new AppleTree(
+      user.identityKey,
+      Variety.HONEYCRISP,
+      10,
+      new Date().getTime()
+    );
 
     // When
     const response = await client.apples.DryRun("PlantTree", user.publicKey, dto);
@@ -136,8 +157,18 @@ describe("Apple trees", () => {
   test("Support Batch operations", async () => {
     // Given
     const plant = new PlantAppleTreeDto(Variety.HONEYCRISP, 10, randomUniqueKey());
-    const pick1 = new PickAppleDto(user.identityKey, plant.variety, plant.index, randomUniqueKey());
-    const pick2 = new PickAppleDto(user.identityKey, plant.variety, plant.index, randomUniqueKey());
+    const pick1 = new PickAppleDto(
+      user.identityKey,
+      plant.variety,
+      plant.index,
+      randomUniqueKey()
+    );
+    const pick2 = new PickAppleDto(
+      user.identityKey,
+      plant.variety,
+      plant.index,
+      randomUniqueKey()
+    );
 
     const batch = plainToInstance(BatchDto, {
       uniqueKey: randomUniqueKey(),
@@ -174,19 +205,27 @@ function appleContractAPI(client: ChainClient): AppleContractAPI & CommonContrac
     ...commonContractAPI(client),
 
     PlantTree(dto: PlantAppleTreeDto) {
-      return client.submitTransaction("PlantTree", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("PlantTree", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     },
 
     PlantTrees(dto: PlantAppleTreesDto) {
-      return client.submitTransaction("PlantTrees", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("PlantTrees", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     },
 
     FetchTrees(dto: FetchTreesDto) {
-      return client.evaluateTransaction("FetchTrees", dto) as Promise<GalaChainResponse<PagedTreesDto>>;
+      return client.evaluateTransaction("FetchTrees", dto) as Promise<
+        GalaChainResponse<PagedTreesDto>
+      >;
     },
 
     PickApple(dto: PickAppleDto) {
-      return client.submitTransaction("PickApple", dto) as Promise<GalaChainResponse<void>>;
+      return client.submitTransaction("PickApple", dto) as Promise<
+        GalaChainResponse<void>
+      >;
     }
   };
 }
