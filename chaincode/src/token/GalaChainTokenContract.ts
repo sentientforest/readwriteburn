@@ -121,7 +121,10 @@ import { Info } from "fabric-contract-api";
 
 import { version } from "../../package.json";
 
-@Info({ title: "GalaChainToken", description: "Contract for managing GalaChain tokens" })
+@Info({
+  title: "GalaChainToken",
+  description: "Contract for managing GalaChain tokens"
+})
 export default class GalaChainTokenContract extends GalaContract {
   constructor() {
     super("GalaChainToken", version);
@@ -132,7 +135,10 @@ export default class GalaChainTokenContract extends GalaContract {
     out: TokenClassKey,
     ...requireCuratorAuth
   })
-  public async CreateTokenClass(ctx: GalaChainContext, dto: CreateTokenClassDto): Promise<TokenClassKey> {
+  public async CreateTokenClass(
+    ctx: GalaChainContext,
+    dto: CreateTokenClassDto
+  ): Promise<TokenClassKey> {
     const authorities = dto.authorities
       ? await Promise.all(dto.authorities.map((a) => resolveUserAlias(ctx, a)))
       : [ctx.callingUser];
@@ -151,7 +157,8 @@ export default class GalaChainTokenContract extends GalaContract {
       contractAddress: dto.contractAddress,
       maxSupply: dto.maxSupply ?? CreateTokenClassDto.DEFAULT_MAX_SUPPLY,
       maxCapacity: dto.maxCapacity ?? CreateTokenClassDto.DEFAULT_MAX_CAPACITY,
-      totalMintAllowance: dto.totalMintAllowance ?? CreateTokenClassDto.INITIAL_MINT_ALLOWANCE,
+      totalMintAllowance:
+        dto.totalMintAllowance ?? CreateTokenClassDto.INITIAL_MINT_ALLOWANCE,
       totalSupply: dto.totalSupply ?? CreateTokenClassDto.INITIAL_TOTAL_SUPPLY,
       totalBurned: dto.totalBurned ?? CreateTokenClassDto.INITIAL_TOTAL_BURNED,
       authorities
@@ -163,7 +170,10 @@ export default class GalaChainTokenContract extends GalaContract {
     out: TokenClassKey,
     ...requireCuratorAuth
   })
-  public async UpdateTokenClass(ctx: GalaChainContext, dto: UpdateTokenClassDto): Promise<TokenClassKey> {
+  public async UpdateTokenClass(
+    ctx: GalaChainContext,
+    dto: UpdateTokenClassDto
+  ): Promise<TokenClassKey> {
     const authorities = dto.authorities
       ? await Promise.all(dto.authorities.map((a) => resolveUserAlias(ctx, a)))
       : undefined;
@@ -175,7 +185,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: FetchTokenClassesDto,
     out: { arrayOf: TokenClass }
   })
-  public FetchTokenClasses(ctx: GalaChainContext, dto: FetchTokenClassesDto): Promise<TokenClass[]> {
+  public FetchTokenClasses(
+    ctx: GalaChainContext,
+    dto: FetchTokenClassesDto
+  ): Promise<TokenClass[]> {
     return fetchTokenClasses(ctx, dto.tokenClasses);
   }
 
@@ -195,7 +208,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: GrantAllowanceDto,
     out: { arrayOf: TokenAllowance }
   })
-  public GrantAllowance(ctx: GalaChainContext, dto: GrantAllowanceDto): Promise<TokenAllowance[]> {
+  public GrantAllowance(
+    ctx: GalaChainContext,
+    dto: GrantAllowanceDto
+  ): Promise<TokenAllowance[]> {
     return grantAllowance(ctx, {
       tokenInstance: dto.tokenInstance,
       allowanceType: dto.allowanceType,
@@ -209,7 +225,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: RefreshAllowancesDto,
     out: { arrayOf: TokenAllowance }
   })
-  public RefreshAllowances(ctx: GalaChainContext, dto: RefreshAllowancesDto): Promise<TokenAllowance[]> {
+  public RefreshAllowances(
+    ctx: GalaChainContext,
+    dto: RefreshAllowancesDto
+  ): Promise<TokenAllowance[]> {
     return refreshAllowances(ctx, dto.allowances);
   }
 
@@ -224,7 +243,9 @@ export default class GalaChainTokenContract extends GalaContract {
   ): Promise<FullAllowanceCheckResDto> {
     return fullAllowanceCheck(ctx, {
       owner: dto.owner ? await resolveUserAlias(ctx, dto.owner) : ctx.callingUser,
-      grantedTo: dto.grantedTo ? await resolveUserAlias(ctx, dto.grantedTo) : ctx.callingUser,
+      grantedTo: dto.grantedTo
+        ? await resolveUserAlias(ctx, dto.grantedTo)
+        : ctx.callingUser,
       allowanceType: dto.allowanceType ?? AllowanceType.Use,
       collection: dto.collection,
       category: dto.category,
@@ -238,7 +259,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: FetchAllowancesDto,
     out: FetchAllowancesResponse
   })
-  public FetchAllowances(ctx: GalaChainContext, dto: FetchAllowancesDto): Promise<FetchAllowancesResponse> {
+  public FetchAllowances(
+    ctx: GalaChainContext,
+    dto: FetchAllowancesDto
+  ): Promise<FetchAllowancesResponse> {
     return fetchAllowancesWithPagination(ctx, {
       ...dto,
       limit: dto.limit ?? FetchAllowancesDto.DEFAULT_LIMIT
@@ -249,7 +273,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: DeleteAllowancesDto,
     out: "number"
   })
-  public DeleteAllowances(ctx: GalaChainContext, dto: DeleteAllowancesDto): Promise<number> {
+  public DeleteAllowances(
+    ctx: GalaChainContext,
+    dto: DeleteAllowancesDto
+  ): Promise<number> {
     return deleteAllowances(ctx, dto);
   }
 
@@ -258,8 +285,14 @@ export default class GalaChainTokenContract extends GalaContract {
     in: FetchBalancesDto,
     out: { arrayOf: TokenBalance }
   })
-  public async FetchBalances(ctx: GalaChainContext, dto: FetchBalancesDto): Promise<TokenBalance[]> {
-    return fetchBalances(ctx, { ...dto, owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser) });
+  public async FetchBalances(
+    ctx: GalaChainContext,
+    dto: FetchBalancesDto
+  ): Promise<TokenBalance[]> {
+    return fetchBalances(ctx, {
+      ...dto,
+      owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser)
+    });
   }
 
   @GalaTransaction({
@@ -281,7 +314,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: HighThroughputMintTokenDto,
     out: FulfillMintDto
   })
-  public async RequestMint(ctx: GalaChainContext, dto: HighThroughputMintTokenDto): Promise<FulfillMintDto> {
+  public async RequestMint(
+    ctx: GalaChainContext,
+    dto: HighThroughputMintTokenDto
+  ): Promise<FulfillMintDto> {
     return requestMint(ctx, {
       tokenClass: dto.tokenClass,
       owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser),
@@ -299,7 +335,10 @@ export default class GalaChainTokenContract extends GalaContract {
     enforceUniqueKey: true
     // no signature verification
   })
-  public async FulfillMint(ctx: GalaChainContext, dto: FulfillMintDto): Promise<TokenInstanceKey[]> {
+  public async FulfillMint(
+    ctx: GalaChainContext,
+    dto: FulfillMintDto
+  ): Promise<TokenInstanceKey[]> {
     return fulfillMintRequest(ctx, {
       ...dto,
       callingUser: ctx.callingUser
@@ -338,7 +377,9 @@ export default class GalaChainTokenContract extends GalaContract {
     dto: HighThroughputMintTokenDto
   ): Promise<TokenInstanceKey[]> {
     return Promise.reject(
-      new Error(`HighThroughputMint is a sequence call: Execute RequestMint and FulfillMint sequentially.`)
+      new Error(
+        `HighThroughputMint is a sequence call: Execute RequestMint and FulfillMint sequentially.`
+      )
     );
   }
 
@@ -358,7 +399,12 @@ export default class GalaChainTokenContract extends GalaContract {
       additionalKey: dto.additionalKey
     });
 
-    return mintRequestsByTimeRange(ctx, mintRequestsClassKey, dto.startTimestamp, dto.endTimestamp);
+    return mintRequestsByTimeRange(
+      ctx,
+      mintRequestsClassKey,
+      dto.startTimestamp,
+      dto.endTimestamp
+    );
   }
 
   /**
@@ -370,7 +416,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: MintTokenDto,
     out: { arrayOf: TokenInstanceKey }
   })
-  public async MintToken(ctx: GalaChainContext, dto: MintTokenDto): Promise<TokenInstanceKey[]> {
+  public async MintToken(
+    ctx: GalaChainContext,
+    dto: MintTokenDto
+  ): Promise<TokenInstanceKey[]> {
     return mintToken(ctx, {
       tokenClassKey: dto.tokenClass,
       owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser),
@@ -400,7 +449,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: BatchMintTokenDto,
     out: { arrayOf: TokenInstanceKey }
   })
-  public async BatchMintToken(ctx: GalaChainContext, dto: BatchMintTokenDto): Promise<TokenInstanceKey[]> {
+  public async BatchMintToken(
+    ctx: GalaChainContext,
+    dto: BatchMintTokenDto
+  ): Promise<TokenInstanceKey[]> {
     const params = dto.mintDtos.map(async (d) => ({
       tokenClassKey: d.tokenClass,
       owner: await resolveUserAlias(ctx, d.owner ?? ctx.callingUser),
@@ -429,7 +481,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: ReleaseTokenDto,
     out: TokenBalance
   })
-  public ReleaseToken(ctx: GalaChainContext, dto: ReleaseTokenDto): Promise<TokenBalance> {
+  public ReleaseToken(
+    ctx: GalaChainContext,
+    dto: ReleaseTokenDto
+  ): Promise<TokenBalance> {
     return releaseToken(ctx, {
       tokenInstanceKey: dto.tokenInstance
     });
@@ -439,10 +494,15 @@ export default class GalaChainTokenContract extends GalaContract {
     in: LockTokenDto,
     out: TokenBalance
   })
-  public async LockToken(ctx: GalaChainContext, dto: LockTokenDto): Promise<TokenBalance> {
+  public async LockToken(
+    ctx: GalaChainContext,
+    dto: LockTokenDto
+  ): Promise<TokenBalance> {
     return lockToken(ctx, {
       owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser),
-      lockAuthority: dto.lockAuthority ? await resolveUserAlias(ctx, dto.lockAuthority) : undefined,
+      lockAuthority: dto.lockAuthority
+        ? await resolveUserAlias(ctx, dto.lockAuthority)
+        : undefined,
       tokenInstanceKey: dto.tokenInstance,
       quantity: dto.quantity,
       allowancesToUse: dto.useAllowances ?? [],
@@ -457,8 +517,13 @@ export default class GalaChainTokenContract extends GalaContract {
     in: LockTokensDto,
     out: { arrayOf: TokenBalance }
   })
-  public async LockTokens(ctx: GalaChainContext, dto: LockTokensDto): Promise<TokenBalance[]> {
-    const lockAuthority = dto.lockAuthority ? await resolveUserAlias(ctx, dto.lockAuthority) : undefined;
+  public async LockTokens(
+    ctx: GalaChainContext,
+    dto: LockTokensDto
+  ): Promise<TokenBalance[]> {
+    const lockAuthority = dto.lockAuthority
+      ? await resolveUserAlias(ctx, dto.lockAuthority)
+      : undefined;
     const tokenInstances = dto.tokenInstances.map(async (d) => ({
       tokenInstanceKey: d.tokenInstanceKey,
       quantity: d.quantity,
@@ -478,7 +543,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: UnlockTokenDto,
     out: TokenBalance
   })
-  public async UnlockToken(ctx: GalaChainContext, dto: UnlockTokenDto): Promise<TokenBalance> {
+  public async UnlockToken(
+    ctx: GalaChainContext,
+    dto: UnlockTokenDto
+  ): Promise<TokenBalance> {
     return unlockToken(ctx, {
       tokenInstanceKey: dto.tokenInstance,
       name: dto.lockedHoldName ?? undefined,
@@ -491,7 +559,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: UnlockTokensDto,
     out: { arrayOf: TokenBalance }
   })
-  public async UnlockTokens(ctx: GalaChainContext, dto: UnlockTokensDto): Promise<TokenBalance[]> {
+  public async UnlockTokens(
+    ctx: GalaChainContext,
+    dto: UnlockTokensDto
+  ): Promise<TokenBalance[]> {
     const params = dto.tokenInstances.map(async (d) => ({
       tokenInstanceKey: d.tokenInstanceKey,
       quantity: d.quantity,
@@ -506,7 +577,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: TransferTokenDto,
     out: { arrayOf: TokenBalance }
   })
-  public async TransferToken(ctx: GalaChainContext, dto: TransferTokenDto): Promise<TokenBalance[]> {
+  public async TransferToken(
+    ctx: GalaChainContext,
+    dto: TransferTokenDto
+  ): Promise<TokenBalance[]> {
     return transferToken(ctx, {
       from: await resolveUserAlias(ctx, dto.from ?? ctx.callingUser),
       to: await resolveUserAlias(ctx, dto.to),
@@ -521,7 +595,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: BurnTokensDto,
     out: { arrayOf: TokenBurn }
   })
-  public async BurnTokens(ctx: GalaChainContext, dto: BurnTokensDto): Promise<TokenBurn[]> {
+  public async BurnTokens(
+    ctx: GalaChainContext,
+    dto: BurnTokensDto
+  ): Promise<TokenBurn[]> {
     return burnTokens(ctx, {
       owner: await resolveUserAlias(ctx, dto.owner ?? ctx.callingUser),
       toBurn: dto.tokenInstances
@@ -624,7 +701,10 @@ export default class GalaChainTokenContract extends GalaContract {
     in: CreateVestingTokenDto,
     out: VestingToken
   })
-  public async CreateVestingToken(ctx: GalaChainContext, dto: CreateVestingTokenDto): Promise<VestingToken> {
+  public async CreateVestingToken(
+    ctx: GalaChainContext,
+    dto: CreateVestingTokenDto
+  ): Promise<VestingToken> {
     const authorities = dto.tokenClass.authorities
       ? await Promise.all(dto.tokenClass.authorities.map((a) => resolveUserAlias(ctx, a)))
       : [ctx.callingUser];
@@ -643,7 +723,8 @@ export default class GalaChainTokenContract extends GalaContract {
       contractAddress: dto.tokenClass.contractAddress,
       maxSupply: dto.tokenClass.maxSupply ?? CreateTokenClassDto.DEFAULT_MAX_SUPPLY,
       maxCapacity: dto.tokenClass.maxCapacity ?? CreateTokenClassDto.DEFAULT_MAX_CAPACITY,
-      totalMintAllowance: dto.tokenClass.totalMintAllowance ?? CreateTokenClassDto.INITIAL_MINT_ALLOWANCE,
+      totalMintAllowance:
+        dto.tokenClass.totalMintAllowance ?? CreateTokenClassDto.INITIAL_MINT_ALLOWANCE,
       totalSupply: dto.tokenClass.totalSupply ?? CreateTokenClassDto.INITIAL_TOTAL_SUPPLY,
       totalBurned: dto.tokenClass.totalBurned ?? CreateTokenClassDto.INITIAL_TOTAL_BURNED,
       authorities,

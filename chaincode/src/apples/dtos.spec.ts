@@ -29,13 +29,21 @@ it("should validate FetchTreesDto", async () => {
 
   const expectValid = [];
   const expectInvalid = (key: string, error: string) => [
-    expect.objectContaining({ constraints: { [key]: expect.stringContaining(error) } })
+    expect.objectContaining({
+      constraints: { [key]: expect.stringContaining(error) }
+    })
   ];
 
   // When
-  const results = [valid1, valid2, valid3, valid4, missingPlantedBy, missingVariety, wrongVariety].map((o) =>
-    plainToInstance(FetchTreesDto, o).validate()
-  );
+  const results = [
+    valid1,
+    valid2,
+    valid3,
+    valid4,
+    missingPlantedBy,
+    missingVariety,
+    wrongVariety
+  ].map((o) => plainToInstance(FetchTreesDto, o).validate());
 
   // Then
   expect(await Promise.all(results)).toEqual([

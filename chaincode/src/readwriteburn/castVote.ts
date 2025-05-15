@@ -1,31 +1,42 @@
-import { ValidationFailedError, asValidUserRef } from "@gala-chain/api";
+import { ChainObject, ValidationFailedError, asValidUserRef } from "@gala-chain/api";
 import {
   GalaChainContext,
   UniqueTransactionService,
   authenticate,
+  getObjectByKey,
   inverseTime,
-  objectExists,
   putChainObject
 } from "@gala-chain/chaincode";
 
 import { Vote } from "./Vote";
 import { CastVoteDto } from "./dtos";
+import { IEntry, RWB_TYPES } from "./types";
 
 export async function castVote(ctx: GalaChainContext, dto: CastVoteDto): Promise<void> {
-  const { entry, quantity } = dto.vote;
+  const { entry, entryType, quantity } = dto.vote;
 
-  const existingEntry = await objectExists(ctx, entry);
+  if (RWB_TYPES[entryType] === undefined)
+    throw new ValidationFailedError(`VoteDto missing entryType`);
 
-  if (!existingEntry) {
-    throw new ValidationFailedError(`Vote received for non-existent entry: ${entry}`);
-  }
-
-  const voteId = inverseTime(ctx);
+  const existingEntry: ChainObject & IEntry = await getObjectByKey(
+    ctx,
+    RWB_TYPES[entryType],
+    entry
+  );
 
   await UniqueTransactionService.ensureUniqueTransaction(ctx, dto.vote.uniqueKey);
   const voter = await authenticate(ctx, dto.vote);
 
-  const vote = new Vote(entry, voteId, asValidUserRef(voter.alias), quantity);
+  const voteId = inverseTime(ctx);
+
+  const vote = new Vote(
+    entryType,
+    existingEntry.entryParent,
+    entry,
+    voteId,
+    asValidUserRef(voter.alias),
+    quantity
+  );
 
   await putChainObject(ctx, vote);
 }

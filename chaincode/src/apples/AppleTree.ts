@@ -57,7 +57,10 @@ export class AppleTree extends ChainObject {
 
   public ageInYears(now: number): BigNumber {
     if (this.plantedAt > now) {
-      throw new DefaultError("Tree planted in the future", { plantedAt: this.plantedAt, now });
+      throw new DefaultError("Tree planted in the future", {
+        plantedAt: this.plantedAt,
+        now
+      });
     }
 
     return new BigNumber(now - this.plantedAt)

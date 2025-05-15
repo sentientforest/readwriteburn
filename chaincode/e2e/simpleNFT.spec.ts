@@ -64,16 +64,19 @@ describe("Simple NFT scenario", () => {
 
   it("Curator should create NFT Class", async () => {
     // Given
-    const galaTokenDto: CreateTokenClassDto = await createValidSubmitDTO(CreateTokenClassDto, {
-      decimals: 0,
-      tokenClass: nftClassKey,
-      name: nftClassKey.collection,
-      symbol: nftClassKey.collection.slice(0, 20),
-      description: "This is a test description!",
-      isNonFungible: true,
-      image: "https://app.gala.games/_nuxt/img/gala-logo_horizontal_white.8b0409c.png",
-      maxSupply: new BigNumber(10)
-    });
+    const galaTokenDto: CreateTokenClassDto = await createValidSubmitDTO(
+      CreateTokenClassDto,
+      {
+        decimals: 0,
+        tokenClass: nftClassKey,
+        name: nftClassKey.collection,
+        symbol: nftClassKey.collection.slice(0, 20),
+        description: "This is a test description!",
+        isNonFungible: true,
+        image: "https://app.gala.games/_nuxt/img/gala-logo_horizontal_white.8b0409c.png",
+        maxSupply: new BigNumber(10)
+      }
+    );
 
     // When
     const response = await client.assets.submitTransaction<TokenClassKey>(
@@ -89,7 +92,10 @@ describe("Simple NFT scenario", () => {
   it("Curator should grant users minting allowance for NFT", async () => {
     // Given
     const galaAllowanceDto = await createValidSubmitDTO(GrantAllowanceDto, {
-      tokenInstance: TokenInstanceKey.nftKey(nftClassKey, TokenInstance.FUNGIBLE_TOKEN_INSTANCE).toQueryKey(),
+      tokenInstance: TokenInstanceKey.nftKey(
+        nftClassKey,
+        TokenInstance.FUNGIBLE_TOKEN_INSTANCE
+      ).toQueryKey(),
       allowanceType: AllowanceType.Mint,
       quantities: [
         { user: user1.identityKey, quantity: new BigNumber(1) },
@@ -151,7 +157,9 @@ describe("Simple NFT scenario", () => {
 
   it("Users should have some NTFs", async () => {
     // Given
-    const balancesDto = await createValidDTO(FetchBalancesDto, { ...instanceToPlain(nftClassKey) });
+    const balancesDto = await createValidDTO(FetchBalancesDto, {
+      ...instanceToPlain(nftClassKey)
+    });
     const user1BalancesDto = balancesDto.signed(user1.privateKey);
     const user2BalancesDto = balancesDto.signed(user2.privateKey);
 
@@ -188,10 +196,11 @@ describe("Simple NFT scenario", () => {
 
     // Then
     expect(transferResponse).toEqual(transactionSuccess());
-    expect(await fetchNFTInstances(client.assets, nftClassKey, user1.identityKey)).toEqual([]);
-    expect(await fetchNFTInstances(client.assets, nftClassKey, user2.identityKey)).toEqual([
-      new BigNumber(1),
-      new BigNumber(2)
-    ]);
+    expect(
+      await fetchNFTInstances(client.assets, nftClassKey, user1.identityKey)
+    ).toEqual([]);
+    expect(
+      await fetchNFTInstances(client.assets, nftClassKey, user2.identityKey)
+    ).toEqual([new BigNumber(1), new BigNumber(2)]);
   });
 });

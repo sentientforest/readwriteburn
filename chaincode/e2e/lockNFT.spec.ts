@@ -220,12 +220,15 @@ describe("lock with allowances", () => {
     await client.disconnect();
   });
   it("User1 grants lock allowance for token to User2", async () => {
-    const galaAllowanceDto = await createValidSubmitDTO<GrantAllowanceDto>(GrantAllowanceDto, {
-      tokenInstance: token2Key.toQueryKey(),
-      allowanceType: AllowanceType.Lock,
-      quantities: [{ user: user2.identityKey, quantity: new BigNumber(1) }],
-      uses: new BigNumber(1)
-    });
+    const galaAllowanceDto = await createValidSubmitDTO<GrantAllowanceDto>(
+      GrantAllowanceDto,
+      {
+        tokenInstance: token2Key.toQueryKey(),
+        allowanceType: AllowanceType.Lock,
+        quantities: [{ user: user2.identityKey, quantity: new BigNumber(1) }],
+        uses: new BigNumber(1)
+      }
+    );
 
     const result = await client.assets.submitTransaction<TokenAllowance[]>(
       "GrantAllowance",

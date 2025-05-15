@@ -29,8 +29,15 @@ it("should allow to plant a tree", async () => {
   // Given
   const user = users.random();
   const { contract, ctx, getWrites } = fixture(AppleContract).registeredUsers(user);
-  const dto = new PlantAppleTreeDto(Variety.GALA, 1, randomUniqueKey()).signed(user.privateKey);
-  const expectedTree = new AppleTree(user.identityKey, dto.variety, dto.index, ctx.txUnixTime);
+  const dto = new PlantAppleTreeDto(Variety.GALA, 1, randomUniqueKey()).signed(
+    user.privateKey
+  );
+  const expectedTree = new AppleTree(
+    user.identityKey,
+    dto.variety,
+    dto.index,
+    ctx.txUnixTime
+  );
 
   // When
   const response = await contract.PlantTree(ctx, dto);
@@ -48,7 +55,11 @@ it("should fail to plant a tree if tree already exists", async () => {
     .registeredUsers(user)
     .savedState(new AppleTree(user.identityKey, Variety.GOLDEN_DELICIOUS, 1, 0));
 
-  const dto = new PlantAppleTreeDto(Variety.GOLDEN_DELICIOUS, 1, randomUniqueKey()).signed(user.privateKey);
+  const dto = new PlantAppleTreeDto(
+    Variety.GOLDEN_DELICIOUS,
+    1,
+    randomUniqueKey()
+  ).signed(user.privateKey);
 
   // When
   const response = await contract.PlantTree(ctx, dto);
@@ -60,14 +71,21 @@ it("should fail to plant a tree if tree already exists", async () => {
 
 it("should allow to pick apples", async () => {
   // Given
-  const twoYearsAgo = new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 365 * 2).getTime();
+  const twoYearsAgo = new Date(
+    new Date().getTime() - 1000 * 60 * 60 * 24 * 365 * 2
+  ).getTime();
   const tree = new AppleTree("client|some-user", Variety.GALA, 1, twoYearsAgo);
   const user = users.random();
-  const { contract, ctx, getWrites } = fixture(AppleContract).registeredUsers(user).savedState(tree);
+  const { contract, ctx, getWrites } = fixture(AppleContract)
+    .registeredUsers(user)
+    .savedState(tree);
 
-  const dto = new PickAppleDto(tree.plantedBy, tree.variety, tree.index, randomUniqueKey()).signed(
-    user.privateKey
-  );
+  const dto = new PickAppleDto(
+    tree.plantedBy,
+    tree.variety,
+    tree.index,
+    randomUniqueKey()
+  ).signed(user.privateKey);
 
   // When
   const response = await contract.PickApple(ctx, dto);

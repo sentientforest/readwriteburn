@@ -1,11 +1,14 @@
 import { ChainKey, ChainObject, IsUserRef, UserRef } from "@gala-chain/api";
-import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class Fire extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBF";
+
+  @ChainKey({ position: 0 })
+  @IsString()
+  public entryParent: string;
 
   @ChainKey({ position: 0 })
   @IsString()
@@ -22,7 +25,12 @@ export class Fire extends ChainObject {
   @IsUserRef()
   public starter: UserRef;
 
-  constructor(slug: string, name: string, starter: UserRef, description: string | undefined) {
+  constructor(
+    slug: string,
+    name: string,
+    starter: UserRef,
+    description: string | undefined
+  ) {
     super();
     this.slug = slug;
     this.name = name;

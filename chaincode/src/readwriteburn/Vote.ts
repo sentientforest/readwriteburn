@@ -17,19 +17,23 @@ export class Vote extends ChainObject {
   @ChainKey({ position: 0 })
   @IsNotEmpty()
   @IsString()
-  fire: string;
+  entryType: string;
 
   @ChainKey({ position: 1 })
-  @IsNotEmpty()
   @IsString()
-  submission: string;
+  entryParent: string;
 
   @ChainKey({ position: 2 })
   @IsNotEmpty()
   @IsString()
-  id: string;
+  entry: string;
 
   @ChainKey({ position: 3 })
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  @ChainKey({ position: 4 })
   @IsUserRef()
   voter: UserRef;
 
@@ -37,9 +41,18 @@ export class Vote extends ChainObject {
   @BigNumberProperty()
   quantity: BigNumber;
 
-  constructor(submission: string, id: string, voter: UserRef, quantity: BigNumber) {
+  constructor(
+    entryType: string,
+    entryParent: string,
+    entry: string,
+    id: string,
+    voter: UserRef,
+    quantity: BigNumber
+  ) {
     super();
-    this.submission = submission;
+    this.entryType = entryType;
+    this.entryParent = entryParent;
+    this.entry = entry;
     this.id = id;
     this.voter = voter;
     this.quantity = quantity;

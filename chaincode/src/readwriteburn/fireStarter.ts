@@ -1,10 +1,13 @@
-import { ConflictError, ValidationFailedError } from "@gala-chain/api";
+import { ConflictError, ValidationFailedError, createValidDTO } from "@gala-chain/api";
 import { GalaChainContext, objectExists, putChainObject } from "@gala-chain/chaincode";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
-import { FireStarterDto } from "./dtos";
+import { FireResDto, FireStarterDto, IFireResDto } from "./dtos";
 
-export async function fireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<void> {
+export async function fireStarter(
+  ctx: GalaChainContext,
+  dto: FireStarterDto
+): Promise<FireResDto> {
   const { slug, name, starter, description, authorities, moderators } = dto.fire;
 
   const fire = new Fire(slug, name, starter, description);
@@ -19,6 +22,13 @@ export async function fireStarter(ctx: GalaChainContext, dto: FireStarterDto): P
 
   const startedBy = new FireStarter(ctx.callingUser, fireKey);
 
+  const fireRes: IFireResDto = {
+    metadata: fire,
+    starter: startedBy,
+    authorities: [],
+    moderators: []
+  };
+
   if (starter !== startedBy.identity) {
     throw new ValidationFailedError(
       `Mistmatch between callingUser ${ctx.callingUser} and stated fire starter ${starter}`
@@ -31,11 +41,13 @@ export async function fireStarter(ctx: GalaChainContext, dto: FireStarterDto): P
     const fireAuthority = new FireAuthority(fireKey, ctx.callingUser);
 
     await putChainObject(ctx, fireAuthority);
+    fireRes.authorities.push(fireAuthority);
   } else {
     for (const identity of authorities) {
       const fireAuthority = new FireAuthority(fireKey, identity);
 
       await putChainObject(ctx, fireAuthority);
+      fireRes.authorities.push(fireAuthority);
     }
   }
 
@@ -43,11 +55,15 @@ export async function fireStarter(ctx: GalaChainContext, dto: FireStarterDto): P
     const fireModerator = new FireModerator(fireKey, ctx.callingUser);
 
     await putChainObject(ctx, fireModerator);
+    fireRes.moderators.push(fireModerator);
   } else {
     for (const identity of moderators) {
       const fireModerator = new FireModerator(fireKey, identity);
 
       await putChainObject(ctx, fireModerator);
+      fireRes.moderators.push(fireModerator);
     }
   }
+
+  return createValidDTO(FireResDto, fireRes);
 }
