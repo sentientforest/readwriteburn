@@ -61,13 +61,13 @@ export class FireDto extends ChainCallDTO {
 
   constructor(data: IFireDto) {
     super();
-    this.slug = data.slug;
-    this.name = data.name;
-    this.starter = data.starter;
-    this.description = data.description;
-    this.authorities = data.authorities ?? [];
-    this.moderators = data.moderators ?? [];
-    this.uniqueKey = data.uniqueKey;
+    this.slug = data?.slug ?? "";
+    this.name = data?.name ?? "";
+    this.starter = data?.starter ?? "";
+    this.description = data?.description ?? "";
+    this.authorities = data?.authorities ?? [];
+    this.moderators = data?.moderators ?? [];
+    this.uniqueKey = data?.uniqueKey ?? "";
   }
 }
 
@@ -88,9 +88,9 @@ export class FireStarterDto extends SubmitCallDTO {
 
   constructor(data: IFireStarterDto) {
     super();
-    this.fire = data.fire;
-    this.fee = data.fee;
-    this.uniqueKey = data.uniqueKey;
+    this.fire = data?.fire;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
   }
 }
 
@@ -115,9 +115,9 @@ export class FetchFiresDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresDto) {
     super();
-    this.slug = data.slug;
-    this.bookmark = data.bookmark;
-    this.limit = data.limit;
+    this.slug = data?.slug;
+    this.bookmark = data?.bookmark;
+    this.limit = data?.limit;
   }
 }
 
@@ -147,10 +147,10 @@ export class FireResDto extends ChainCallDTO {
 
   constructor(data: IFireResDto) {
     super();
-    this.metadata = data.metadata;
-    this.starter = data.starter;
-    this.authorities = data.authorities;
-    this.moderators = data.moderators;
+    this.metadata = data?.metadata;
+    this.starter = data?.starter ?? "";
+    this.authorities = data.authorities ?? [];
+    this.moderators = data.moderators ?? [];
   }
 }
 
@@ -172,35 +172,8 @@ export class FetchFiresResDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresResDto) {
     super();
-    this.results = data.results;
-    this.nextPageBookmark = data.nextPageBookmark;
-  }
-}
-
-export interface IFetchSubmissionsDto {
-  fire?: string;
-  bookmark?: string;
-  limit?: number;
-}
-
-export class FetchSubmissionsDto extends ChainCallDTO {
-  @IsOptional()
-  @IsString()
-  public fire?: string;
-
-  @IsOptional()
-  @IsString()
-  public bookmark?: string;
-
-  @IsOptional()
-  @IsNumber()
-  public limit?: number;
-
-  constructor(data: IFetchSubmissionsDto) {
-    super();
-    this.fire = data.fire;
-    this.bookmark = data.bookmark;
-    this.limit = data.limit;
+    this.results = data?.results;
+    this.nextPageBookmark = data?.nextPageBookmark;
   }
 }
 
@@ -236,12 +209,12 @@ export class SubmissionDto extends ChainCallDTO {
 
   constructor(data: ISubmissionDto) {
     super();
-    this.name = data.name;
-    this.fire = data.fire;
-    this.contributor = data.contributor;
-    this.description = data.description;
-    this.url = data.url;
-    this.uniqueKey = data.uniqueKey;
+    this.name = data?.name;
+    this.fire = data?.fire;
+    this.contributor = data?.contributor;
+    this.description = data?.description;
+    this.url = data?.url;
+    this.uniqueKey = data?.uniqueKey;
   }
 }
 
@@ -271,9 +244,59 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
 
   constructor(data: IContributeSubmissionDto) {
     super();
-    this.submission = data.submission;
-    this.fee = data.fee;
-    this.uniqueKey = data.uniqueKey;
+    this.submission = data?.submission;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
+  }
+}
+
+export interface IFetchSubmissionsDto {
+  fire?: string;
+  bookmark?: string;
+  limit?: number;
+}
+
+export class FetchSubmissionsDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public fire?: string;
+
+  @IsOptional()
+  @IsString()
+  public bookmark?: string;
+
+  @IsOptional()
+  @IsNumber()
+  public limit?: number;
+
+  constructor(data: IFetchSubmissionsDto) {
+    super();
+    this.fire = data?.fire;
+    this.bookmark = data?.bookmark;
+    this.limit = data?.limit;
+  }
+}
+
+export interface IFetchSubmissionsResDto {
+  results: Submission[];
+  nextPageBookmark?: string | undefined;
+}
+
+export class FetchSubmissionsResDto extends ChainCallDTO {
+  @JSONSchema({ description: "List of results." })
+  @ValidateNested({ each: true })
+  @Type(() => Submission)
+  results: Submission[];
+
+  @JSONSchema({ description: "Next page bookmark." })
+  @IsOptional()
+  @IsNotEmpty()
+  nextPageBookmark?: string;
+
+  constructor(data: IFetchSubmissionsResDto) {
+    super();
+    this.results = data?.results;
+    this.nextPageBookmark = data?.nextPageBookmark;
   }
 }
 
@@ -303,11 +326,11 @@ export class VoteDto extends SubmitCallDTO {
 
   constructor(data: IVoteDto) {
     super();
-    this.entryType = data.entryType;
-    this.entryParent = data.entryParent;
-    this.entry = data.entry;
-    this.quantity = data.quantity;
-    this.uniqueKey = data.uniqueKey;
+    this.entryType = data?.entryType;
+    this.entryParent = data?.entryParent;
+    this.entry = data?.entry;
+    this.quantity = data?.quantity;
+    this.uniqueKey = data?.uniqueKey;
   }
 }
 
@@ -328,9 +351,9 @@ export class CastVoteDto extends SubmitCallDTO {
 
   constructor(data: ICastVoteDto) {
     super();
-    this.vote = data.vote;
-    this.fee = data.fee;
-    this.uniqueKey = data.uniqueKey;
+    this.vote = data?.vote;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
   }
 }
 
@@ -364,10 +387,10 @@ export class FetchVotesDto extends ChainCallDTO {
 
   constructor(data: IFetchVotesDto) {
     super();
-    this.fire = data.fire;
-    this.submission = data.submission;
-    this.bookmark = data.bookmark;
-    this.limit = data.limit;
+    this.fire = data?.fire;
+    this.submission = data?.submission;
+    this.bookmark = data?.bookmark;
+    this.limit = data?.limit;
   }
 }
 
@@ -392,8 +415,8 @@ export class VoteResult extends ChainCallDTO {
 
   constructor(data: IVoteResult) {
     super();
-    this.key = data.key;
-    this.value = data.value;
+    this.key = data?.key;
+    this.value = data?.value;
   }
 }
 
@@ -446,9 +469,9 @@ export class CountVotesDto extends SubmitCallDTO {
 
   constructor(data: ICountVotesDto) {
     super();
-    this.fire = data.fire;
-    this.submission = data.submission;
-    this.votes = data.votes;
-    this.uniqueKey = data.uniqueKey;
+    this.fire = data?.fire;
+    this.submission = data?.submission;
+    this.votes = data?.votes;
+    this.uniqueKey = data?.uniqueKey;
   }
 }

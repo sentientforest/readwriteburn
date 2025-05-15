@@ -28,15 +28,17 @@ import {
   FetchSubmissionsDto,
   FetchVotesDto,
   FetchVotesResDto,
+  Fire,
   FireDto,
   FireResDto,
   FireStarterDto,
   IVoteResult,
+  Submission,
   SubmissionDto,
   SubmissionResDto,
   VoteDto,
   VoteResult
-} from "../src/readwriteburn/dtos";
+} from "../src/readwriteburn";
 
 describe("Read Write Burn Contract", () => {
   const readwriteburnContractConfig = {
@@ -52,6 +54,8 @@ describe("Read Write Burn Contract", () => {
   let user: ChainUser;
   let user2: ChainUser;
   let fireChainKey: string;
+  let submissionChainKey: string;
+  let uncountedVotes: IVoteResult[];
 
   beforeAll(async () => {
     client = await TestClients.createForAdmin(readwriteburnContractConfig);
@@ -94,18 +98,26 @@ describe("Read Write Burn Contract", () => {
       uniqueKey: randomUniqueKey()
     }).signed(client.readwriteburn.privateKey);
 
+    const expectedResult = new Fire(fire.slug, fire.name, fire.starter, fire.description);
+
+    const expectedFireKey = expectedResult.getCompositeKey();
+
     // When
     const response = await client.readwriteburn.FireStarter(dto);
 
     // Then
-    expect(response).toEqual(transactionSuccess());
+    expect(response).toEqual(transactionSuccess(expectedResult));
+
+    fireChainKey = response.Data?.metadata.getCompositeKey() ?? "";
+
+    expect(fireChainKey).toEqual(expectedFireKey);
   });
 
   test("ContributeSubmission", async () => {
     // Given
     const submission = new SubmissionDto({
       name: "test submission",
-      fire: "mock fire key",
+      fire: fireChainKey,
       contributor: "contributor",
       url: "url",
       description: "",
@@ -133,6 +145,10 @@ describe("Read Write Burn Contract", () => {
 
     // Then
     expect(response).toEqual(transactionSuccess());
+
+    expect(response.Data).toBeDefined();
+
+    submissionChainKey = response.Data?.getCompositeKey() ?? "";
   });
 
   test("CastVote", async () => {
@@ -167,8 +183,6 @@ describe("Read Write Burn Contract", () => {
     // Then
     expect(response).toEqual(transactionSuccess());
   });
-
-  let uncountedVotes: IVoteResult[];
 
   test("Fetch uncounted votes", async () => {
     // Given
@@ -213,7 +227,9 @@ describe("Read Write Burn Contract", () => {
 interface ReadWriteBurnContractAPI {
   FireStarter(dto: FireStarterDto): Promise<GalaChainResponse<FireResDto>>;
   FetchFires(dto: FetchFiresDto): Promise<GalaChainResponse<FetchFiresResDto>>;
-  ContributeSubmission(dto: ContributeSubmissionDto): Promise<GalaChainResponse<void>>;
+  ContributeSubmission(
+    dto: ContributeSubmissionDto
+  ): Promise<GalaChainResponse<Submission>>;
   CastVote(dto: CastVoteDto): Promise<GalaChainResponse<void>>;
   CountVotes(dto: CountVotesDto): Promise<GalaChainResponse<void>>;
   FetchVotes(dto: FetchVotesDto): Promise<GalaChainResponse<FetchVotesResDto>>;
@@ -237,7 +253,7 @@ function readwriteburnContractAPI(
     },
     ContributeSubmission(dto: ContributeSubmissionDto) {
       return client.submitTransaction("ContributeSubmission", dto) as Promise<
-        GalaChainResponse<void>
+        GalaChainResponse<Submission>
       >;
     },
     CastVote(dto: CastVoteDto) {

@@ -12,7 +12,7 @@ import { ContributeSubmissionDto } from "./dtos";
 export async function contributeSubmission(
   ctx: GalaChainContext,
   dto: ContributeSubmissionDto
-): Promise<void> {
+): Promise<Submission> {
   const { name, fire, contributor, description, url } = dto.submission;
 
   const badRequest = await objectExists(ctx, fire);
@@ -40,4 +40,6 @@ export async function contributeSubmission(
   }
 
   await putChainObject(ctx, submission);
+
+  return submission;
 }
