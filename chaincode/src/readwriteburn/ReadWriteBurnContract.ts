@@ -4,7 +4,8 @@ import {
   GalaContract,
   GalaTransaction,
   SUBMIT,
-  Submit
+  Submit,
+  UnsignedEvaluate
 } from "@gala-chain/chaincode";
 
 import { version } from "../../package.json";
@@ -15,10 +16,14 @@ import {
   CastVoteDto,
   ContributeSubmissionDto,
   CountVotesDto,
+  FetchFiresDto,
+  FetchFiresResDto,
   FetchVotesDto,
   FetchVotesResDto,
+  FireResDto,
   FireStarterDto
 } from "./dtos";
+import { fetchFires } from "./fetchFires";
 import { fetchVotes } from "./fetchVotes";
 import { fireStarter } from "./fireStarter";
 
@@ -28,10 +33,19 @@ export class ReadWriteBurnContract extends GalaContract {
   }
 
   @Submit({
-    in: FireStarterDto
+    in: FireStarterDto,
+    out: FireResDto
   })
-  public async FireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<void> {
+  public async FireStarter(ctx: GalaChainContext, dto: FireStarterDto): Promise<FireResDto> {
     return fireStarter(ctx, dto);
+  }
+
+  @UnsignedEvaluate({
+    in: FetchFiresDto,
+    out: FetchFiresResDto
+  })
+  public async FetchFires(ctx: GalaChainContext, dto: FetchFiresDto): Promise<FetchFiresResDto> {
+    return fetchFires(ctx, dto);
   }
 
   @Submit({
