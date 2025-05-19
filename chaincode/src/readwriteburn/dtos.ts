@@ -28,6 +28,7 @@ import { VoteRanking } from "./VoteRanking";
 import { VoterReceipt } from "./VoterReceipt";
 
 export interface IFireDto {
+  entryParent?: string | undefined;
   slug: string;
   name: string;
   starter: UserRef;
@@ -38,6 +39,10 @@ export interface IFireDto {
 }
 
 export class FireDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -53,14 +58,15 @@ export class FireDto extends ChainCallDTO {
   @IsString()
   public description?: string;
 
-  @IsString({ each: true })
+  @IsUserRef({ each: true })
   public authorities: UserRef[];
 
-  @IsString({ each: true })
+  @IsUserRef({ each: true })
   public moderators: UserRef[];
 
   constructor(data: IFireDto) {
     super();
+    this.entryParent = data?.entryParent ?? "";
     this.slug = data?.slug ?? "";
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
@@ -149,8 +155,8 @@ export class FireResDto extends ChainCallDTO {
     super();
     this.metadata = data?.metadata;
     this.starter = data?.starter ?? "";
-    this.authorities = data.authorities ?? [];
-    this.moderators = data.moderators ?? [];
+    this.authorities = data?.authorities ?? [];
+    this.moderators = data?.moderators ?? [];
   }
 }
 

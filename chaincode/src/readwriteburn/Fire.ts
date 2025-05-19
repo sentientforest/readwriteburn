@@ -26,12 +26,14 @@ export class Fire extends ChainObject {
   public starter: UserRef;
 
   constructor(
+    entryParent: string,
     slug: string,
     name: string,
     starter: UserRef,
     description: string | undefined
   ) {
     super();
+    this.entryParent = entryParent ?? "";
     this.slug = slug;
     this.name = name;
     this.starter = starter;

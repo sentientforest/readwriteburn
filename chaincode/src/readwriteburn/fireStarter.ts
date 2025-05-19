@@ -1,5 +1,10 @@
 import { ConflictError, ValidationFailedError, createValidDTO } from "@gala-chain/api";
-import { GalaChainContext, objectExists, putChainObject } from "@gala-chain/chaincode";
+import {
+  GalaChainContext,
+  ensureIsAuthenticatedBy,
+  objectExists,
+  putChainObject
+} from "@gala-chain/chaincode";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
 import { FireResDto, FireStarterDto, IFireResDto } from "./dtos";
@@ -8,9 +13,12 @@ export async function fireStarter(
   ctx: GalaChainContext,
   dto: FireStarterDto
 ): Promise<FireResDto> {
-  const { slug, name, starter, description, authorities, moderators } = dto.fire;
+  const { entryParent, slug, name, starter, description, authorities, moderators } =
+    dto.fire;
 
-  const fire = new Fire(slug, name, starter, description);
+  await ensureIsAuthenticatedBy(ctx, dto.fire, starter);
+
+  const fire = new Fire(entryParent, slug, name, starter, description);
 
   const fireKey = fire.getCompositeKey();
 
@@ -20,7 +28,7 @@ export async function fireStarter(
 
   await putChainObject(ctx, fire);
 
-  const startedBy = new FireStarter(ctx.callingUser, fireKey);
+  const startedBy = new FireStarter(starter, fireKey);
 
   const fireRes: IFireResDto = {
     metadata: fire,
@@ -37,7 +45,9 @@ export async function fireStarter(
 
   await putChainObject(ctx, startedBy);
 
-  if (authorities.length < 1) {
+  if (!Array.isArray(authorities)) {
+    throw new ValidationFailedError(`FireDto missing authorities array: ${authorities}`);
+  } else if (authorities.length < 1) {
     const fireAuthority = new FireAuthority(fireKey, ctx.callingUser);
 
     await putChainObject(ctx, fireAuthority);
