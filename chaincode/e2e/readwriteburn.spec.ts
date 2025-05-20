@@ -8,6 +8,7 @@ import {
   GalaChainResponseType,
   asValidUserRef,
   commonContractAPI,
+  createValidDTO,
   randomUniqueKey
 } from "@gala-chain/api";
 import {
@@ -29,10 +30,15 @@ import {
   FetchVotesDto,
   FetchVotesResDto,
   Fire,
+  FireAuthority,
   FireDto,
+  FireModerator,
   FireResDto,
+  FireStarter,
   FireStarterDto,
+  IFireResDto,
   IVoteResult,
+  RWB_TYPES,
   Submission,
   SubmissionDto,
   SubmissionResDto,
@@ -55,7 +61,7 @@ describe("Read Write Burn Contract", () => {
   let user2: ChainUser;
   let fireChainKey: string;
   let submissionChainKey: string;
-  let uncountedVotes: IVoteResult[];
+  let uncountedVotes: IVoteResult[] = [];
 
   beforeAll(async () => {
     client = await TestClients.createForAdmin(readwriteburnContractConfig);
@@ -73,14 +79,14 @@ describe("Read Write Burn Contract", () => {
     const userRef = asValidUserRef(user.identityKey);
 
     const fire = new FireDto({
-      slug: "test-fire",
+      slug: `test-fire-${randomUniqueKey()}`,
       name: "Test Fire",
       starter: userRef,
       description: "Test Fire Description",
       authorities: [userRef],
       moderators: [userRef],
       uniqueKey: randomUniqueKey()
-    });
+    }).signed(user.privateKey);
 
     const fee = plainToInstance(FeeVerificationDto, {
       authorization: "",
@@ -98,17 +104,40 @@ describe("Read Write Burn Contract", () => {
       uniqueKey: randomUniqueKey()
     }).signed(client.readwriteburn.privateKey);
 
-    const expectedResult = new Fire(fire.slug, fire.name, fire.starter, fire.description);
+    const starter = asValidUserRef(user.identityKey);
 
-    const expectedFireKey = expectedResult.getCompositeKey();
+    const expectedMetadata = new Fire(
+      fire.entryParent,
+      fire.slug,
+      fire.name,
+      fire.starter,
+      fire.description
+    );
 
+    const expectedFireKey = expectedMetadata.getCompositeKey();
+
+    const startedBy = new FireStarter(starter, expectedFireKey);
+    const authority: FireAuthority = new FireAuthority(expectedFireKey, starter);
+    const moderator: FireModerator = new FireModerator(expectedFireKey, starter);
+
+    const data: IFireResDto = {
+      metadata: expectedMetadata,
+      starter: startedBy,
+      authorities: [authority],
+      moderators: [moderator]
+    };
+
+    const expectedResult: FireResDto = await createValidDTO(FireResDto, data);
     // When
     const response = await client.readwriteburn.FireStarter(dto);
 
     // Then
     expect(response).toEqual(transactionSuccess(expectedResult));
 
-    fireChainKey = response.Data?.metadata.getCompositeKey() ?? "";
+    const metadataResult = response.Data?.metadata as Fire;
+    const { entryParent, slug, name, description } = metadataResult;
+    fireChainKey =
+      new Fire(entryParent, slug, name, starter, description).getCompositeKey() ?? "";
 
     expect(fireChainKey).toEqual(expectedFireKey);
   });
@@ -116,8 +145,9 @@ describe("Read Write Burn Contract", () => {
   test("ContributeSubmission", async () => {
     // Given
     const submission = new SubmissionDto({
-      name: "test submission",
+      name: `test submission ${randomUniqueKey()}`,
       fire: fireChainKey,
+      entryParent: fireChainKey,
       contributor: "contributor",
       url: "url",
       description: "",
@@ -141,9 +171,11 @@ describe("Read Write Burn Contract", () => {
     }).signed(user.privateKey);
 
     // When
+    const dtoValidation = await dto.validate();
     const response = await client.readwriteburn.ContributeSubmission(dto);
 
     // Then
+    expect(dtoValidation).toEqual([]);
     expect(response).toEqual(transactionSuccess());
 
     expect(response.Data).toBeDefined();
@@ -154,12 +186,12 @@ describe("Read Write Burn Contract", () => {
   test("CastVote", async () => {
     // Given
     const vote = new VoteDto({
-      entryType: "",
-      entryParent: "",
-      entry: "",
+      entryType: Submission.INDEX_KEY,
+      entryParent: fireChainKey,
+      entry: submissionChainKey,
       quantity: new BigNumber("1"),
       uniqueKey: randomUniqueKey()
-    });
+    }).signed(user.privateKey);
 
     const fee = plainToInstance(FeeVerificationDto, {
       authorization: "",
@@ -175,7 +207,7 @@ describe("Read Write Burn Contract", () => {
       vote: vote,
       fee: fee,
       uniqueKey: randomUniqueKey()
-    }).signed(user.privateKey);
+    }).signed(client.readwriteburn.privateKey);
 
     // When
     const response = await client.readwriteburn.CastVote(dto);

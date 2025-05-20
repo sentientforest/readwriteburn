@@ -11,6 +11,7 @@ import BigNumber from "bignumber.js";
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   ArrayNotEmpty,
   IsNotEmpty,
   IsNumber,
@@ -58,9 +59,11 @@ export class FireDto extends ChainCallDTO {
   @IsString()
   public description?: string;
 
+  @ArrayMinSize(0)
   @IsUserRef({ each: true })
   public authorities: UserRef[];
 
+  @ArrayMinSize(0)
   @IsUserRef({ each: true })
   public moderators: UserRef[];
 
@@ -186,6 +189,7 @@ export class FetchFiresResDto extends ChainCallDTO {
 export interface ISubmissionDto {
   name: string;
   fire: string;
+  entryParent: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -200,6 +204,10 @@ export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
   fire: string;
+
+  @IsNotEmpty()
+  @IsString()
+  entryParent: string;
 
   @IsOptional()
   @IsString()
@@ -217,6 +225,7 @@ export class SubmissionDto extends ChainCallDTO {
     super();
     this.name = data?.name;
     this.fire = data?.fire;
+    this.entryParent = data?.entryParent;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
@@ -226,6 +235,7 @@ export class SubmissionDto extends ChainCallDTO {
 
 export interface SubmissionResDto {
   id: number;
+  entryParent: string;
   name: string;
   contributor: string;
   description: string;
@@ -347,8 +357,8 @@ export interface ICastVoteDto {
 }
 
 export class CastVoteDto extends SubmitCallDTO {
-  @IsNotEmpty()
-  @IsString()
+  @ValidateNested()
+  @Type(() => VoteDto)
   vote: VoteDto;
 
   @ValidateNested()

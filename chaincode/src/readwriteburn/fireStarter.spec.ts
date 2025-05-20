@@ -7,14 +7,13 @@ import {
   randomUniqueKey
 } from "@gala-chain/api";
 import { GalaChainContext } from "@gala-chain/chaincode";
-import { currency, fixture, nft, randomUser, users, writesMap } from "@gala-chain/test";
+import { fixture, randomUser, writesMap } from "@gala-chain/test";
 import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
 import { FireDto, FireResDto, FireStarterDto, IFireResDto } from "./dtos";
-import { fireStarter } from "./fireStarter";
 
 describe("fireStarter chaincode call", () => {
   test("fireStarter", async () => {
@@ -83,5 +82,7 @@ describe("fireStarter chaincode call", () => {
     const result = await contract.FireStarter(ctx, dto);
 
     expect(result).toEqual(GalaChainResponse.Success(expectedResult));
+
+    // todo: verify writesMap is correct
   });
 });

@@ -15,9 +15,14 @@ export class Submission extends ChainObject {
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
-  id: string;
+  entryParent: string;
 
   @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  @ChainKey({ position: 3 })
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -36,6 +41,7 @@ export class Submission extends ChainObject {
 
   constructor(
     fire: string,
+    entryParent: string,
     id: string,
     name: string,
     contributor?: string | undefined,
@@ -44,6 +50,7 @@ export class Submission extends ChainObject {
   ) {
     super();
     this.fire = fire;
+    this.entryParent = entryParent;
     this.id = id;
     this.name = name;
     this.contributor = contributor;

@@ -10,7 +10,7 @@ export class Fire extends ChainObject {
   @IsString()
   public entryParent: string;
 
-  @ChainKey({ position: 0 })
+  @ChainKey({ position: 1 })
   @IsString()
   public slug: string;
 
