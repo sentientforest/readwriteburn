@@ -268,6 +268,7 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
 
 export interface IFetchSubmissionsDto {
   fire?: string;
+  entryParent?: string;
   bookmark?: string;
   limit?: number;
 }
@@ -276,6 +277,10 @@ export class FetchSubmissionsDto extends ChainCallDTO {
   @IsOptional()
   @IsString()
   public fire?: string;
+
+  @IsOptional()
+  @IsString()
+  public entryParent?: string;
 
   @IsOptional()
   @IsString()
@@ -288,6 +293,7 @@ export class FetchSubmissionsDto extends ChainCallDTO {
   constructor(data: IFetchSubmissionsDto) {
     super();
     this.fire = data?.fire;
+    this.entryParent = data?.entryParent;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;
   }

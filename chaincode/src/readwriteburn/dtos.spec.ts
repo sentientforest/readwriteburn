@@ -9,6 +9,7 @@ import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
+import { Submission } from "./Submission";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
@@ -248,6 +249,51 @@ describe("readwriteburn DTOs", () => {
 
     const validationResult = await dto.validate();
 
+    expect(validationResult).toEqual([]);
+  });
+
+  test("FetchSubmissionsDto", async () => {
+    // Given
+    const dto = new FetchSubmissionsDto({
+      fire: "test fire key",
+      entryParent: ""
+    });
+
+    // When
+    const validationResult = await dto.validate();
+
+    // Then
+    expect(validationResult).toEqual([]);
+  });
+
+  test("FetchSubmissionsDto with class-transformer", async () => {
+    // Given
+    const dto = plainToInstance(FetchSubmissionsDto, {
+      fire: "test fire key",
+      entryParent: "",
+      bookmark: "page 2 string key",
+      limit: 1
+    });
+
+    // When
+    const validationResult = await dto.validate();
+
+    // Then
+    expect(validationResult).toEqual([]);
+  });
+
+  test("FetchSubmissionsResDto", async () => {
+    // Given
+    const results = [
+      new Submission("a", "", "001", "name"),
+      new Submission("b", "", "002", "submission b")
+    ];
+    const dto = new FetchSubmissionsResDto({ results, nextPageBookmark: "page2" });
+
+    // When
+    const validationResult = await dto.validate();
+
+    // Then
     expect(validationResult).toEqual([]);
   });
 

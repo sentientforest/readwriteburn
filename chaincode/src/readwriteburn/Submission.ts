@@ -13,7 +13,6 @@ export class Submission extends ChainObject {
   fire: string;
 
   @ChainKey({ position: 1 })
-  @IsNotEmpty()
   @IsString()
   entryParent: string;
 
