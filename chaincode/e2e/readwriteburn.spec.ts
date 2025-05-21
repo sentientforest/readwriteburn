@@ -180,7 +180,11 @@ describe("Read Write Burn Contract", () => {
 
     expect(response.Data).toBeDefined();
 
-    submissionChainKey = response.Data?.getCompositeKey() ?? "";
+    const submissionResult = response.Data as Submission;
+
+    const { fire, entryParent, id, name } = submissionResult;
+
+    submissionChainKey = new Submission(fire, entryParent, id, name).getCompositeKey();
   });
 
   test("CastVote", async () => {
@@ -221,9 +225,11 @@ describe("Read Write Burn Contract", () => {
     const dto = new FetchVotesDto({});
 
     // When
+    const dtoValidation = await dto.validate();
     const response = await client.readwriteburn.FetchVotes(dto);
 
     // Then
+    expect(dtoValidation).toEqual([]);
     expect(response).toEqual(transactionSuccess());
 
     uncountedVotes = response.Data?.results ?? [];

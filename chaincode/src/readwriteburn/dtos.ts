@@ -176,7 +176,7 @@ export class FetchFiresResDto extends ChainCallDTO {
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
-  @IsNotEmpty()
+  @IsString()
   nextPageBookmark?: string;
 
   constructor(data: IFetchFiresResDto) {
@@ -452,13 +452,13 @@ export class FetchVotesResDto extends ChainCallDTO {
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
-  @IsNotEmpty()
+  @IsString()
   nextPageBookmark?: string;
 
   constructor(data: IFetchVotesResDto) {
     super();
-    this.results = data.results;
-    this.nextPageBookmark = data.nextPageBookmark;
+    this.results = data?.results ?? [];
+    this.nextPageBookmark = data?.nextPageBookmark;
   }
 }
 

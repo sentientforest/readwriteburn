@@ -34,7 +34,7 @@ describe("API snapshots", () => {
     readwriteburn: {
       channel: "product-channel",
       chaincode: "basic-product",
-      contract: "ReadWriteBurnContract",
+      contract: "ReadWriteBurn",
       api: commonContractAPI
     }
   };
