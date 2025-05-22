@@ -1,5 +1,10 @@
 import { ConflictError, ValidationFailedError, createValidDTO } from "@gala-chain/api";
-import { GalaChainContext, objectExists, putChainObject } from "@gala-chain/chaincode";
+import {
+  GalaChainContext,
+  ensureIsAuthenticatedBy,
+  objectExists,
+  putChainObject
+} from "@gala-chain/chaincode";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
 import { FireResDto, FireStarterDto, IFireResDto } from "./dtos";
@@ -8,9 +13,16 @@ export async function fireStarter(
   ctx: GalaChainContext,
   dto: FireStarterDto
 ): Promise<FireResDto> {
-  const { slug, name, starter, description, authorities, moderators } = dto.fire;
+  if (!dto.fire) {
+    throw new ValidationFailedError(`DTO missing fire property: ${dto.serialize()}`);
+  }
+  const { entryParent, slug, name, starter, description } = dto.fire;
+  const authorities = dto.fire.authorities;
+  const moderators = dto.fire.moderators;
 
-  const fire = new Fire(slug, name, starter, description);
+  await ensureIsAuthenticatedBy(ctx, dto.fire, starter);
+
+  const fire = new Fire(entryParent, slug, name, starter, description);
 
   const fireKey = fire.getCompositeKey();
 
@@ -20,7 +32,7 @@ export async function fireStarter(
 
   await putChainObject(ctx, fire);
 
-  const startedBy = new FireStarter(ctx.callingUser, fireKey);
+  const startedBy = new FireStarter(starter, fireKey);
 
   const fireRes: IFireResDto = {
     metadata: fire,
@@ -37,32 +49,46 @@ export async function fireStarter(
 
   await putChainObject(ctx, startedBy);
 
-  if (authorities.length < 1) {
-    const fireAuthority = new FireAuthority(fireKey, ctx.callingUser);
-
-    await putChainObject(ctx, fireAuthority);
-    fireRes.authorities.push(fireAuthority);
-  } else {
-    for (const identity of authorities) {
-      const fireAuthority = new FireAuthority(fireKey, identity);
+  try {
+    if (!Array.isArray(authorities)) {
+      throw new ValidationFailedError(
+        `FireDto missing authorities array: ${authorities}`
+      );
+    } else if (authorities.length < 1) {
+      const fireAuthority = new FireAuthority(fireKey, ctx.callingUser);
 
       await putChainObject(ctx, fireAuthority);
       fireRes.authorities.push(fireAuthority);
+    } else {
+      for (const identity of authorities) {
+        const fireAuthority = new FireAuthority(fireKey, identity);
+
+        await putChainObject(ctx, fireAuthority);
+        fireRes.authorities.push(fireAuthority);
+      }
     }
+  } catch (e) {
+    throw new ValidationFailedError(
+      `Failed to save authorities to chain: ${authorities}`
+    );
   }
 
-  if (moderators.length < 1) {
-    const fireModerator = new FireModerator(fireKey, ctx.callingUser);
-
-    await putChainObject(ctx, fireModerator);
-    fireRes.moderators.push(fireModerator);
-  } else {
-    for (const identity of moderators) {
-      const fireModerator = new FireModerator(fireKey, identity);
+  try {
+    if (moderators.length < 1) {
+      const fireModerator = new FireModerator(fireKey, ctx.callingUser);
 
       await putChainObject(ctx, fireModerator);
       fireRes.moderators.push(fireModerator);
+    } else {
+      for (const identity of moderators) {
+        const fireModerator = new FireModerator(fireKey, identity);
+
+        await putChainObject(ctx, fireModerator);
+        fireRes.moderators.push(fireModerator);
+      }
     }
+  } catch (e) {
+    throw new ValidationFailedError(`Failed to save moderators to chain: ${moderators}`);
   }
 
   return createValidDTO(FireResDto, fireRes);

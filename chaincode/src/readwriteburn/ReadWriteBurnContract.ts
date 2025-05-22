@@ -95,7 +95,7 @@ export class ReadWriteBurnContract extends GalaContract {
     return countVotes(ctx, dto);
   }
 
-  @Evaluate({
+  @UnsignedEvaluate({
     in: FetchVotesDto,
     out: FetchVotesResDto
   })

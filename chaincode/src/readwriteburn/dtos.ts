@@ -11,6 +11,7 @@ import BigNumber from "bignumber.js";
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
+  ArrayMinSize,
   ArrayNotEmpty,
   IsNotEmpty,
   IsNumber,
@@ -28,6 +29,7 @@ import { VoteRanking } from "./VoteRanking";
 import { VoterReceipt } from "./VoterReceipt";
 
 export interface IFireDto {
+  entryParent?: string | undefined;
   slug: string;
   name: string;
   starter: UserRef;
@@ -38,6 +40,10 @@ export interface IFireDto {
 }
 
 export class FireDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -53,14 +59,17 @@ export class FireDto extends ChainCallDTO {
   @IsString()
   public description?: string;
 
-  @IsString({ each: true })
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
   public authorities: UserRef[];
 
-  @IsString({ each: true })
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
   public moderators: UserRef[];
 
   constructor(data: IFireDto) {
     super();
+    this.entryParent = data?.entryParent ?? "";
     this.slug = data?.slug ?? "";
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
@@ -149,8 +158,8 @@ export class FireResDto extends ChainCallDTO {
     super();
     this.metadata = data?.metadata;
     this.starter = data?.starter ?? "";
-    this.authorities = data.authorities ?? [];
-    this.moderators = data.moderators ?? [];
+    this.authorities = data?.authorities ?? [];
+    this.moderators = data?.moderators ?? [];
   }
 }
 
@@ -167,7 +176,7 @@ export class FetchFiresResDto extends ChainCallDTO {
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
-  @IsNotEmpty()
+  @IsString()
   nextPageBookmark?: string;
 
   constructor(data: IFetchFiresResDto) {
@@ -180,6 +189,7 @@ export class FetchFiresResDto extends ChainCallDTO {
 export interface ISubmissionDto {
   name: string;
   fire: string;
+  entryParent: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -194,6 +204,9 @@ export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
   fire: string;
+
+  @IsString()
+  entryParent: string;
 
   @IsOptional()
   @IsString()
@@ -211,6 +224,7 @@ export class SubmissionDto extends ChainCallDTO {
     super();
     this.name = data?.name;
     this.fire = data?.fire;
+    this.entryParent = data?.entryParent;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
@@ -220,6 +234,7 @@ export class SubmissionDto extends ChainCallDTO {
 
 export interface SubmissionResDto {
   id: number;
+  entryParent: string;
   name: string;
   contributor: string;
   description: string;
@@ -252,14 +267,19 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
 
 export interface IFetchSubmissionsDto {
   fire?: string;
+  entryParent?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchSubmissionsDto extends ChainCallDTO {
   @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   public fire?: string;
+
+  @IsOptional()
+  @IsNotEmpty()
+  public entryParent?: string;
 
   @IsOptional()
   @IsString()
@@ -272,6 +292,7 @@ export class FetchSubmissionsDto extends ChainCallDTO {
   constructor(data: IFetchSubmissionsDto) {
     super();
     this.fire = data?.fire;
+    this.entryParent = data?.entryParent;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;
   }
@@ -341,8 +362,8 @@ export interface ICastVoteDto {
 }
 
 export class CastVoteDto extends SubmitCallDTO {
-  @IsNotEmpty()
-  @IsString()
+  @ValidateNested()
+  @Type(() => VoteDto)
   vote: VoteDto;
 
   @ValidateNested()
@@ -436,13 +457,13 @@ export class FetchVotesResDto extends ChainCallDTO {
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
-  @IsNotEmpty()
+  @IsString()
   nextPageBookmark?: string;
 
   constructor(data: IFetchVotesResDto) {
     super();
-    this.results = data.results;
-    this.nextPageBookmark = data.nextPageBookmark;
+    this.results = data?.results ?? [];
+    this.nextPageBookmark = data?.nextPageBookmark;
   }
 }
 

@@ -13,17 +13,18 @@ export async function contributeSubmission(
   ctx: GalaChainContext,
   dto: ContributeSubmissionDto
 ): Promise<Submission> {
-  const { name, fire, contributor, description, url } = dto.submission;
+  const { name, fire, entryParent, contributor, description, url } = dto.submission;
 
-  const badRequest = await objectExists(ctx, fire);
+  const fireExists = await objectExists(ctx, fire);
 
-  if (badRequest)
+  if (!fireExists)
     throw new ValidationFailedError(`Fire with key ${fire} does not exist.`);
 
   const submissionId = inverseTime(ctx);
 
   const submission = new Submission(
     fire,
+    entryParent,
     submissionId,
     name,
     contributor,

@@ -21,9 +21,9 @@ it("should expose contract names", async () => {
   const cliPath = require.resolve(`../lib/src/cli.js`);
 
   const expectedContracts = [
-    { contractName: "AppleContract" },
     { contractName: "GalaChainToken" },
-    { contractName: "PublicKeyContract" }
+    { contractName: "PublicKeyContract" },
+    { contractName: "ReadWriteBurn" }
   ];
 
   // When

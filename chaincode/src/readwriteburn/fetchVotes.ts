@@ -25,6 +25,10 @@ export async function fetchVotes(
     limit
   );
 
+  if (!votes || !Array.isArray(votes.results)) {
+    return plainToInstance(FetchVotesResDto, { results: [], nextPageBookmark: "" });
+  }
+
   const results: VoteResult[] = votes.results.map((vote: Vote) => {
     return plainToInstance(VoteResult, {
       key: vote.getCompositeKey(),
