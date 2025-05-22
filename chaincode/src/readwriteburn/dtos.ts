@@ -205,7 +205,6 @@ export class SubmissionDto extends ChainCallDTO {
   @IsString()
   fire: string;
 
-  @IsNotEmpty()
   @IsString()
   entryParent: string;
 
@@ -275,11 +274,11 @@ export interface IFetchSubmissionsDto {
 
 export class FetchSubmissionsDto extends ChainCallDTO {
   @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   public fire?: string;
 
   @IsOptional()
-  @IsString()
+  @IsNotEmpty()
   public entryParent?: string;
 
   @IsOptional()

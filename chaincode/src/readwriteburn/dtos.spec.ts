@@ -256,7 +256,7 @@ describe("readwriteburn DTOs", () => {
     // Given
     const dto = new FetchSubmissionsDto({
       fire: "test fire key",
-      entryParent: ""
+      entryParent: "test fire key"
     });
 
     // When
@@ -270,7 +270,7 @@ describe("readwriteburn DTOs", () => {
     // Given
     const dto = plainToInstance(FetchSubmissionsDto, {
       fire: "test fire key",
-      entryParent: "",
+      entryParent: "test fire key",
       bookmark: "page 2 string key",
       limit: 1
     });
@@ -285,8 +285,8 @@ describe("readwriteburn DTOs", () => {
   test("FetchSubmissionsResDto", async () => {
     // Given
     const results = [
-      new Submission("a", "", "001", "name"),
-      new Submission("b", "", "002", "submission b")
+      new Submission("a", "fireChainKey", "001", "name"),
+      new Submission("b", "submission-a-chain-key", "002", "submission b")
     ];
     const dto = new FetchSubmissionsResDto({ results, nextPageBookmark: "page2" });
 

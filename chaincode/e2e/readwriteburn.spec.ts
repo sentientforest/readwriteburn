@@ -27,6 +27,7 @@ import {
   FetchFiresDto,
   FetchFiresResDto,
   FetchSubmissionsDto,
+  FetchSubmissionsResDto,
   FetchVotesDto,
   FetchVotesResDto,
   Fire,
@@ -61,6 +62,7 @@ describe("Read Write Burn Contract", () => {
   let user2: ChainUser;
   let fireChainKey: string;
   let submissionChainKey: string;
+  let commentChainKey: string;
   let uncountedVotes: IVoteResult[] = [];
 
   beforeAll(async () => {
@@ -260,6 +262,96 @@ describe("Read Write Burn Contract", () => {
     expect(response).toEqual(transactionSuccess());
     expect(response.Data?.results).toEqual([]);
   });
+
+  test("Comment on Submission (sub-submission or parent/child submission", async () => {
+    // Given
+    const submission = new SubmissionDto({
+      name: `test comment ${randomUniqueKey()}`,
+      fire: fireChainKey,
+      entryParent: submissionChainKey,
+      contributor: "contributor",
+      url: "url",
+      description: "",
+      uniqueKey: randomUniqueKey()
+    });
+
+    const fee = plainToInstance(FeeVerificationDto, {
+      authorization: "",
+      authority: asValidUserRef(user.identityKey),
+      created: Date.now(),
+      txId: "test txid",
+      quantity: new BigNumber("1"),
+      feeAuthorizationKey: "test key",
+      uniqueKey: randomUniqueKey()
+    }).signed(client.readwriteburn.privateKey);
+
+    const dto = new ContributeSubmissionDto({
+      submission: submission,
+      fee: fee,
+      uniqueKey: randomUniqueKey()
+    }).signed(user.privateKey);
+
+    // When
+    const dtoValidation = await dto.validate();
+    const response = await client.readwriteburn.ContributeSubmission(dto);
+
+    // Then
+    expect(dtoValidation).toEqual([]);
+    expect(response).toEqual(transactionSuccess());
+
+    expect(response.Data).toBeDefined();
+
+    const submissionResult = response.Data as Submission;
+
+    const { fire, entryParent, id, name } = submissionResult;
+
+    commentChainKey = new Submission(fire, entryParent, id, name).getCompositeKey();
+  });
+
+  test("Upvote a comment", async () => {
+    // Given
+    const vote = new VoteDto({
+      entryType: Submission.INDEX_KEY,
+      entryParent: submissionChainKey,
+      entry: commentChainKey,
+      quantity: new BigNumber("1"),
+      uniqueKey: randomUniqueKey()
+    }).signed(user.privateKey);
+
+    const fee = plainToInstance(FeeVerificationDto, {
+      authorization: "",
+      authority: asValidUserRef(user.identityKey),
+      created: Date.now(),
+      txId: "test txid",
+      quantity: new BigNumber("1"),
+      feeAuthorizationKey: "test key",
+      uniqueKey: randomUniqueKey()
+    }).signed(client.readwriteburn.privateKey);
+
+    const dto = new CastVoteDto({
+      vote: vote,
+      fee: fee,
+      uniqueKey: randomUniqueKey()
+    }).signed(client.readwriteburn.privateKey);
+
+    // When
+    const response = await client.readwriteburn.CastVote(dto);
+
+    // Then
+    expect(response).toEqual(transactionSuccess());
+  });
+
+  test("Fetch only top-level submissions for a given category/fire", async () => {
+    const dto = new FetchSubmissionsDto({
+      fire: fireChainKey,
+      entryParent: fireChainKey
+    });
+
+    const response = await client.readwriteburn.FetchSubmissions(dto);
+
+    expect(response).toEqual(transactionSuccess());
+    expect(response.Data?.results?.length).toBe(1);
+  });
 });
 
 interface ReadWriteBurnContractAPI {
@@ -268,6 +360,9 @@ interface ReadWriteBurnContractAPI {
   ContributeSubmission(
     dto: ContributeSubmissionDto
   ): Promise<GalaChainResponse<Submission>>;
+  FetchSubmissions(
+    dto: FetchSubmissionsDto
+  ): Promise<GalaChainResponse<FetchSubmissionsResDto>>;
   CastVote(dto: CastVoteDto): Promise<GalaChainResponse<void>>;
   CountVotes(dto: CountVotesDto): Promise<GalaChainResponse<void>>;
   FetchVotes(dto: FetchVotesDto): Promise<GalaChainResponse<FetchVotesResDto>>;
@@ -292,6 +387,11 @@ function readwriteburnContractAPI(
     ContributeSubmission(dto: ContributeSubmissionDto) {
       return client.submitTransaction("ContributeSubmission", dto) as Promise<
         GalaChainResponse<Submission>
+      >;
+    },
+    FetchSubmissions(dto: FetchSubmissionsDto) {
+      return client.evaluateTransaction("FetchSubmissions", dto) as Promise<
+        GalaChainResponse<FetchSubmissionsResDto>
       >;
     },
     CastVote(dto: CastVoteDto) {
