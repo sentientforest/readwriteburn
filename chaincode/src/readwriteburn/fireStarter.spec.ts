@@ -11,9 +11,9 @@ import { fixture, randomUser, writesMap } from "@gala-chain/test";
 import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
-import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
-import { FireDto, FireResDto, FireStarterDto, IFireResDto } from "./dtos";
+import { Fire, FireAuthority, FireModerator, FireStarter } from "./api/Fire";
+import { FireDto, FireResDto, FireStarterDto, IFireResDto } from "./api/dtos";
 
 describe("fireStarter chaincode call", () => {
   test("fireStarter", async () => {

@@ -12,8 +12,8 @@ import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
-import { Submission } from "./Submission";
-import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./dtos";
+import { Submission } from "./api/Submission";
+import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./api/dtos";
 
 describe("fetchSubmissions chaincode call", () => {
   const fireChainKey = "test|fire";

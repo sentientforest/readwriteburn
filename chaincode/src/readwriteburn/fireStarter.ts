@@ -6,8 +6,8 @@ import {
   putChainObject
 } from "@gala-chain/chaincode";
 
-import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
-import { FireResDto, FireStarterDto, IFireResDto } from "./dtos";
+import { Fire, FireAuthority, FireModerator, FireStarter } from "./api/Fire";
+import { FireResDto, FireStarterDto, IFireResDto } from "./api/dtos";
 
 export async function fireStarter(
   ctx: GalaChainContext,
