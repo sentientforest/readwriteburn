@@ -4,8 +4,8 @@ import {
   takeUntilUndefined
 } from "@gala-chain/chaincode";
 
-import { Submission } from "./Submission";
-import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./dtos";
+import { Submission } from "./api/Submission";
+import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./api/dtos";
 
 export async function fetchSubmissions(
   ctx: GalaChainContext,

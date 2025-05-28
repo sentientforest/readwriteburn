@@ -6,8 +6,8 @@ import {
   putChainObject
 } from "@gala-chain/chaincode";
 
-import { Submission } from "./Submission";
-import { ContributeSubmissionDto } from "./dtos";
+import { Submission } from "./api/Submission";
+import { ContributeSubmissionDto } from "./api/dtos";
 
 export async function contributeSubmission(
   ctx: GalaChainContext,

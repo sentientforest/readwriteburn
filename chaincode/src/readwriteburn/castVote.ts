@@ -8,9 +8,9 @@ import {
   putChainObject
 } from "@gala-chain/chaincode";
 
-import { Vote } from "./Vote";
-import { CastVoteDto } from "./dtos";
-import { IEntry, RWB_TYPES } from "./types";
+import { Vote } from "./api/Vote";
+import { CastVoteDto } from "./api/dtos";
+import { IEntry, RWB_TYPES } from "./api/types";
 
 export async function castVote(ctx: GalaChainContext, dto: CastVoteDto): Promise<void> {
   const { entry, entryType, quantity } = dto.vote;

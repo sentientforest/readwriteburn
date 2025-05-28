@@ -1,6 +1,6 @@
 import { GalaChainContext, creditFeeBalance, galaFeeGate } from "@gala-chain/chaincode";
 
-import { FireStarterDto } from "./dtos";
+import { FireStarterDto } from "./api/dtos";
 
 export enum ReadWriteBurnFeeGateCodes {
   Unknown = "",

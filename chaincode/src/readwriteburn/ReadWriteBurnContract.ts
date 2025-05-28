@@ -9,10 +9,7 @@ import {
 } from "@gala-chain/chaincode";
 
 import { version } from "../../package.json";
-import { Submission } from "./Submission";
-import { castVote } from "./castVote";
-import { contributeSubmission } from "./contributeSubmission";
-import { countVotes } from "./countVotes";
+import { Submission } from "./api/Submission";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
@@ -26,7 +23,10 @@ import {
   FireDto,
   FireResDto,
   FireStarterDto
-} from "./dtos";
+} from "./api/dtos";
+import { castVote } from "./castVote";
+import { contributeSubmission } from "./contributeSubmission";
+import { countVotes } from "./countVotes";
 import { fetchFires } from "./fetchFires";
 import { fetchSubmissions } from "./fetchSubmissions";
 import { fetchVotes } from "./fetchVotes";

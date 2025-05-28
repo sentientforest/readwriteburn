@@ -7,11 +7,11 @@ import {
 } from "@gala-chain/chaincode";
 import BigNumber from "bignumber.js";
 
-import { Vote } from "./Vote";
-import { VoteCount } from "./VoteCount";
-import { VoteRanking } from "./VoteRanking";
-import { VoterReceipt } from "./VoterReceipt";
-import { CountVotesDto } from "./dtos";
+import { Vote } from "./api/Vote";
+import { VoteCount } from "./api/VoteCount";
+import { VoteRanking } from "./api/VoteRanking";
+import { VoterReceipt } from "./api/VoterReceipt";
+import { CountVotesDto } from "./api/dtos";
 
 export async function countVotes(
   ctx: GalaChainContext,

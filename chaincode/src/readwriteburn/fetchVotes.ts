@@ -5,8 +5,8 @@ import {
 } from "@gala-chain/chaincode";
 import { plainToInstance } from "class-transformer";
 
-import { Vote } from "./Vote";
-import { FetchVotesDto, FetchVotesResDto, VoteResult } from "./dtos";
+import { Vote } from "./api/Vote";
+import { FetchVotesDto, FetchVotesResDto, VoteResult } from "./api/dtos";
 
 export async function fetchVotes(
   ctx: GalaChainContext,
