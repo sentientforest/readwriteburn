@@ -59,10 +59,14 @@ npm run type-check        # Vue TypeScript checking
 ## Architecture
 
 ### Smart Contract Architecture (chaincode/)
-- **ReadWriteBurnContract**: Main contract extending GalaContract
-- **Fire**: Topic/community entity with submission management
-- **Submission**: Content submissions within fires
-- **Vote**: Token burning mechanism for upvoting
+- **ReadWriteBurnContract**: Main contract extending GalaContract with 6 core operations
+- **Fire**: Topic/community entity with hierarchical organization and moderation controls
+- **Submission**: Content submissions with threaded discussion support via entryParent
+- **Vote**: Individual token burns - temporary objects processed into aggregates
+- **VoteCount**: Aggregated voting weight per entry with ranking references
+- **VoteRanking**: Efficient leaderboard queries using inverse-time keys
+- **VoterReceipt**: Permanent audit trail of user voting activity
+- **Fire Management**: FireStarter, FireAuthority, FireModerator for governance
 - Uses GalaChain SDK decorators (@Submit, @UnsignedEvaluate) for transaction types
 - Implements fee gates for token burning operations
 - Built on Hyperledger Fabric with TypeScript
@@ -101,3 +105,34 @@ The project requires a local GalaChain network. Use `npm run network:up` in chai
 - All components use ESLint + Prettier
 - TypeScript strict mode enabled
 - Import sorting via @trivago/prettier-plugin-sort-imports
+- Comprehensive TypeDoc annotations for professional API documentation
+
+## Smart Contract Data Flow
+
+### Voting Workflow
+1. **CastVote**: Users burn GALA tokens creating temporary Vote objects
+2. **CountVotes**: Batch processing (up to 1000 votes) that:
+   - Aggregates votes into VoteCount objects
+   - Updates VoteRanking for efficient leaderboards
+   - Creates VoterReceipt audit records
+   - Deletes processed votes to prevent double-counting
+
+### Content Hierarchy
+- **Fires** contain **Submissions** 
+- **Submissions** can have nested **Submissions** (comments)
+- **entryParent** field enables threaded discussions
+- All content supports **Votes** for token-weighted ranking
+
+### Key Design Patterns
+- **Inverse Time Keys**: Higher vote totals get better (lower) ranking positions
+- **Polymorphic Entry Types**: RWB_TYPES registry enables dynamic object instantiation
+- **Fee Gate Integration**: Atomic fee credit/debit operations for fire creation
+- **Hierarchical Organization**: entryParent enables nested content structures
+- **Batch Processing**: Vote counting handles large batches efficiently
+
+### Security Considerations
+- Unique transaction service prevents replay attacks
+- Authentication required for all state-changing operations
+- Fee verification with co-signed authorization
+- Conflict detection prevents duplicate fire creation
+- Validation of entry types and existence checks
