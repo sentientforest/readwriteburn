@@ -3,6 +3,13 @@ import "dotenv/config";
 import cors from "cors";
 import express from "express";
 
+import {
+  bulkVerifyContent_endpoint,
+  getModerationHistory,
+  getVerificationStats,
+  moderateSubmission,
+  verifySubmissionContent
+} from "./controllers/content";
 import { deleteFire, fireStarter, listFires, readFire, updateFire } from "./controllers/fires";
 import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
@@ -13,6 +20,7 @@ import {
   readSubmission,
   upvoteSubmission
 } from "./controllers/submissions";
+import { countVotes, fetchVotes, getVoteCounts } from "./controllers/votes";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -45,6 +53,18 @@ app.get("/api/submissions/:id", readSubmission);
 app.post("/api/submissions", createSubmission);
 app.post("/api/submissions/:id/vote", upvoteSubmission);
 app.get("/api/fires/:slug/submissions", listSubmissionsByFire);
+
+// Content verification and moderation routes
+app.get("/api/submissions/:id/verify", verifySubmissionContent);
+app.post("/api/admin/verify-bulk", bulkVerifyContent_endpoint);
+app.post("/api/admin/submissions/:id/moderate", moderateSubmission);
+app.get("/api/admin/submissions/:id/moderation-history", getModerationHistory);
+app.get("/api/admin/verification-stats", getVerificationStats);
+
+// Vote routes
+app.get("/api/votes", fetchVotes);
+app.post("/api/votes/count", countVotes);
+app.get("/api/votes/counts", getVoteCounts);
 
 app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);

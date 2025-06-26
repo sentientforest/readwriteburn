@@ -1,4 +1,4 @@
-import { createValidDTO } from "@gala-chain/api";
+import { asValidUserRef, createValidDTO } from "@gala-chain/api";
 import assert from "assert";
 import Database from "better-sqlite3";
 import { unlinkSync } from "fs";
@@ -39,6 +39,7 @@ describe("Database Service", () => {
         slug: "test-subfire-create",
         name: "TestSubfire-Create",
         description: "A test subfire",
+        starter: asValidUserRef("client|test-starter"),
         authorities: ["auth1", "auth2"],
         moderators: ["mod1", "mod2"]
       });
@@ -57,6 +58,7 @@ describe("Database Service", () => {
         slug: "test-subfire-get",
         name: "TestSubfire-Get",
         description: "A test subfire",
+        starter: asValidUserRef("client|test-starter"),
         authorities: ["auth1"],
         moderators: ["mod1"]
       });
@@ -79,6 +81,7 @@ describe("Database Service", () => {
         slug: "test-subfire-update",
         name: "TestSubfire-Update",
         description: "Original description",
+        starter: asValidUserRef("client|test-starter"),
         authorities: ["auth1"],
         moderators: ["mod1"]
       });
@@ -89,6 +92,7 @@ describe("Database Service", () => {
         slug: "test-subfire-update-new",
         name: "TestSubfire-Update-New",
         description: "Updated description",
+        starter: asValidUserRef("client|test-starter-updated"),
         authorities: ["auth2"],
         moderators: ["mod2"]
       });
@@ -106,6 +110,7 @@ describe("Database Service", () => {
         slug: "test-subfire-delete",
         name: "TestSubfire-Delete",
         description: "A test subfire",
+        starter: asValidUserRef("client|test-starter"),
         authorities: ["auth1"],
         moderators: ["mod1"]
       });
@@ -138,6 +143,7 @@ describe("Database Service", () => {
         slug: `TestSubfire-Submission-${++testCounter}`,
         name: `TestSubfire-Submission-${++testCounter}`,
         description: "Test subfire for submissions",
+        starter: asValidUserRef("client|test-starter"),
         authorities: [],
         moderators: []
       });

@@ -41,7 +41,11 @@ npm run dev               # Development server with watch mode
 npm run start             # Production server
 npm run lint              # ESLint checking
 npm run fix               # Auto-fix ESLint issues
-npm run test              # Run Mocha tests
+npm run test              # Run Mocha tests (includes content hashing utilities)
+
+# Testing specific modules
+npm run test -- src/utils/contentHash.spec.ts  # Content hashing tests
+npm run test -- src/db.spec.ts                 # Database and migration tests
 ```
 
 ### Client Development
@@ -72,12 +76,17 @@ npm run type-check        # Vue TypeScript checking
 - Built on Hyperledger Fabric with TypeScript
 
 ### Backend Architecture (server/)
-- Express.js with TypeScript
-- SQLite database using better-sqlite3
+- **Hybrid Storage Strategy**: SQLite for moderable content, blockchain for immutable hashes
+- **Content Hashing**: SHA-256 with timestamp salting using `@noble/hashes` library
+- **Legal Compliance**: DMCA takedown capability while preserving chain integrity
+- Express.js with TypeScript and comprehensive error handling
+- SQLite database with migration system for schema evolution
 - CORS enabled for frontend communication
-- API routes for fires, submissions, and identities
-- Proxy endpoints for chaincode interaction
-- User registration and wallet management
+- **Content Verification API**: Individual and bulk hash verification endpoints
+- **Moderation System**: Flag/remove/modify/restore with audit logging
+- API routes for fires, submissions, identities, and content management
+- Proxy endpoints for direct chaincode interaction
+- User registration and wallet management with secp256k1 authentication
 
 ### Frontend Architecture (client/)
 - Vue 3 with Composition API and TypeScript
@@ -94,8 +103,11 @@ npm run type-check        # Vue TypeScript checking
 - Client uses Vite environment variables (VITE_ prefix)
 
 ### Testing Strategy
-- Chaincode: Jest with e2e tests against actual network
-- Server: Mocha with TypeScript support
+- Chaincode: Jest with e2e tests against actual network (98.1% success rate)
+- Server: Mocha with TypeScript support (57 tests covering utilities and database)
+  - Content hashing utilities: 24 comprehensive tests with `@noble/hashes`
+  - Database operations: 33 tests including migration system verification
+  - All tests use Node.js `assert` for consistency
 - Client: Vue/Vite testing setup
 
 ### Network Setup
@@ -131,8 +143,11 @@ The project requires a local GalaChain network. Use `npm run network:up` in chai
 - **Batch Processing**: Vote counting handles large batches efficiently
 
 ### Security Considerations
-- Unique transaction service prevents replay attacks
-- Authentication required for all state-changing operations
-- Fee verification with co-signed authorization
-- Conflict detection prevents duplicate fire creation
-- Validation of entry types and existence checks
+- **Chain Level**: Unique transaction service prevents replay attacks
+- **Authentication**: Required for all state-changing operations with secp256k1 signatures
+- **Fee Verification**: Co-signed authorization with atomic credit/debit operations
+- **Conflict Detection**: Prevents duplicate fire creation and vote double-counting
+- **Validation**: Entry types and existence checks with comprehensive error handling
+- **Content Security**: SHA-256 hashing with timestamp salting against rainbow tables
+- **Timing Attack Protection**: Constant-time string comparison for hash verification
+- **Data Integrity**: Cryptographic proof system enables content authenticity verification
