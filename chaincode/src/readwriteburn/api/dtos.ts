@@ -17,6 +17,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  ValidateIf,
   ValidateNested
 } from "class-validator";
 import { JSONSchema } from "class-validator-jsonschema";
@@ -379,6 +380,7 @@ export class CastVoteDto extends SubmitCallDTO {
 }
 
 export interface IFetchVotesDto {
+  entryType?: string;
   fire?: string;
   submission?: string;
   bookmark?: string;
@@ -386,7 +388,13 @@ export interface IFetchVotesDto {
 }
 
 export class FetchVotesDto extends ChainCallDTO {
-  @IsOptional()
+  @JSONSchema({ description: "Optional, but required if fire is provided." })
+  @ValidateIf((dto) => !!dto.entryType || !!dto.fire)
+  @IsString()
+  entryType?: string;
+
+  @JSONSchema({ description: "Optional, but required if submission is provided." })
+  @ValidateIf((dto) => !!dto.fire || !!dto.submission)
   @IsString()
   fire?: string;
 
@@ -408,6 +416,7 @@ export class FetchVotesDto extends ChainCallDTO {
 
   constructor(data: IFetchVotesDto) {
     super();
+    this.entryType = data?.entryType;
     this.fire = data?.fire;
     this.submission = data?.submission;
     this.bookmark = data?.bookmark;

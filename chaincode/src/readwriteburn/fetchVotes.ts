@@ -49,7 +49,7 @@ export async function fetchVotes(
 ): Promise<FetchVotesResDto> {
   const { bookmark, limit } = dto;
 
-  const attributes = takeUntilUndefined(dto.fire, dto.submission);
+  const attributes = takeUntilUndefined(dto.entryType, dto.fire, dto.submission);
 
   const votes = await getObjectsByPartialCompositeKeyWithPagination(
     ctx,
@@ -57,7 +57,7 @@ export async function fetchVotes(
     attributes,
     Vote,
     bookmark,
-    limit
+    limit || 100 // Default limit if not provided
   );
 
   if (!votes || !Array.isArray(votes.results)) {

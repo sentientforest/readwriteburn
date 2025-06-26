@@ -71,7 +71,12 @@ export class VoteRanking extends ChainObject {
     super();
     this.entryType = entryType;
     this.entryParent = entryParent;
-    this.id = generateInverseTimeKey(quantity.toNumber());
+    // Handle undefined quantity during deserialization
+    if (quantity && quantity.toNumber) {
+      this.id = generateInverseTimeKey(quantity.toNumber());
+    } else {
+      this.id = generateInverseTimeKey(0);
+    }
     this.quantity = quantity;
     this.entry = entry;
   }
