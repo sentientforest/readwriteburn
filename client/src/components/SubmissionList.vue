@@ -41,11 +41,26 @@
           </div>
         </div>
         <div class="item-content">
-          <h3 class="item-title">{{ submission.name }}</h3>
+          <div class="flex items-start justify-between mb-2">
+            <h3 class="item-title">{{ submission.name }}</h3>
+            <ContentVerificationBadge
+              :submission-id="submission.id"
+              :initial-verified="submission.hash_verified"
+              :initial-moderation-status="submission.moderation_status"
+              :show-verify-button="false"
+            />
+          </div>
           <p class="item-description">{{ submission.description }}</p>
-          <a v-if="submission.url" :href="submission.url" target="_blank" rel="noopener noreferrer"
-            >View Source</a
-          >
+          <div class="flex items-center gap-4 mt-2">
+            <a v-if="submission.url" :href="submission.url" target="_blank" rel="noopener noreferrer"
+              class="text-primary-600 hover:text-primary-700 text-sm">View Source</a>
+            <router-link 
+              :to="`/submissions/${submission.id}/verify`"
+              class="text-primary-600 hover:text-primary-700 text-sm"
+            >
+              Verify Content
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -57,6 +72,7 @@ import type { MetamaskConnectClient } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 
 import type { SubfireResDto, SubmissionResDto } from "../types";
 

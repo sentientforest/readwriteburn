@@ -65,6 +65,11 @@ export interface SubmissionResDto {
   description: string;
   url: string;
   votes: number;
+  hash_verified?: boolean;
+  moderation_status?: 'active' | 'flagged' | 'removed' | 'modified';
+  content_hash?: string;
+  content_timestamp?: number;
+  created_at?: string;
 }
 
 export class ContributeSubmissionDto extends ChainCallDTO {

@@ -3,6 +3,9 @@
     <nav>
       <RouterLink to="/">Find Fires</RouterLink>
       <RouterLink to="/firestarter">Let's Burn</RouterLink>
+      <RouterLink to="/votes">Vote Explorer</RouterLink>
+      <RouterLink to="/votes/leaderboard">Leaderboard</RouterLink>
+      <RouterLink to="/verify">Verify Content</RouterLink>
       <RouterLink to="/account">Account/Wallet</RouterLink>
       <RouterLink to="/about">About</RouterLink>
     </nav>
