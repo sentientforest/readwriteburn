@@ -51,7 +51,7 @@ const form = ref<SubmissionDto>({
   name: "",
   description: "",
   url: "",
-  subfire: subfireSlug,
+  fire: subfireSlug,
   contributor: props.walletAddress
 });
 
@@ -85,12 +85,12 @@ async function submitForm() {
       name: "",
       description: "",
       url: "",
-      subfire: subfireSlug,
+      fire: subfireSlug,
       contributor: props.walletAddress
     };
 
-    // Redirect back to subfire page
-    router.push(`/subfires/${subfireSlug}`);
+    // Redirect back to fire page
+    router.push(`/f/${subfireSlug}`);
   } catch (err: unknown) {
     console.error("Error creating submission:", err);
     error.value = "Failed to create submission. Please try again.";

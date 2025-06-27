@@ -88,13 +88,13 @@ async function fetchSubmissions() {
   loadError.value = false;
 
   try {
-    // Fetch subfire details
-    const subfireRes = await fetch(`${apiBase}/api/subfires/${subfireSlug}`);
-    if (!subfireRes.ok) throw new Error(`Failed to fetch subfire`);
-    subfire.value = await subfireRes.json();
+    // Fetch fire details
+    const fireRes = await fetch(`${apiBase}/api/fires/${subfireSlug}`);
+    if (!fireRes.ok) throw new Error(`Failed to fetch fire`);
+    subfire.value = await fireRes.json();
 
-    // Fetch submissions for this subfire
-    const submissionsRes = await fetch(`${apiBase}/api/subfires/${subfireSlug}/submissions`);
+    // Fetch submissions for this fire
+    const submissionsRes = await fetch(`${apiBase}/api/fires/${subfireSlug}/submissions`);
     if (!submissionsRes.ok) throw new Error(`Failed to fetch submissions`);
 
     const data = await submissionsRes.json();

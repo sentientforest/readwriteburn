@@ -2,7 +2,7 @@
   <div class="fire-starter">
     <h2>Fire Starter</h2>
     <div class="burn-notice">
-      <p>🔥 Creating a new fire requires burning 100 $GALA</p>
+      <p>🔥 Creating a new fire requires burning $GALA tokens</p>
     </div>
 
     <form class="fire-form" @submit.prevent="handleSubmit">
@@ -29,15 +29,59 @@
         <textarea
           id="description"
           v-model="formData.description"
-          required
           placeholder="What's this fire about?"
           rows="4"
         ></textarea>
       </div>
 
+      <div class="form-group">
+        <label for="entryParent">Parent Fire (optional)</label>
+        <input
+          id="entryParent"
+          v-model="formData.entryParent"
+          type="text"
+          placeholder="Leave empty for top-level fire"
+        />
+        <small class="help-text">Enter the slug of a parent fire to create a nested fire</small>
+      </div>
+
+      <div class="form-section">
+        <h3>Additional Authorities (optional)</h3>
+        <div class="user-list">
+          <div v-for="(authority, index) in formData.authorities" :key="`auth-${index}`" class="user-item">
+            <input
+              v-model="formData.authorities[index]"
+              type="text"
+              placeholder="eth|0x1234567890123456789012345678901234567890"
+              pattern="^eth\|0x[a-fA-F0-9]{40}$"
+              title="Format: eth|0x followed by 40 hex characters"
+            />
+            <button type="button" @click="removeAuthority(index)" class="remove-btn">Remove</button>
+          </div>
+          <button type="button" @click="addAuthority" class="add-btn">Add Authority</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Additional Moderators (optional)</h3>
+        <div class="user-list">
+          <div v-for="(moderator, index) in formData.moderators" :key="`mod-${index}`" class="user-item">
+            <input
+              v-model="formData.moderators[index]"
+              type="text"
+              placeholder="eth|0x1234567890123456789012345678901234567890"
+              pattern="^eth\|0x[a-fA-F0-9]{40}$"
+              title="Format: eth|0x followed by 40 hex characters"
+            />
+            <button type="button" @click="removeModerator(index)" class="remove-btn">Remove</button>
+          </div>
+          <button type="button" @click="addModerator" class="add-btn">Add Moderator</button>
+        </div>
+      </div>
+
       <div class="form-actions">
-        <button type="submit" :disabled="isSubmitting">
-          {{ isSubmitting ? "Creating..." : "Start Fire 🔥" }}
+        <button type="submit" :disabled="isSubmitting || showFeeConfirmation">
+          {{ isSubmitting ? "Calculating fees..." : "Preview Fire Creation 🔥" }}
         </button>
       </div>
 
@@ -45,89 +89,223 @@
         {{ error }}
       </div>
     </form>
+
+    <!-- Fee Confirmation Modal -->
+    <div v-if="showFeeConfirmation" class="fee-confirmation-modal">
+      <div class="modal-content">
+        <h3>Confirm Fire Creation</h3>
+        <div class="fire-preview">
+          <h4>Fire Details:</h4>
+          <p><strong>Name:</strong> {{ formData.name }}</p>
+          <p><strong>Slug:</strong> {{ formData.slug }}</p>
+          <p><strong>Description:</strong> {{ formData.description || 'No description' }}</p>
+          <p v-if="formData.entryParent"><strong>Parent Fire:</strong> {{ formData.entryParent }}</p>
+        </div>
+        
+        <div class="fee-details">
+          <h4>Transaction Fees:</h4>
+          <div v-if="estimatedFees && estimatedFees.length > 0">
+            <div v-for="fee in estimatedFees" :key="fee.feeCode" class="fee-item">
+              <span class="fee-label">{{ fee.feeCode }}:</span>
+              <span class="fee-amount">{{ formatFee(fee.quantity) }} GALA</span>
+            </div>
+            <div class="total-fee">
+              <strong>Total: {{ formatFee(totalFee) }} GALA</strong>
+            </div>
+          </div>
+          <div v-else class="no-fees">
+            <p>✅ No fees required for this transaction</p>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button @click="cancelFireCreation" :disabled="isSubmitting" class="cancel-btn">
+            Cancel
+          </button>
+          <button @click="confirmFireCreation" :disabled="isSubmitting" class="confirm-btn">
+            {{ isSubmitting ? "Creating Fire..." : "Confirm & Create Fire 🔥" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { DryRunDto, FeeAuthorizationDto, asValidUserRef, createValidDTO } from "@gala-chain/api";
+import { DryRunDto, FeeVerificationDto, asValidUserRef } from "@gala-chain/api";
+import { BrowserConnectClient } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
-import { FireDto, FireStarterDto } from "../types";
 import { randomUniqueKey } from "../utils";
 
 const router = useRouter();
 
 const props = defineProps<{
   walletAddress: string;
+  metamaskClient: BrowserConnectClient;
 }>();
 
 const formData = ref({
   name: "",
   slug: "",
-  description: ""
+  description: "",
+  entryParent: "",
+  authorities: [] as string[],
+  moderators: [] as string[]
 });
 
 const isSubmitting = ref(false);
 const error = ref("");
+const showFeeConfirmation = ref(false);
+const estimatedFees = ref<Array<{ feeCode: string; quantity: BigNumber }>>([]);
+const pendingFireDto = ref<any>(null);
 
-const apiBase = import.meta.env.VITE_PROJECT_API;
+const apiBase = import.meta.env.VITE_GALASWAP_API;
 
+const totalFee = computed(() => {
+  return estimatedFees.value.reduce((total, fee) => total.plus(fee.quantity), new BigNumber(0));
+});
+
+function addAuthority() {
+  formData.value.authorities.push("");
+}
+
+function removeAuthority(index: number) {
+  formData.value.authorities.splice(index, 1);
+}
+
+function addModerator() {
+  formData.value.moderators.push("");
+}
+
+function removeModerator(index: number) {
+  formData.value.moderators.splice(index, 1);
+}
+
+function formatFee(amount: BigNumber): string {
+  // Format BigNumber to readable GALA amount (assuming 8 decimals)
+  return amount.dividedBy(new BigNumber(10).pow(8)).toFixed(2);
+}
+
+function cancelFireCreation() {
+  showFeeConfirmation.value = false;
+  estimatedFees.value = [];
+  pendingFireDto.value = null;
+  error.value = "";
+}
+
+// Step 1: Handle form submission - execute dry run
 async function handleSubmit() {
   isSubmitting.value = true;
   error.value = "";
 
-  const fire = await createValidDTO(FireDto, {
-    ...formData.value,
-    // todo: allow pre-configuration of additional authorities/moderators
-    authorities: [props.walletAddress],
-    moderators: [props.walletAddress]
-  });
+  try {
+    // Create FireDto with all required fields
+    const fireDto = {
+      entryParent: formData.value.entryParent || "",
+      slug: formData.value.slug,
+      name: formData.value.name,
+      starter: asValidUserRef(props.walletAddress),
+      description: formData.value.description,
+      authorities: formData.value.authorities.filter(auth => auth.trim() !== ""),
+      moderators: formData.value.moderators.filter(mod => mod.trim() !== ""),
+      uniqueKey: randomUniqueKey()
+    };
 
-  let expectedFee: BigNumber;
+    // Store the fire DTO for later use
+    pendingFireDto.value = fireDto;
 
-  const dryRun = await createValidDTO(DryRunDto, {
-    callerPublicKey: props.walletAddress,
-    method: "FireStarter",
-    dto: fire
-  });
+    // Create placeholder fee for dry run
+    const placeholderFee = {
+      feeCode: "FIRE_CREATION_FEE",
+      uniqueKey: randomUniqueKey()
+    };
 
-  const response = await fetch(`${apiBase}/api/product/readwriteburn/DryRun`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: dryRun.serialize()
-  });
+    // Create FireStarterDto for dry run
+    const fireStarterDto = {
+      fire: fireDto,
+      fee: placeholderFee,
+      uniqueKey: randomUniqueKey()
+    };
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to estimate fee from dry run");
+    // Execute dry run to estimate fees
+    const publicKey = await props.metamaskClient.getPublicKey();
+    const dryRunDto = {
+      callerPublicKey: publicKey.publicKey,
+      method: "FireStarter",
+      dto: fireStarterDto
+    };
+
+    const dryRunResponse = await fetch(`${apiBase}/api/product/ReadWriteBurn/DryRun`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(dryRunDto)
+    });
+
+    if (!dryRunResponse.ok) {
+      const errorData = await dryRunResponse.json();
+      throw new Error(errorData.message || "Failed to estimate fees");
+    }
+
+    const dryRunResult = await dryRunResponse.json();
+    console.log("Dry run result:", dryRunResult);
+
+    // Parse fees from dry run response
+    estimatedFees.value = parseFeeEstimation(dryRunResult);
+    
+    // Show fee confirmation modal
+    showFeeConfirmation.value = true;
+
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : "Failed to estimate fees";
+    console.error("Dry run error:", err);
+  } finally {
+    isSubmitting.value = false;
+  }
+}
+
+// Step 2: Confirm and submit the actual transaction
+async function confirmFireCreation() {
+  if (!pendingFireDto.value) {
+    error.value = "No pending fire data found";
+    return;
   }
 
-  console.log(`dryrun response successful`);
-
-  const dryRunResponse = await response.json();
-
-  // todo: parse dryRunResponse, determine fee
-  expectedFee = new BigNumber("100");
-
-  const fee = await createValidDTO(FeeAuthorizationDto, {
-    authority: asValidUserRef(props.walletAddress),
-    quantity: expectedFee,
-    uniqueKey: randomUniqueKey()
-  });
-
-  const dto = await createValidDTO(FireStarterDto, { fire, fee });
+  isSubmitting.value = true;
+  error.value = "";
 
   try {
+    // Create actual fee verification DTOs based on estimated fees
+    const feeVerifications = estimatedFees.value.map(fee => ({
+      feeCode: fee.feeCode,
+      uniqueKey: randomUniqueKey()
+    }));
+
+    // Use first fee or placeholder if no fees
+    const primaryFee = feeVerifications.length > 0 
+      ? feeVerifications[0] 
+      : { feeCode: "NO_FEE", uniqueKey: randomUniqueKey() };
+
+    // Create final FireStarterDto
+    const fireStarterDto = {
+      fire: pendingFireDto.value,
+      fee: primaryFee,
+      uniqueKey: randomUniqueKey()
+    };
+
+    // Sign and submit the transaction
+    const signedDto = await props.metamaskClient.sign(fireStarterDto);
+
     const response = await fetch(`${apiBase}/api/fires`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: dto.serialize()
+      body: JSON.stringify(signedDto)
     });
 
     if (!response.ok) {
@@ -135,15 +313,45 @@ async function handleSubmit() {
       throw new Error(errorData.message || "Failed to create fire");
     }
 
-    console.log(`dryrun response successful`);
+    const result = await response.json();
+    console.log("Fire created successfully:", result);
+    
+    // Navigate to the new fire
+    router.push(`/f/${pendingFireDto.value.slug}`);
 
-    const dryRunResponse = await response.json();
-    router.push(`/fires/${fire.slug}`);
   } catch (err) {
-    error.value = err instanceof Error ? err.message : "An unexpected error occurred";
+    error.value = err instanceof Error ? err.message : "Failed to create fire";
+    console.error("Fire creation error:", err);
   } finally {
     isSubmitting.value = false;
+    showFeeConfirmation.value = false;
   }
+}
+
+// Parse fee estimation from dry run response
+function parseFeeEstimation(dryRunResult: any): Array<{ feeCode: string; quantity: BigNumber }> {
+  const fees: Array<{ feeCode: string; quantity: BigNumber }> = [];
+  
+  // Parse the dry run response to extract fee information
+  // This structure may need adjustment based on actual GalaChain dry run response format
+  if (dryRunResult.Data && dryRunResult.Data.fees) {
+    for (const [feeCode, feeData] of Object.entries(dryRunResult.Data.fees)) {
+      fees.push({
+        feeCode,
+        quantity: new BigNumber(feeData as string)
+      });
+    }
+  } else if (dryRunResult.feeRequirements) {
+    // Alternative parsing if fees are in different structure
+    dryRunResult.feeRequirements.forEach((req: any) => {
+      fees.push({
+        feeCode: req.feeCode,
+        quantity: new BigNumber(req.amount)
+      });
+    });
+  }
+  
+  return fees;
 }
 </script>
 
@@ -224,6 +432,183 @@ button:disabled {
   margin-top: 1rem;
   color: #dc3545;
   text-align: center;
+}
+
+.help-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.form-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.form-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+  color: #495057;
+}
+
+.user-list {
+  space-y: 0.75rem;
+}
+
+.user-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.user-item input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.remove-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  background: #6c757d;
+  font-size: 0.875rem;
+}
+
+.remove-btn:hover {
+  background: #5a6268;
+}
+
+.add-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  background: #28a745;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.add-btn:hover {
+  background: #218838;
+}
+
+.fee-confirmation-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.fire-preview {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.fire-preview h4 {
+  margin-bottom: 0.75rem;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.fire-preview p {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.fee-details {
+  margin-bottom: 1.5rem;
+}
+
+.fee-details h4 {
+  margin-bottom: 0.75rem;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.fee-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.fee-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.fee-amount {
+  font-weight: 600;
+  color: #dc3545;
+}
+
+.total-fee {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid #dee2e6;
+  text-align: right;
+  font-size: 1.125rem;
+  color: #dc3545;
+}
+
+.no-fees {
+  text-align: center;
+  color: #28a745;
+  font-weight: 500;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-actions button {
+  width: auto;
+  min-width: 120px;
+  padding: 0.75rem 1.5rem;
+}
+
+.cancel-btn {
+  background: #6c757d;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+.confirm-btn {
+  background: #dc3545;
+}
+
+.confirm-btn:hover {
+  background: #c82333;
 }
 </style>
 ]]>

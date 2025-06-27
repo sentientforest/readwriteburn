@@ -1,35 +1,30 @@
-:root {
-    --primary-color: #00ff9c;
-    --background-color: #0f1014;
-    --text-color: #ffffff;
-    --button-hover-color: #00cc7d;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
   }
-  
-  body {
-    background-color: var(--background-color);
-    color: var(--text-color);
-    font-family: 'Inter', sans-serif;
-  }
-  
+}
+
+@layer components {
+  /* Legacy support for existing styles */
   .button {
-    background-color: var(--primary-color);
-    color: var(--background-color);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-  
-  .button:hover {
-    background-color: var(--button-hover-color);
+    @apply bg-primary-500 text-white border-0 px-5 py-2.5 rounded cursor-pointer font-semibold transition-colors duration-300 hover:bg-primary-600;
   }
   
   .input {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--text-color);
-    padding: 10px;
-    border-radius: 4px;
+    @apply bg-white/10 border border-white/20 text-white px-2.5 py-2.5 rounded;
   }
+}
+
+/* Preserve legacy CSS variables for gradual migration */
+:root {
+  --primary-color: #3b82f6;
+  --background-color: #0f1014;
+  --text-color: #ffffff;
+  --button-hover-color: #2563eb;
+}

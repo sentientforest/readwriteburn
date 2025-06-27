@@ -22,44 +22,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useFiresStore } from "@/stores";
 
-import type { FireDto } from "../types";
+const firesStore = useFiresStore();
+const router = useRouter();
 
-const apiBase = import.meta.env.VITE_PROJECT_API;
+// Computed properties from store
+const fires = computed(() => firesStore.fires);
+const loading = computed(() => firesStore.loading);
+const loadError = computed(() => !!firesStore.error);
 
-const fires = ref<FireDto[]>([]);
-const loading = ref(false);
-const loadError = ref(false);
-
-async function fetchFires() {
-  loading.value = true;
-  loadError.value = false;
-
-  try {
-    const response = await fetch(`${apiBase}/api/fires`);
-    if (!response.ok) throw new Error(`Failed to fetch fires`);
-
-    const data = await response.json();
-    if (!Array.isArray(data)) {
-      throw new Error("Invalid response format");
-    }
-
-    fires.value = data;
-  } catch (error) {
-    console.error("Error fetching fires:", error);
-    loadError.value = true;
-  } finally {
-    loading.value = false;
-  }
-}
-
-function selectFire(fire: FireDto) {
-  window.location.href = `/f/${fire.slug}`;
+function selectFire(fire: any) {
+  router.push(`/f/${fire.slug}`);
 }
 
 onMounted(async () => {
-  await fetchFires();
+  await firesStore.fetchFires();
 });
 </script>
 
