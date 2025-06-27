@@ -17,6 +17,7 @@ export interface FireResponse {
   starter: string;
   authorities: string[];
   moderators: string[];
+  entryParent?: string; // For hierarchy support
 }
 
 export interface FireCreateRequest {
@@ -45,6 +46,7 @@ export interface SubmissionResponse {
   created_at: string;
   updated_at?: string;
   votes?: number;
+  entryParent?: string; // For threaded discussions
 }
 
 export interface SubmissionCreateRequest {
@@ -53,6 +55,7 @@ export interface SubmissionCreateRequest {
   contributor?: string;
   description?: string;
   url?: string;
+  entryParent?: string; // For threaded comments
 }
 
 // Content Verification Types

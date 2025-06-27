@@ -17,6 +17,15 @@
         <input id="url" v-model="form.url" type="url" :disabled="isSubmitting" />
       </div>
 
+      <!-- Reply Context -->
+      <div v-if="replyToSubmission" class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <h3 class="text-sm font-medium text-blue-900 mb-2">Replying to:</h3>
+        <div class="text-sm text-blue-800">
+          <strong>{{ replyToSubmission.name }}</strong>
+          <p class="text-blue-700 mt-1">{{ replyToSubmission.description }}</p>
+        </div>
+      </div>
+
       <!-- Content Hash Preview -->
       <div v-if="contentHash" class="bg-gray-50 rounded-lg p-4 mb-4">
         <h3 class="text-sm font-medium text-gray-900 mb-2">Content Hash Preview</h3>
@@ -51,10 +60,10 @@
 import type { MetamaskConnectClient } from "@gala-chain/connect";
 import { sha256 } from '@noble/hashes/sha256';
 import { bytesToHex } from '@noble/hashes/utils';
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import type { SubmissionDto } from "../types";
+import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
@@ -66,14 +75,18 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const subfireSlug = route.params.slug as string;
+const replyToId = route.query.replyTo as string | undefined;
 
-const form = ref<SubmissionDto>({
+const form = ref<SubmissionCreateRequest>({
   name: "",
   description: "",
   url: "",
   fire: subfireSlug,
-  contributor: props.walletAddress
+  contributor: props.walletAddress,
+  entryParent: replyToId
 });
+
+const replyToSubmission = ref<SubmissionResponse | null>(null);
 
 const isSubmitting = ref(false);
 const error = ref("");
@@ -143,7 +156,8 @@ async function submitForm() {
       description: "",
       url: "",
       fire: subfireSlug,
-      contributor: props.walletAddress
+      contributor: props.walletAddress,
+      entryParent: replyToId
     };
 
     // Redirect back to fire page
@@ -155,6 +169,20 @@ async function submitForm() {
     isSubmitting.value = false;
   }
 }
+
+// Fetch parent submission if replying
+onMounted(async () => {
+  if (replyToId) {
+    try {
+      const response = await fetch(`${apiBase}/api/submissions/${replyToId}`);
+      if (response.ok) {
+        replyToSubmission.value = await response.json();
+      }
+    } catch (error) {
+      console.error("Error fetching parent submission:", error);
+    }
+  }
+});
 </script>
 
 <style>
