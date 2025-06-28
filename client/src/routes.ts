@@ -2,6 +2,7 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import "./assets/main.css";
 import AccountDetails from "./components/AccountDetails.vue";
+import AdminDashboard from "./components/AdminDashboard.vue";
 import AnalyticsDashboard from "./components/AnalyticsDashboard.vue";
 import ContentVerification from "./components/ContentVerification.vue";
 import FireList from "./components/FireList.vue";
@@ -28,6 +29,7 @@ const routes = [
   { path: "/votes/leaderboard", component: VoteLeaderboard },
   { path: "/analytics", component: AnalyticsDashboard },
   { path: "/insights", component: UserInsightsDashboard },
+  { path: "/admin", component: AdminDashboard },
   { path: "/admin/moderation", component: ModerationPanel },
   { path: "/account", component: AccountDetails },
   { path: "/about", component: InfoPage }

@@ -71,7 +71,7 @@ export const useVotesStore = defineStore('votes', () => {
       if (params.limit) searchParams.append('limit', params.limit.toString());
 
       const response = await fetch(
-        `${import.meta.env.VITE_GALASWAP_API}/api/votes?${searchParams.toString()}`
+        `${import.meta.env.VITE_PROJECT_API}/api/votes?${searchParams.toString()}`
       );
       
       if (!response.ok) {
@@ -113,7 +113,7 @@ export const useVotesStore = defineStore('votes', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/votes/count`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/votes/count`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -148,7 +148,7 @@ export const useVotesStore = defineStore('votes', () => {
       if (submission) searchParams.append('submission', submission);
 
       const response = await fetch(
-        `${import.meta.env.VITE_GALASWAP_API}/api/votes/counts?${searchParams.toString()}`
+        `${import.meta.env.VITE_PROJECT_API}/api/votes/counts?${searchParams.toString()}`
       );
       
       if (!response.ok) {

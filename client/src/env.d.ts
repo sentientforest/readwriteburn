@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_BURN_GATEWAY_API: string;
   readonly VITE_BURN_GATEWAY_PUBLIC_KEY_API: string;
   readonly VITE_GALASWAP_API: string;
+  readonly VITE_PROJECT_API: string; // Local server API for content management
   readonly VITE_PROJECT_ID: string;
 }
 

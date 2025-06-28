@@ -57,7 +57,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/fires/${fireSlug}/submissions`);
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires/${fireSlug}/submissions`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch submissions: ${response.status}`);
@@ -93,7 +93,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/submissions/${id}`);
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/submissions/${id}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch submission: ${response.status}`);
@@ -125,7 +125,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/submissions`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/submissions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -155,7 +155,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
 
   async function verifyContent(submissionId: number): Promise<ContentVerificationResponse> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/submissions/${submissionId}/verify`);
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/submissions/${submissionId}/verify`);
       
       if (!response.ok) {
         throw new Error(`Failed to verify content: ${response.status}`);
@@ -180,7 +180,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
 
   async function bulkVerifyContent(submissionIds: number[]): Promise<BulkVerificationResponse> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/admin/verify-bulk`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/admin/verify-bulk`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -229,7 +229,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
 
       const signedDto = await metamaskClient.sign(voteDto);
 
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/submissions/${submissionId}/vote`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/submissions/${submissionId}/vote`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

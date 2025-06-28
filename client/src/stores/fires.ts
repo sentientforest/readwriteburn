@@ -32,7 +32,7 @@ export const useFiresStore = defineStore('fires', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/fires`);
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch fires: ${response.status}`);
@@ -65,7 +65,7 @@ export const useFiresStore = defineStore('fires', () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/fires/${slug}`);
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires/${slug}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch fire: ${response.status}`);
@@ -113,7 +113,7 @@ export const useFiresStore = defineStore('fires', () => {
       // Sign the transaction
       const signedDto = await metamaskClient.sign(fireStarterDto);
 
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/fires`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

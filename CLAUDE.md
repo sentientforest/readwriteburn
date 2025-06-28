@@ -89,18 +89,25 @@ npm run type-check        # Vue TypeScript checking
 - User registration and wallet management with secp256k1 authentication
 
 ### Frontend Architecture (client/)
-- Vue 3 with Composition API and TypeScript
-- Vue Router for navigation
-- GalaChain Connect integration via MetaMask
-- Components for wallet connection, balance display, and token burning
-- Vite build system with Node.js polyfills for blockchain libraries
+- **Vue 3 with Composition API** and TypeScript for reactive UI development
+- **Vue Router** for client-side navigation with route guards
+- **Pinia** for centralized state management (user, fires, submissions, votes, analytics)
+- **GalaChain Connect** integration via MetaMask for wallet connectivity
+- **Headless UI + Tailwind CSS** for modern, accessible component library
+- **Advanced Features**: Threaded discussions, fire hierarchies, analytics dashboard
+- **Hybrid Connection Strategy**: Graceful fallback for wallet connection issues
+- **Content Verification**: Real-time hash generation and verification system
+- **Vite** build system with Node.js polyfills for blockchain libraries
 
 ## Key Development Notes
 
 ### Environment Configuration
 - Chaincode uses `.dev-env` file for network configuration
-- Server uses standard `.env` file
-- Client uses Vite environment variables (VITE_ prefix)
+- Server uses standard `.env` file for database and proxy settings
+- Client uses Vite environment variables with proper API separation:
+  - `VITE_PROJECT_API` for local server (content management, port 4000)
+  - `VITE_GALASWAP_API` for GalaChain operations (blockchain, port 3000)
+  - `VITE_BURN_GATEWAY_API` for user registration and identity services
 
 ### Testing Strategy
 - Chaincode: Jest with e2e tests against actual network (98.1% success rate)
@@ -151,3 +158,36 @@ The project requires a local GalaChain network. Use `npm run network:up` in chai
 - **Content Security**: SHA-256 hashing with timestamp salting against rainbow tables
 - **Timing Attack Protection**: Constant-time string comparison for hash verification
 - **Data Integrity**: Cryptographic proof system enables content authenticity verification
+
+## Development Workflow
+
+### Multi-Service Startup
+1. **Start Chaincode Network**: `cd chaincode && npm run network:up`
+2. **Start Server**: `cd server && npm run dev` (runs on port 4000)
+3. **Start Client**: `cd client && npm run dev` (runs on port 5173)
+
+### Common Issues & Solutions
+
+#### Wallet Connection Errors
+- **"Cannot read from private field"**: GalaChain Connect library issue
+- **Solution**: Use hybrid connection strategy with graceful fallback
+- **Debug**: Try "Connect Basic (Debug)" button for MetaMask-only connection
+
+#### API Configuration Issues
+- **Symptom**: 404 errors, `/identities` prefix in URLs, CORS errors
+- **Root Cause**: Wrong environment variable usage between local server vs blockchain APIs
+- **Solution**: Verify environment variables:
+  - Local server endpoints → `VITE_PROJECT_API` (port 4000)
+  - Blockchain operations → `VITE_GALASWAP_API` (port 3000)
+
+#### Build Issues
+- **Noble hashes import errors**: Use `@noble/hashes/sha256` not `@noble/hashes/sha2.js`
+- **TypeScript compilation**: Ensure all interface fields match API responses
+- **Missing dependencies**: Run `npm install` in all three directories
+
+### Client Development Patterns
+- **Store Usage**: Prefer stores over direct API calls in components
+- **Error Handling**: All API calls should have try/catch with user-friendly messages
+- **Loading States**: Use store loading states for UI feedback
+- **Hash Generation**: Use `@noble/hashes` library for client-side content hashing
+- **Environment Variables**: Always use `import.meta.env.VITE_*` for client configuration
