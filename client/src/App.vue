@@ -3,6 +3,9 @@
     <nav>
       <RouterLink to="/">Find Fires</RouterLink>
       <RouterLink to="/firestarter">Let's Burn</RouterLink>
+      <RouterLink to="/votes">Vote Explorer</RouterLink>
+      <RouterLink to="/votes/leaderboard">Leaderboard</RouterLink>
+      <RouterLink to="/verify">Verify Content</RouterLink>
       <RouterLink to="/account">Account/Wallet</RouterLink>
       <RouterLink to="/about">About</RouterLink>
     </nav>
@@ -24,71 +27,40 @@
       </div>
       <div v-else>
         <p class="wallet-address">Connected: {{ walletAddress }}</p>
-        <RouterView :wallet-address="walletAddress" :metamask-client="metamaskClient" />
+        <RouterView :wallet-address="walletAddress" :metamask-client="userStore.metamaskClient" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { BrowserConnectClient } from "@gala-chain/connect";
-import { ref } from "vue";
-import { createMemoryHistory, createRouter } from "vue-router";
+import { computed, onMounted } from "vue";
+import { useUserStore } from "@/stores";
 
-import AccountDetails from "./components/AccountDetails.vue";
-import InfoPage from "./components/InfoPage.vue";
+const userStore = useUserStore();
 
-const metamaskSupport = ref(true);
-let metamaskClient: BrowserConnectClient;
-try {
-  metamaskClient = new BrowserConnectClient();
-} catch (e) {
-  metamaskSupport.value = false;
-}
-
-const isConnected = ref(false);
-const walletAddress = ref("");
-const showInfo = ref(false);
+// Computed properties from store
+const metamaskSupport = computed(() => !!userStore.metamaskClient);
+const isConnected = computed(() => userStore.isConnected);
+const walletAddress = computed(() => userStore.address);
+const isAuthenticated = computed(() => userStore.isAuthenticated);
 
 async function connectWallet() {
-  if (!metamaskSupport.value) {
-    return;
+  const success = await userStore.connectWallet();
+  if (!success && userStore.error) {
+    console.error("Connection failed:", userStore.error);
   }
-
-  try {
-    await metamaskClient.connect();
-    walletAddress.value = metamaskClient.galaChainAddress;
-
-    // Check registration
-    try {
-      await checkRegistration();
-    } catch {
-      await registerUser();
-    }
-
-    isConnected.value = true;
-  } catch (err) {
-    console.error("Error connecting wallet:", err);
+  
+  // If connected but not registered, attempt registration
+  if (userStore.isConnected && !userStore.isRegistered) {
+    await userStore.registerUser();
   }
 }
 
-async function checkRegistration() {
-  const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_PUBLIC_KEY_API}/GetPublicKey`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user: walletAddress.value })
-  });
-  if (!response.ok) throw new Error("User not registered");
-}
-
-async function registerUser() {
-  const publicKey = await metamaskClient.getPublicKey();
-  await fetch(`${import.meta.env.VITE_GALASWAP_API}/CreateHeadlessWallet`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ publicKey: publicKey.publicKey })
-  });
-}
+onMounted(async () => {
+  // Initialize MetaMask support check
+  await userStore.initializeMetamask();
+});
 </script>
 
 <style>

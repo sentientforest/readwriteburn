@@ -1,6 +1,8 @@
 import Database from "better-sqlite3";
 
-import { FireDto, SubmissionDto, SubmissionResDto } from "./types";
+import { runMigrations } from "./migrations";
+import { FireDto, ModerationLogDto, SubmissionDto, SubmissionResDto } from "./types";
+import { type HashableContent, hashSubmissionContent } from "./utils/contentHash";
 
 let db: Database.Database;
 
@@ -21,6 +23,8 @@ export function closeDatabase() {
 
 export function initializeDatabase() {
   const db = getDb();
+
+  // Create base tables
   db.exec(`
     -- Create tables
     CREATE TABLE IF NOT EXISTS subfires (
@@ -76,6 +80,9 @@ export function initializeDatabase() {
     CREATE INDEX IF NOT EXISTS idx_votes_submission_id ON votes(submission_id);
     CREATE INDEX IF NOT EXISTS idx_votes_count ON votes(count);
   `);
+
+  // Run migrations to add new features
+  runMigrations(db);
 }
 
 export const dbService = {
@@ -217,9 +224,16 @@ export const dbService = {
 
   // Submission methods
   saveSubmission: (submission: SubmissionDto): SubmissionResDto => {
+    // Generate content hash
+    const { hash, timestamp } = hashSubmissionContent(
+      submission.name,
+      submission.description || "",
+      submission.url
+    );
+
     const insertSubmission = getDb().prepare(`
-      INSERT INTO submissions (name, contributor, description, url, subfire_id)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO submissions (name, contributor, description, url, subfire_id, content_hash, content_timestamp, hash_verified, moderation_status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertVotes = getDb().prepare(`
@@ -233,7 +247,11 @@ export const dbService = {
         submission.contributor,
         submission.description,
         submission.url,
-        submission.fire
+        submission.fire,
+        hash,
+        timestamp,
+        1, // hash_verified (boolean as integer)
+        "active" // moderation_status
       );
       const newId = result.lastInsertRowid as number;
       insertVotes.run(newId);
@@ -321,7 +339,11 @@ export const dbService = {
         s.url,
         sf.name as subfire,
         v.count as votes,
-        s.created_at
+        s.created_at,
+        s.content_hash,
+        s.hash_verified,
+        s.content_timestamp,
+        s.moderation_status
       FROM submissions s
       LEFT JOIN votes v ON s.id = v.submission_id
       JOIN subfires sf ON s.subfire_id = sf.slug
@@ -330,6 +352,152 @@ export const dbService = {
     `
       )
       .all(subfireId) as SubmissionResDto[];
+  },
+
+  // Content hashing and moderation methods
+  getSubmissionForVerification: (id: number): HashableContent | null => {
+    const submission = db
+      .prepare(
+        `
+      SELECT name, description, url, content_timestamp
+      FROM submissions
+      WHERE id = ?
+    `
+      )
+      .get(id) as { name: string; description: string; url: string; content_timestamp: number } | null;
+
+    if (!submission) return null;
+
+    return {
+      title: submission.name,
+      description: submission.description || "",
+      url: submission.url,
+      timestamp: submission.content_timestamp
+    };
+  },
+
+  moderateSubmission: (
+    id: number,
+    action: string,
+    reason: string | undefined,
+    adminUser: string,
+    newContent?: string
+  ): { success: boolean; originalHash?: string; newHash?: string } => {
+    const getSubmission = db.prepare(`
+      SELECT content_hash, name, description, url, content_timestamp
+      FROM submissions
+      WHERE id = ?
+    `);
+
+    const updateSubmission = db.prepare(`
+      UPDATE submissions
+      SET description = ?, moderation_status = ?, hash_verified = ?
+      WHERE id = ?
+    `);
+
+    const logModeration = db.prepare(`
+      INSERT INTO content_moderation (submission_id, action, reason, admin_user, original_hash, new_hash)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    return db.transaction(() => {
+      const submission = getSubmission.get(id) as any;
+      if (!submission) {
+        return { success: false };
+      }
+
+      const originalHash = submission.content_hash;
+      let newHash = originalHash;
+      let newDescription = submission.description;
+      let moderationStatus = submission.moderation_status;
+      let hashVerified = true;
+
+      switch (action) {
+        case "remove":
+          newDescription = "[Content removed by moderator]";
+          moderationStatus = "removed";
+          hashVerified = false;
+          break;
+        case "modify":
+          if (newContent) {
+            newDescription = newContent;
+            const { hash } = hashSubmissionContent(
+              submission.name,
+              newContent,
+              submission.url,
+              submission.content_timestamp
+            );
+            newHash = hash;
+            moderationStatus = "modified";
+            hashVerified = false;
+          }
+          break;
+        case "flag":
+          moderationStatus = "flagged";
+          break;
+        case "restore":
+          moderationStatus = "active";
+          hashVerified = true;
+          break;
+      }
+
+      updateSubmission.run(newDescription, moderationStatus, hashVerified ? 1 : 0, id);
+      logModeration.run(id, action, reason, adminUser, originalHash, newHash);
+
+      return {
+        success: true,
+        originalHash,
+        newHash: newHash !== originalHash ? newHash : undefined
+      };
+    })();
+  },
+
+  getModerationHistory: (submissionId: number): ModerationLogDto[] => {
+    return db
+      .prepare(
+        `
+      SELECT *
+      FROM content_moderation
+      WHERE submission_id = ?
+      ORDER BY created_at DESC
+    `
+      )
+      .all(submissionId) as ModerationLogDto[];
+  },
+
+  bulkGetSubmissionsForVerification: (
+    ids: number[]
+  ): Array<{
+    id: number;
+    content: HashableContent;
+    storedHash: string;
+  }> => {
+    const placeholders = ids.map(() => "?").join(",");
+    const query = `
+      SELECT id, name, description, url, content_timestamp, content_hash
+      FROM submissions
+      WHERE id IN (${placeholders})
+    `;
+
+    const results = db.prepare(query).all(...ids) as Array<{
+      id: number;
+      name: string;
+      description: string;
+      url: string;
+      content_timestamp: number;
+      content_hash: string;
+    }>;
+
+    return results.map((row) => ({
+      id: row.id,
+      content: {
+        title: row.name,
+        description: row.description || "",
+        url: row.url,
+        timestamp: row.content_timestamp
+      },
+      storedHash: row.content_hash
+    }));
   }
 };
 
