@@ -24,7 +24,7 @@
       </div>
 
       <!-- Filter Controls -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div>
           <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">
             Status Filter
@@ -91,65 +91,65 @@
           :key="submission.id"
           class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
         >
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1">
-              <div class="flex items-center gap-3 mb-2">
-                <h3 class="font-semibold text-gray-900">{{ submission.name }}</h3>
-                <ContentVerificationBadge
-                  :submission-id="submission.id"
-                  :initial-verified="submission.hash_verified"
-                  :initial-moderation-status="submission.moderation_status"
-                  :show-verify-button="true"
-                />
-              </div>
-              
-              <p class="text-gray-600 text-sm mb-2">{{ submission.description }}</p>
-              
-              <div class="text-xs text-gray-500 space-y-1">
-                <div>
-                  <span class="font-medium">ID:</span> {{ submission.id }}
-                  <span class="mx-2">•</span>
-                  <span class="font-medium">Fire:</span> {{ submission.subfire_id }}
-                  <span class="mx-2">•</span>
-                  <span class="font-medium">Contributor:</span> {{ formatAddress(submission.contributor) }}
+          <div class="space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                  <h3 class="font-semibold text-gray-900 truncate">{{ submission.name }}</h3>
+                  <ContentVerificationBadge
+                    :submission-id="submission.id"
+                    :initial-verified="submission.hash_verified"
+                    :initial-moderation-status="submission.moderation_status"
+                    :show-verify-button="true"
+                  />
                 </div>
-                <div v-if="submission.created_at">
-                  <span class="font-medium">Created:</span> {{ formatDate(submission.created_at) }}
+                
+                <p class="text-gray-600 text-sm mb-2 line-clamp-2">{{ submission.description }}</p>
+                
+                <div class="text-xs text-gray-500 space-y-1">
+                  <div class="flex flex-wrap gap-x-3 gap-y-1">
+                    <span><span class="font-medium">ID:</span> {{ submission.id }}</span>
+                    <span><span class="font-medium">Fire:</span> {{ submission.subfire_id }}</span>
+                    <span><span class="font-medium">Contributor:</span> {{ formatAddress(submission.contributor) }}</span>
+                  </div>
+                  <div v-if="submission.created_at">
+                    <span class="font-medium">Created:</span> {{ formatDate(submission.created_at) }}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Moderation Actions -->
-            <div class="flex items-center gap-2 ml-4">
-              <button
-                @click="openModerationModal(submission, 'flag')"
-                :disabled="processing"
-                class="px-3 py-1 text-xs bg-warning-600 text-white rounded hover:bg-warning-700 disabled:opacity-50"
-              >
-                Flag
-              </button>
-              <button
-                @click="openModerationModal(submission, 'modify')"
-                :disabled="processing"
-                class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
-              >
-                Modify
-              </button>
-              <button
-                @click="openModerationModal(submission, 'remove')"
-                :disabled="processing"
-                class="px-3 py-1 text-xs bg-error-600 text-white rounded hover:bg-error-700 disabled:opacity-50"
-              >
-                Remove
-              </button>
-              <button
-                v-if="submission.moderation_status !== 'active'"
-                @click="openModerationModal(submission, 'restore')"
-                :disabled="processing"
-                class="px-3 py-1 text-xs bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50"
-              >
-                Restore
-              </button>
+              <!-- Moderation Actions -->
+              <div class="flex flex-wrap gap-2 sm:gap-1 sm:flex-col lg:flex-row lg:items-center">
+                <button
+                  @click="openModerationModal(submission, 'flag')"
+                  :disabled="processing"
+                  class="flex-1 sm:flex-none px-3 py-2 text-xs bg-warning-600 text-white rounded hover:bg-warning-700 disabled:opacity-50 min-h-[36px] touch-manipulation"
+                >
+                  Flag
+                </button>
+                <button
+                  @click="openModerationModal(submission, 'modify')"
+                  :disabled="processing"
+                  class="flex-1 sm:flex-none px-3 py-2 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50 min-h-[36px] touch-manipulation"
+                >
+                  Modify
+                </button>
+                <button
+                  @click="openModerationModal(submission, 'remove')"
+                  :disabled="processing"
+                  class="flex-1 sm:flex-none px-3 py-2 text-xs bg-error-600 text-white rounded hover:bg-error-700 disabled:opacity-50 min-h-[36px] touch-manipulation"
+                >
+                  Remove
+                </button>
+                <button
+                  v-if="submission.moderation_status !== 'active'"
+                  @click="openModerationModal(submission, 'restore')"
+                  :disabled="processing"
+                  class="flex-1 sm:flex-none px-3 py-2 text-xs bg-success-600 text-white rounded hover:bg-success-700 disabled:opacity-50 min-h-[36px] touch-manipulation"
+                >
+                  Restore
+                </button>
+              </div>
             </div>
           </div>
 
@@ -187,8 +187,8 @@
     </div>
 
     <!-- Moderation Modal -->
-    <div v-if="showModerationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div v-if="showModerationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold capitalize">
@@ -252,12 +252,12 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center gap-3 pt-4">
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
               <button
                 @click="executeModerationAction"
                 :disabled="processing || !moderationReason.trim()"
                 :class="[
-                  'px-4 py-2 text-white rounded-md disabled:opacity-50 flex items-center gap-2',
+                  'w-full sm:flex-1 px-4 py-3 text-white rounded-md disabled:opacity-50 flex items-center justify-center gap-2 min-h-[44px]',
                   getModerationButtonClass(currentModerationAction)
                 ]"
               >
@@ -268,7 +268,7 @@
               <button
                 @click="closeModerationModal"
                 :disabled="processing"
-                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
+                class="w-full sm:w-auto px-4 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 min-h-[44px]"
               >
                 Cancel
               </button>
@@ -394,7 +394,7 @@ async function executeModerationAction() {
 
     // Call moderation API (placeholder - implement in store)
     const response = await fetch(
-      `${import.meta.env.VITE_GALASWAP_API}/api/admin/submissions/${currentSubmission.value.id}/moderate`,
+      `${import.meta.env.VITE_PROJECT_API}/api/admin/submissions/${currentSubmission.value.id}/moderate`,
       {
         method: 'POST',
         headers: {
@@ -511,5 +511,41 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Additional component-specific styles if needed */
+/* Line clamp utility for description text */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Touch-friendly interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Mobile-specific button adjustments */
+@media (max-width: 640px) {
+  .moderation-panel {
+    padding: 1rem;
+  }
+  
+  /* Ensure buttons are properly sized for touch */
+  button {
+    min-height: 44px;
+  }
+  
+  /* Stack action buttons vertically on very small screens */
+  .flex-wrap > button {
+    min-width: calc(50% - 0.25rem);
+  }
+}
+
+/* Ensure modal is properly sized on mobile */
+@media (max-width: 768px) {
+  .bg-white.rounded-lg.shadow-xl {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+}
 </style>
