@@ -56,9 +56,9 @@
               pattern="^eth\|0x[a-fA-F0-9]{40}$"
               title="Format: eth|0x followed by 40 hex characters"
             />
-            <button type="button" @click="removeAuthority(index)" class="remove-btn">Remove</button>
+            <button type="button" class="remove-btn" @click="removeAuthority(index)">Remove</button>
           </div>
-          <button type="button" @click="addAuthority" class="add-btn">Add Authority</button>
+          <button type="button" class="add-btn" @click="addAuthority">Add Authority</button>
         </div>
       </div>
 
@@ -73,9 +73,9 @@
               pattern="^eth\|0x[a-fA-F0-9]{40}$"
               title="Format: eth|0x followed by 40 hex characters"
             />
-            <button type="button" @click="removeModerator(index)" class="remove-btn">Remove</button>
+            <button type="button" class="remove-btn" @click="removeModerator(index)">Remove</button>
           </div>
-          <button type="button" @click="addModerator" class="add-btn">Add Moderator</button>
+          <button type="button" class="add-btn" @click="addModerator">Add Moderator</button>
         </div>
       </div>
 
@@ -98,10 +98,10 @@
           <h4>Fire Details:</h4>
           <p><strong>Name:</strong> {{ formData.name }}</p>
           <p><strong>Slug:</strong> {{ formData.slug }}</p>
-          <p><strong>Description:</strong> {{ formData.description || 'No description' }}</p>
+          <p><strong>Description:</strong> {{ formData.description || "No description" }}</p>
           <p v-if="formData.entryParent"><strong>Parent Fire:</strong> {{ formData.entryParent }}</p>
         </div>
-        
+
         <div class="fee-details">
           <h4>Transaction Fees:</h4>
           <div v-if="estimatedFees && estimatedFees.length > 0">
@@ -119,10 +119,8 @@
         </div>
 
         <div class="modal-actions">
-          <button @click="cancelFireCreation" :disabled="isSubmitting" class="cancel-btn">
-            Cancel
-          </button>
-          <button @click="confirmFireCreation" :disabled="isSubmitting" class="confirm-btn">
+          <button :disabled="isSubmitting" class="cancel-btn" @click="cancelFireCreation">Cancel</button>
+          <button :disabled="isSubmitting" class="confirm-btn" @click="confirmFireCreation">
             {{ isSubmitting ? "Creating Fire..." : "Confirm & Create Fire 🔥" }}
           </button>
         </div>
@@ -209,8 +207,8 @@ async function handleSubmit() {
       name: formData.value.name,
       starter: asValidUserRef(props.walletAddress),
       description: formData.value.description,
-      authorities: formData.value.authorities.filter(auth => auth.trim() !== ""),
-      moderators: formData.value.moderators.filter(mod => mod.trim() !== ""),
+      authorities: formData.value.authorities.filter((auth) => auth.trim() !== ""),
+      moderators: formData.value.moderators.filter((mod) => mod.trim() !== ""),
       uniqueKey: randomUniqueKey()
     };
 
@@ -256,10 +254,9 @@ async function handleSubmit() {
 
     // Parse fees from dry run response
     estimatedFees.value = parseFeeEstimation(dryRunResult);
-    
+
     // Show fee confirmation modal
     showFeeConfirmation.value = true;
-
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to estimate fees";
     console.error("Dry run error:", err);
@@ -280,15 +277,14 @@ async function confirmFireCreation() {
 
   try {
     // Create actual fee verification DTOs based on estimated fees
-    const feeVerifications = estimatedFees.value.map(fee => ({
+    const feeVerifications = estimatedFees.value.map((fee) => ({
       feeCode: fee.feeCode,
       uniqueKey: randomUniqueKey()
     }));
 
     // Use first fee or placeholder if no fees
-    const primaryFee = feeVerifications.length > 0 
-      ? feeVerifications[0] 
-      : { feeCode: "NO_FEE", uniqueKey: randomUniqueKey() };
+    const primaryFee =
+      feeVerifications.length > 0 ? feeVerifications[0] : { feeCode: "NO_FEE", uniqueKey: randomUniqueKey() };
 
     // Create final FireStarterDto
     const fireStarterDto = {
@@ -315,10 +311,9 @@ async function confirmFireCreation() {
 
     const result = await response.json();
     console.log("Fire created successfully:", result);
-    
+
     // Navigate to the new fire
     router.push(`/f/${pendingFireDto.value.slug}`);
-
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to create fire";
     console.error("Fire creation error:", err);
@@ -331,7 +326,7 @@ async function confirmFireCreation() {
 // Parse fee estimation from dry run response
 function parseFeeEstimation(dryRunResult: any): Array<{ feeCode: string; quantity: BigNumber }> {
   const fees: Array<{ feeCode: string; quantity: BigNumber }> = [];
-  
+
   // Parse the dry run response to extract fee information
   // This structure may need adjustment based on actual GalaChain dry run response format
   if (dryRunResult.Data && dryRunResult.Data.fees) {
@@ -350,7 +345,7 @@ function parseFeeEstimation(dryRunResult: any): Array<{ feeCode: string; quantit
       });
     });
   }
-  
+
   return fees;
 }
 </script>

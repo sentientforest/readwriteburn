@@ -1,7 +1,7 @@
 <template>
   <div class="threaded-submission" :style="{ marginLeft: `${depth * 20}px` }">
     <!-- Main Submission -->
-    <div 
+    <div
       :class="[
         'submission-item',
         depth > 0 ? 'border-l-2 border-gray-200 pl-4' : '',
@@ -29,8 +29,8 @@
             </div>
             <button
               :disabled="!voteQuantity || isVoting || !userStore.isAuthenticated"
-              @click="submitVote"
               class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:opacity-50"
+              @click="submitVote"
             >
               {{ isVoting ? "Voting..." : "Vote" }}
             </button>
@@ -57,49 +57,42 @@
               <span>{{ formatDate(submission.created_at) }}</span>
             </div>
           </div>
-          
+
           <p class="text-gray-700 text-sm mb-3">{{ submission.description }}</p>
-          
+
           <div class="flex items-center gap-4 text-sm">
-            <a 
-              v-if="submission.url" 
-              :href="submission.url" 
-              target="_blank" 
+            <a
+              v-if="submission.url"
+              :href="submission.url"
+              target="_blank"
               rel="noopener noreferrer"
               class="text-primary-600 hover:text-primary-700"
             >
               View Source
             </a>
-            
-            <router-link 
+
+            <router-link
               :to="`/submissions/${submission.id}/verify`"
               class="text-primary-600 hover:text-primary-700"
             >
               Verify Content
             </router-link>
-            
-            <button
-              @click="toggleReplyForm"
-              class="text-primary-600 hover:text-primary-700"
-            >
-              Reply
-            </button>
-            
+
+            <button class="text-primary-600 hover:text-primary-700" @click="toggleReplyForm">Reply</button>
+
             <router-link
               :to="`/f/${fireSlug}/reply?replyTo=${submission.id}`"
               class="text-primary-600 hover:text-primary-700"
             >
               Reply (new page)
             </router-link>
-            
+
             <button
               v-if="childSubmissions.length > 0"
-              @click="toggleReplies"
               class="text-gray-600 hover:text-gray-700 flex items-center gap-1"
+              @click="toggleReplies"
             >
-              <ChevronRightIcon 
-                :class="['h-4 w-4 transition-transform', showReplies && 'rotate-90']" 
-              />
+              <ChevronRightIcon :class="['h-4 w-4 transition-transform', showReplies && 'rotate-90']" />
               {{ childSubmissions.length }} replies
             </button>
           </div>
@@ -133,12 +126,13 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronRightIcon } from '@heroicons/vue/24/outline';
-import { ref, computed } from 'vue';
-import { useUserStore } from '@/stores';
-import ContentVerificationBadge from './ContentVerificationBadge.vue';
-import QuickReplyForm from './QuickReplyForm.vue';
-import type { SubmissionResponse } from '@/types/api';
+import { useUserStore } from "@/stores";
+import type { SubmissionResponse } from "@/types/api";
+import { ChevronRightIcon } from "@heroicons/vue/24/outline";
+import { computed, ref } from "vue";
+
+import ContentVerificationBadge from "./ContentVerificationBadge.vue";
+import QuickReplyForm from "./QuickReplyForm.vue";
 
 interface Props {
   submission: SubmissionResponse;
@@ -152,7 +146,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  'submission-updated': [];
+  "submission-updated": [];
 }>();
 
 const userStore = useUserStore();
@@ -165,7 +159,7 @@ const showReplies = ref(depth < 2); // Auto-expand first 2 levels
 
 // Computed properties
 const childSubmissions = computed(() => {
-  return props.allSubmissions.filter(sub => sub.entryParent === props.submission.id.toString());
+  return props.allSubmissions.filter((sub) => sub.entryParent === props.submission.id.toString());
 });
 
 // Methods
@@ -198,7 +192,7 @@ async function submitVote() {
     }
 
     voteQuantity.value = null;
-    emit('submission-updated');
+    emit("submission-updated");
   } catch (error) {
     console.error("Error submitting vote:", error);
   } finally {
@@ -209,13 +203,13 @@ async function submitVote() {
 function handleReplyPosted() {
   showReplyForm.value = false;
   showReplies.value = true; // Show replies when new one is posted
-  emit('submission-updated');
+  emit("submission-updated");
 }
 
 function formatUser(contributor: string): string {
   // Extract address from eth|0x... format
-  if (contributor.includes('|')) {
-    const address = contributor.split('|')[1];
+  if (contributor.includes("|")) {
+    const address = contributor.split("|")[1];
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
   return contributor;
@@ -233,7 +227,7 @@ function formatDate(dateString: string): string {
   } else if (diffHours > 0) {
     return `${diffHours}h ago`;
   } else {
-    return 'Just now';
+    return "Just now";
   }
 }
 </script>

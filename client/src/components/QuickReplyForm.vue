@@ -1,9 +1,7 @@
 <template>
   <form class="quick-reply-form space-y-3" @submit.prevent="handleSubmit">
     <div class="form-group">
-      <label for="reply-title" class="block text-sm font-medium text-gray-700 mb-1">
-        Reply Title
-      </label>
+      <label for="reply-title" class="block text-sm font-medium text-gray-700 mb-1"> Reply Title </label>
       <input
         id="reply-title"
         v-model="formData.name"
@@ -16,9 +14,7 @@
     </div>
 
     <div class="form-group">
-      <label for="reply-content" class="block text-sm font-medium text-gray-700 mb-1">
-        Reply Content
-      </label>
+      <label for="reply-content" class="block text-sm font-medium text-gray-700 mb-1"> Reply Content </label>
       <textarea
         id="reply-content"
         v-model="formData.description"
@@ -74,11 +70,11 @@
         <ArrowPathIcon v-else class="h-4 w-4 animate-spin" />
         {{ isSubmitting ? "Posting..." : "Post Reply" }}
       </button>
-      
+
       <button
         type="button"
-        @click="$emit('cancel')"
         class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+        @click="$emit('cancel')"
       >
         Cancel
       </button>
@@ -95,16 +91,16 @@
 </template>
 
 <script setup lang="ts">
+import { useSubmissionsStore, useUserStore } from "@/stores";
+import type { ContentHashResult } from "@/types/api";
+import { generateContentHash } from "@/utils/contentHash";
 import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   PaperAirplaneIcon,
   ShieldCheckIcon
-} from '@heroicons/vue/24/outline';
-import { ref, computed, watch } from 'vue';
-import { useUserStore, useSubmissionsStore } from '@/stores';
-import { generateContentHash } from '@/utils/contentHash';
-import type { ContentHashResult } from '@/types/api';
+} from "@heroicons/vue/24/outline";
+import { computed, ref, watch } from "vue";
 
 interface Props {
   parentSubmissionId: string;
@@ -114,8 +110,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-  'reply-posted': [];
-  'cancel': [];
+  "reply-posted": [];
+  cancel: [];
 }>();
 
 const userStore = useUserStore();
@@ -123,18 +119,18 @@ const submissionsStore = useSubmissionsStore();
 
 // State
 const formData = ref({
-  name: '',
-  description: '',
-  url: ''
+  name: "",
+  description: "",
+  url: ""
 });
 
 const isSubmitting = ref(false);
-const error = ref('');
+const error = ref("");
 const liveHash = ref<ContentHashResult | null>(null);
 
 // Computed properties
 const isFormValid = computed(() => {
-  return formData.value.name.trim() !== '' && formData.value.description.trim() !== '';
+  return formData.value.name.trim() !== "" && formData.value.description.trim() !== "";
 });
 
 // Methods
@@ -153,7 +149,7 @@ async function updateLiveHash() {
     });
     liveHash.value = hashResult;
   } catch (err) {
-    console.error('Error generating live hash:', err);
+    console.error("Error generating live hash:", err);
     liveHash.value = null;
   }
 }
@@ -165,7 +161,7 @@ async function handleSubmit() {
   }
 
   isSubmitting.value = true;
-  error.value = '';
+  error.value = "";
 
   try {
     const submissionData = {
@@ -178,16 +174,15 @@ async function handleSubmit() {
     };
 
     await submissionsStore.createSubmission(submissionData);
-    
+
     // Reset form
     formData.value = {
-      name: '',
-      description: '',
-      url: ''
+      name: "",
+      description: "",
+      url: ""
     };
-    
-    emit('reply-posted');
 
+    emit("reply-posted");
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to post reply";
     console.error("Reply submission error:", err);

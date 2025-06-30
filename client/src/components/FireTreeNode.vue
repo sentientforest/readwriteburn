@@ -1,40 +1,28 @@
 <template>
   <div class="fire-tree-node" :style="{ marginLeft: `${depth * 20}px` }">
-    <div 
+    <div
       :class="[
         'flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer',
-        isCurrentFire 
-          ? 'bg-primary-100 border border-primary-200' 
-          : 'hover:bg-gray-50'
+        isCurrentFire ? 'bg-primary-100 border border-primary-200' : 'hover:bg-gray-50'
       ]"
       @click="handleClick"
     >
       <!-- Expand/Collapse Button -->
       <button
         v-if="childFires.length > 0"
-        @click.stop="toggleExpanded"
         class="flex items-center justify-center w-5 h-5 rounded text-gray-400 hover:text-gray-600"
+        @click.stop="toggleExpanded"
       >
-        <ChevronRightIcon 
-          :class="['h-3 w-3 transition-transform', expanded && 'rotate-90']" 
-        />
+        <ChevronRightIcon :class="['h-3 w-3 transition-transform', expanded && 'rotate-90']" />
       </button>
       <div v-else class="w-5"></div>
 
       <!-- Fire Icon -->
-      <FolderIcon 
-        :class="[
-          'h-4 w-4',
-          isCurrentFire ? 'text-primary-600' : 'text-gray-400'
-        ]" 
-      />
+      <FolderIcon :class="['h-4 w-4', isCurrentFire ? 'text-primary-600' : 'text-gray-400']" />
 
       <!-- Fire Name -->
-      <span 
-        :class="[
-          'flex-1 text-sm truncate',
-          isCurrentFire ? 'text-primary-900 font-medium' : 'text-gray-700'
-        ]"
+      <span
+        :class="['flex-1 text-sm truncate', isCurrentFire ? 'text-primary-900 font-medium' : 'text-gray-700']"
       >
         {{ fire.name }}
       </span>
@@ -52,9 +40,7 @@
       </div>
 
       <!-- Depth Indicator -->
-      <span v-if="depth > 0" class="text-xs text-gray-400">
-        L{{ depth }}
-      </span>
+      <span v-if="depth > 0" class="text-xs text-gray-400"> L{{ depth }} </span>
     </div>
 
     <!-- Child Fires (Recursive) -->
@@ -74,14 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ChevronRightIcon,
-  DocumentTextIcon,
-  FireIcon,
-  FolderIcon
-} from '@heroicons/vue/24/outline';
-import { ref, computed, onMounted } from 'vue';
-import type { FireResponse } from '@/types/api';
+import type { FireResponse } from "@/types/api";
+import { ChevronRightIcon, DocumentTextIcon, FireIcon, FolderIcon } from "@heroicons/vue/24/outline";
+import { computed, onMounted, ref } from "vue";
 
 interface Props {
   fire: FireResponse;
@@ -107,7 +88,7 @@ const expanded = ref(false);
 const isCurrentFire = computed(() => props.fire.slug === props.currentFireSlug);
 
 const childFires = computed(() => {
-  return props.allFires.filter(fire => fire.entryParent === props.fire.slug);
+  return props.allFires.filter((fire) => fire.entryParent === props.fire.slug);
 });
 
 const fireStats = computed(() => {
@@ -120,7 +101,7 @@ function toggleExpanded() {
 }
 
 function handleClick() {
-  emit('navigate', props.fire.slug);
+  emit("navigate", props.fire.slug);
 }
 
 function formatGala(amount: number): string {
@@ -139,15 +120,15 @@ onMounted(() => {
 });
 
 function checkIfInPath(targetSlug: string, parentSlug: string, allFires: FireResponse[]): boolean {
-  let current = allFires.find(fire => fire.slug === targetSlug);
-  
+  let current = allFires.find((fire) => fire.slug === targetSlug);
+
   while (current && current.entryParent) {
     if (current.entryParent === parentSlug) {
       return true;
     }
-    current = allFires.find(fire => fire.slug === current!.entryParent);
+    current = allFires.find((fire) => fire.slug === current!.entryParent);
   }
-  
+
   return false;
 }
 </script>

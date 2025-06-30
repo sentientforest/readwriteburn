@@ -2,9 +2,7 @@
   <div class="vote-leaderboard max-w-4xl mx-auto p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Vote Leaderboard</h1>
-      <p class="text-gray-600 mt-2">
-        Top submissions and fires ranked by vote weight
-      </p>
+      <p class="text-gray-600 mt-2">Top submissions and fires ranked by vote weight</p>
     </div>
 
     <!-- Filter Controls -->
@@ -26,9 +24,7 @@
         </div>
 
         <div>
-          <label for="fire-filter" class="block text-sm font-medium text-gray-700 mb-1">
-            Fire Filter
-          </label>
+          <label for="fire-filter" class="block text-sm font-medium text-gray-700 mb-1"> Fire Filter </label>
           <select
             id="fire-filter"
             v-model="fireFilter"
@@ -42,9 +38,7 @@
         </div>
 
         <div>
-          <label for="time-period" class="block text-sm font-medium text-gray-700 mb-1">
-            Time Period
-          </label>
+          <label for="time-period" class="block text-sm font-medium text-gray-700 mb-1"> Time Period </label>
           <select
             id="time-period"
             v-model="timePeriod"
@@ -88,8 +82,10 @@
         >
           <div class="flex items-center gap-4">
             <!-- Ranking Position -->
-            <div class="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg"
-                 :class="getRankingBadgeClass(index + 1)">
+            <div
+              class="flex items-center justify-center w-12 h-12 rounded-full font-bold text-lg"
+              :class="getRankingBadgeClass(index + 1)"
+            >
               {{ index + 1 }}
             </div>
 
@@ -97,19 +93,18 @@
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-1">
                 <h3 class="font-semibold text-gray-900">{{ entry.name || `Entry ${entry.entry}` }}</h3>
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                      :class="getEntryTypeBadgeClass(entry.entryType)">
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getEntryTypeBadgeClass(entry.entryType)"
+                >
                   {{ entry.entryType }}
                 </span>
               </div>
-              
+
               <div class="text-sm text-gray-600 space-y-1">
                 <div>
                   <span class="font-medium">Fire:</span>
-                  <router-link 
-                    :to="`/f/${entry.fire}`"
-                    class="ml-1 text-primary-600 hover:text-primary-700"
-                  >
+                  <router-link :to="`/f/${entry.fire}`" class="ml-1 text-primary-600 hover:text-primary-700">
                     {{ entry.fire }}
                   </router-link>
                 </div>
@@ -130,9 +125,7 @@
                 {{ formatGala(parseFloat(entry.quantity)) }}
               </div>
               <div class="text-xs text-gray-500 mb-1">GALA</div>
-              <div class="text-sm text-gray-600">
-                Rank #{{ entry.ranking }}
-              </div>
+              <div class="text-sm text-gray-600">Rank #{{ entry.ranking }}</div>
             </div>
           </div>
 
@@ -142,8 +135,13 @@
               <ArrowTrendingUpIcon v-if="entry.trend > 0" class="h-4 w-4 text-success-500" />
               <ArrowTrendingDownIcon v-else-if="entry.trend < 0" class="h-4 w-4 text-error-500" />
               <MinusIcon v-else class="h-4 w-4 text-gray-400" />
-              <span :class="entry.trend > 0 ? 'text-success-600' : entry.trend < 0 ? 'text-error-600' : 'text-gray-600'">
-                {{ entry.trend > 0 ? '+' : '' }}{{ formatGala(Math.abs(entry.trend)) }} GALA this {{ timePeriod }}
+              <span
+                :class="
+                  entry.trend > 0 ? 'text-success-600' : entry.trend < 0 ? 'text-error-600' : 'text-gray-600'
+                "
+              >
+                {{ entry.trend > 0 ? "+" : "" }}{{ formatGala(Math.abs(entry.trend)) }} GALA this
+                {{ timePeriod }}
               </span>
             </div>
           </div>
@@ -153,20 +151,23 @@
       <!-- Load More -->
       <div v-if="hasMore" class="p-4 border-t border-gray-200">
         <button
-          @click="loadMore"
           :disabled="loading"
           class="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          @click="loadMore"
         >
           <ArrowPathIcon v-if="loading" class="h-4 w-4 animate-spin" />
-          {{ loading ? 'Loading...' : 'Load More Rankings' }}
+          {{ loading ? "Loading..." : "Load More Rankings" }}
         </button>
       </div>
     </div>
 
     <!-- Summary Statistics -->
-    <div v-if="rankedEntries.length > 0" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+    <div
+      v-if="rankedEntries.length > 0"
+      class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6"
+    >
       <h2 class="text-lg font-semibold mb-4">Summary Statistics</h2>
-      
+
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="text-center">
           <div class="text-2xl font-bold text-gray-900">{{ rankedEntries.length }}</div>
@@ -190,25 +191,25 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  ArrowPathIcon, 
-  ArrowTrendingUpIcon,
+import { useFiresStore, useVotesStore } from "@/stores";
+import type { VoteCountResponse } from "@/types/api";
+import {
+  ArrowPathIcon,
   ArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
   ExclamationTriangleIcon,
   MinusIcon,
   TrophyIcon
-} from '@heroicons/vue/24/outline';
-import { ref, computed, onMounted, watch } from 'vue';
-import { useVotesStore, useFiresStore } from '@/stores';
-import type { VoteCountResponse } from '@/types/api';
+} from "@heroicons/vue/24/outline";
+import { computed, onMounted, ref, watch } from "vue";
 
 const votesStore = useVotesStore();
 const firesStore = useFiresStore();
 
 // State
-const rankingType = ref('all');
-const fireFilter = ref('');
-const timePeriod = ref('all');
+const rankingType = ref("all");
+const fireFilter = ref("");
+const timePeriod = ref("all");
 const loading = ref(false);
 const error = ref<string | null>(null);
 const hasMore = ref(false);
@@ -248,30 +249,27 @@ async function loadRankings() {
   try {
     // Fetch vote counts based on filters
     await votesStore.fetchVoteCounts(fireFilter.value);
-    
+
     // Get vote counts and transform for display
     let entries = [...votesStore.voteCounts];
-    
+
     // Filter by entry type
-    if (rankingType.value !== 'all') {
-      entries = entries.filter(entry => entry.entryType === rankingType.value);
+    if (rankingType.value !== "all") {
+      entries = entries.filter((entry) => entry.entryType === rankingType.value);
     }
-    
+
     // Sort by quantity (highest first)
     entries.sort((a, b) => parseFloat(b.quantity) - parseFloat(a.quantity));
-    
+
     // Add mock names and trends (in real app, fetch from submissions/fires)
     rankedEntries.value = entries.map((entry, index) => ({
       ...entry,
-      name: entry.entryType === 'submission' 
-        ? `Submission ${entry.entry}`
-        : `Fire ${entry.fire}`,
+      name: entry.entryType === "submission" ? `Submission ${entry.entry}` : `Fire ${entry.fire}`,
       trend: Math.random() > 0.5 ? Math.random() * 1000 : -Math.random() * 500
     }));
-
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load rankings';
-    console.error('Error loading rankings:', err);
+    error.value = err instanceof Error ? err.message : "Failed to load rankings";
+    console.error("Error loading rankings:", err);
   } finally {
     loading.value = false;
   }
@@ -279,30 +277,30 @@ async function loadRankings() {
 
 function loadMore() {
   // Implement pagination if needed
-  console.log('Load more rankings');
+  console.log("Load more rankings");
 }
 
 function getRankingBadgeClass(position: number): string {
   switch (position) {
     case 1:
-      return 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300';
+      return "bg-yellow-100 text-yellow-800 border-2 border-yellow-300";
     case 2:
-      return 'bg-gray-100 text-gray-800 border-2 border-gray-300';
+      return "bg-gray-100 text-gray-800 border-2 border-gray-300";
     case 3:
-      return 'bg-orange-100 text-orange-800 border-2 border-orange-300';
+      return "bg-orange-100 text-orange-800 border-2 border-orange-300";
     default:
-      return 'bg-primary-100 text-primary-800 border border-primary-200';
+      return "bg-primary-100 text-primary-800 border border-primary-200";
   }
 }
 
 function getEntryTypeBadgeClass(entryType: string): string {
   switch (entryType) {
-    case 'submission':
-      return 'bg-blue-100 text-blue-800';
-    case 'fire':
-      return 'bg-red-100 text-red-800';
+    case "submission":
+      return "bg-blue-100 text-blue-800";
+    case "fire":
+      return "bg-red-100 text-red-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 }
 
@@ -313,11 +311,11 @@ function formatGala(amount: number): string {
 
 function formatDate(timestamp: number): string {
   try {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
     });
   } catch {
     return timestamp.toString();

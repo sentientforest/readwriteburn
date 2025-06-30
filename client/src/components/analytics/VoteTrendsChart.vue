@@ -12,12 +12,9 @@
           <span class="text-sm text-gray-600">GALA Burned</span>
         </div>
       </div>
-      
+
       <div class="flex items-center gap-2">
-        <select 
-          v-model="selectedMetric" 
-          class="text-sm border border-gray-300 rounded px-2 py-1"
-        >
+        <select v-model="selectedMetric" class="text-sm border border-gray-300 rounded px-2 py-1">
           <option value="both">Both Metrics</option>
           <option value="votes">Votes Only</option>
           <option value="gala">GALA Only</option>
@@ -26,30 +23,30 @@
     </div>
 
     <!-- Chart Container -->
-    <div class="chart-container relative" style="height: 300px;">
+    <div class="chart-container relative" style="height: 300px">
       <div v-if="!data || data.length === 0" class="absolute inset-0 flex items-center justify-center">
         <div class="text-center">
           <ChartBarIcon class="h-12 w-12 text-gray-300 mx-auto mb-2" />
           <p class="text-gray-500">No data available</p>
         </div>
       </div>
-      
+
       <svg v-else class="w-full h-full" viewBox="0 0 800 300">
         <!-- Grid Lines -->
         <defs>
           <pattern id="grid" width="50" height="30" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 30" fill="none" stroke="#f3f4f6" stroke-width="1"/>
+            <path d="M 50 0 L 0 0 0 30" fill="none" stroke="#f3f4f6" stroke-width="1" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
-        
+
         <!-- Y-Axis Labels (Votes) -->
         <g v-if="selectedMetric !== 'gala'">
-          <text 
-            v-for="(tick, index) in votesYTicks" 
+          <text
+            v-for="(tick, index) in votesYTicks"
             :key="`votes-y-${index}`"
-            :x="30" 
-            :y="280 - (tick.position * 240)"
+            :x="30"
+            :y="280 - tick.position * 240"
             class="text-xs fill-gray-500"
             text-anchor="end"
           >
@@ -59,11 +56,11 @@
 
         <!-- Y-Axis Labels (GALA) - Right side -->
         <g v-if="selectedMetric !== 'votes'">
-          <text 
-            v-for="(tick, index) in galaYTicks" 
+          <text
+            v-for="(tick, index) in galaYTicks"
             :key="`gala-y-${index}`"
-            :x="770" 
-            :y="280 - (tick.position * 240)"
+            :x="770"
+            :y="280 - tick.position * 240"
             class="text-xs fill-green-600"
             text-anchor="start"
           >
@@ -74,7 +71,7 @@
         <!-- Chart Lines -->
         <g class="chart-lines">
           <!-- Votes Line -->
-          <path 
+          <path
             v-if="selectedMetric !== 'gala'"
             :d="votesPath"
             fill="none"
@@ -82,9 +79,9 @@
             stroke-width="2"
             class="transition-all duration-300"
           />
-          
+
           <!-- GALA Line -->
-          <path 
+          <path
             v-if="selectedMetric !== 'votes'"
             :d="galaPath"
             fill="none"
@@ -98,8 +95,8 @@
         <g class="data-points">
           <!-- Votes Points -->
           <circle
-            v-if="selectedMetric !== 'gala'"
             v-for="(point, index) in votesPoints"
+            v-if="selectedMetric !== 'gala'"
             :key="`votes-point-${index}`"
             :cx="point.x"
             :cy="point.y"
@@ -109,11 +106,11 @@
             @mouseenter="showTooltip($event, data[index], 'votes')"
             @mouseleave="hideTooltip"
           />
-          
+
           <!-- GALA Points -->
           <circle
-            v-if="selectedMetric !== 'votes'"
             v-for="(point, index) in galaPoints"
+            v-if="selectedMetric !== 'votes'"
             :key="`gala-point-${index}`"
             :cx="point.x"
             :cy="point.y"
@@ -127,10 +124,10 @@
 
         <!-- X-Axis Labels -->
         <g class="x-axis-labels">
-          <text 
-            v-for="(point, index) in xAxisPoints" 
+          <text
+            v-for="(point, index) in xAxisPoints"
             :key="`x-axis-${index}`"
-            :x="point.x" 
+            :x="point.x"
             y="295"
             class="text-xs fill-gray-500"
             text-anchor="middle"
@@ -150,14 +147,14 @@
         class="absolute z-10 bg-gray-900 text-white text-sm rounded-lg px-3 py-2 pointer-events-none transform -translate-x-1/2 -translate-y-full"
       >
         <div class="font-medium">{{ tooltip.date }}</div>
-        <div v-if="tooltip.votes !== undefined" class="text-blue-300">
-          Votes: {{ tooltip.votes }}
-        </div>
+        <div v-if="tooltip.votes !== undefined" class="text-blue-300">Votes: {{ tooltip.votes }}</div>
         <div v-if="tooltip.gala !== undefined" class="text-green-300">
           GALA: {{ formatGala(tooltip.gala) }}
         </div>
         <!-- Tooltip arrow -->
-        <div class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+        <div
+          class="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"
+        ></div>
       </div>
     </div>
 
@@ -184,8 +181,8 @@
 </template>
 
 <script setup lang="ts">
-import { ChartBarIcon } from '@heroicons/vue/24/outline';
-import { ref, computed } from 'vue';
+import { ChartBarIcon } from "@heroicons/vue/24/outline";
+import { computed, ref } from "vue";
 
 interface ChartDataPoint {
   date: string;
@@ -201,12 +198,12 @@ interface Props {
 const props = defineProps<Props>();
 
 // State
-const selectedMetric = ref('both');
+const selectedMetric = ref("both");
 const tooltip = ref({
   show: false,
   x: 0,
   y: 0,
-  date: '',
+  date: "",
   votes: undefined as number | undefined,
   gala: undefined as number | undefined
 });
@@ -214,13 +211,13 @@ const tooltip = ref({
 // Computed values
 const votesExtent = computed(() => {
   if (!props.data || props.data.length === 0) return [0, 100];
-  const values = props.data.map(d => d.votes);
+  const values = props.data.map((d) => d.votes);
   return [0, Math.max(...values) * 1.1];
 });
 
 const galaExtent = computed(() => {
   if (!props.data || props.data.length === 0) return [0, 1000];
-  const values = props.data.map(d => d.gala);
+  const values = props.data.map((d) => d.gala);
   return [0, Math.max(...values) * 1.1];
 });
 
@@ -229,7 +226,7 @@ const votesYTicks = computed(() => {
   const ticks = [];
   const step = max / 5;
   for (let i = 0; i <= 5; i++) {
-    const value = min + (step * i);
+    const value = min + step * i;
     ticks.push({
       position: i / 5,
       label: Math.floor(value).toString()
@@ -243,7 +240,7 @@ const galaYTicks = computed(() => {
   const ticks = [];
   const step = max / 5;
   for (let i = 0; i <= 5; i++) {
-    const value = min + (step * i);
+    const value = min + step * i;
     ticks.push({
       position: i / 5,
       label: formatGala(value)
@@ -256,7 +253,7 @@ const votesPoints = computed(() => {
   if (!props.data || props.data.length === 0) return [];
   const [min, max] = votesExtent.value;
   const range = max - min || 1;
-  
+
   return props.data.map((point, index) => ({
     x: 50 + (index / (props.data.length - 1)) * 700,
     y: 280 - ((point.votes - min) / range) * 240
@@ -267,7 +264,7 @@ const galaPoints = computed(() => {
   if (!props.data || props.data.length === 0) return [];
   const [min, max] = galaExtent.value;
   const range = max - min || 1;
-  
+
   return props.data.map((point, index) => ({
     x: 50 + (index / (props.data.length - 1)) * 700,
     y: 280 - ((point.gala - min) / range) * 240
@@ -276,34 +273,34 @@ const galaPoints = computed(() => {
 
 const xAxisPoints = computed(() => {
   if (!props.data || props.data.length === 0) return [];
-  
+
   // Show every nth point based on data density
   const step = Math.max(1, Math.floor(props.data.length / 6));
-  
+
   return props.data
     .filter((_, index) => index % step === 0 || index === props.data.length - 1)
     .map((_, i) => ({
-      x: 50 + (i * step / (props.data.length - 1)) * 700
+      x: 50 + ((i * step) / (props.data.length - 1)) * 700
     }));
 });
 
 const votesPath = computed(() => {
-  if (votesPoints.value.length === 0) return '';
-  
-  const pathData = votesPoints.value.map((point, index) => 
-    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-  ).join(' ');
-  
+  if (votesPoints.value.length === 0) return "";
+
+  const pathData = votesPoints.value
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
   return pathData;
 });
 
 const galaPath = computed(() => {
-  if (galaPoints.value.length === 0) return '';
-  
-  const pathData = galaPoints.value.map((point, index) => 
-    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-  ).join(' ');
-  
+  if (galaPoints.value.length === 0) return "";
+
+  const pathData = galaPoints.value
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+
   return pathData;
 });
 
@@ -327,10 +324,10 @@ const avgGalaPerDay = computed(() => {
 // Methods
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  if (props.timeRange === '24h') {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (props.timeRange === "24h") {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
 function formatGala(amount: number): string {
@@ -340,18 +337,18 @@ function formatGala(amount: number): string {
   return amount.toFixed(1);
 }
 
-function showTooltip(event: MouseEvent, dataPoint: ChartDataPoint, type: 'votes' | 'gala') {
+function showTooltip(event: MouseEvent, dataPoint: ChartDataPoint, type: "votes" | "gala") {
   const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-  const container = (event.currentTarget as SVGElement).closest('.chart-container')?.getBoundingClientRect();
-  
+  const container = (event.currentTarget as SVGElement).closest(".chart-container")?.getBoundingClientRect();
+
   if (container) {
     tooltip.value = {
       show: true,
       x: rect.left - container.left + rect.width / 2,
       y: rect.top - container.top,
       date: formatDate(dataPoint.date),
-      votes: type === 'votes' || selectedMetric.value === 'both' ? dataPoint.votes : undefined,
-      gala: type === 'gala' || selectedMetric.value === 'both' ? dataPoint.gala : undefined
+      votes: type === "votes" || selectedMetric.value === "both" ? dataPoint.votes : undefined,
+      gala: type === "gala" || selectedMetric.value === "both" ? dataPoint.gala : undefined
     };
   }
 }

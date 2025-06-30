@@ -4,19 +4,22 @@
       <UsersIcon class="h-12 w-12 text-gray-300 mx-auto mb-2" />
       <p class="text-gray-500">No user data available</p>
     </div>
-    
+
     <div v-else class="space-y-3">
-      <div 
-        v-for="(user, index) in users" 
+      <div
+        v-for="(user, index) in users"
         :key="user.address"
         class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <!-- Rank -->
         <div class="flex-shrink-0 w-8 text-center">
-          <div v-if="index < 3" :class="[
-            'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white mx-auto',
-            index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
-          ]">
+          <div
+            v-if="index < 3"
+            :class="[
+              'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white mx-auto',
+              index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
+            ]"
+          >
             {{ index + 1 }}
           </div>
           <span v-else class="text-sm font-medium text-gray-500">{{ index + 1 }}</span>
@@ -30,11 +33,11 @@
           <div class="text-xs text-gray-500">
             {{ formatAddress(user.address) }}
           </div>
-          
+
           <!-- Reputation Bar -->
           <div class="mt-1 flex items-center gap-2">
             <div class="flex-1 bg-gray-200 rounded-full h-1.5">
-              <div 
+              <div
                 class="bg-purple-500 h-1.5 rounded-full transition-all duration-500"
                 :style="{ width: `${user.reputation}%` }"
               ></div>
@@ -63,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { UsersIcon } from '@heroicons/vue/24/outline';
+import { UsersIcon } from "@heroicons/vue/24/outline";
 
 interface LeaderboardUser {
   address: string;

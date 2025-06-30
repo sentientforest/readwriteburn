@@ -4,19 +4,22 @@
       <DocumentTextIcon class="h-12 w-12 text-gray-300 mx-auto mb-2" />
       <p class="text-gray-500">No submissions found</p>
     </div>
-    
+
     <div v-else class="space-y-3">
-      <div 
-        v-for="(submission, index) in submissions" 
+      <div
+        v-for="(submission, index) in submissions"
         :key="submission.id"
         class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
       >
         <!-- Rank -->
         <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-          <div v-if="index < 3" :class="[
-            'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white',
-            index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
-          ]">
+          <div
+            v-if="index < 3"
+            :class="[
+              'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white',
+              index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-amber-600'
+            ]"
+          >
             {{ index + 1 }}
           </div>
           <span v-else class="text-sm font-medium text-gray-500">{{ index + 1 }}</span>
@@ -30,7 +33,7 @@
                 {{ submission.name }}
               </h4>
               <div class="flex items-center gap-2 mt-1">
-                <router-link 
+                <router-link
                   :to="`/f/${submission.fire}`"
                   class="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700"
                 >
@@ -60,7 +63,7 @@
 
         <!-- Action -->
         <div class="flex-shrink-0">
-          <router-link 
+          <router-link
             :to="`/submissions/${submission.id}/verify`"
             class="text-xs text-primary-600 hover:text-primary-700 font-medium"
           >
@@ -73,11 +76,11 @@
     <!-- Load More Button -->
     <div v-if="hasMore" class="mt-4 text-center">
       <button
-        @click="$emit('load-more')"
         :disabled="isLoading"
         class="px-4 py-2 text-sm text-primary-600 hover:text-primary-700 font-medium disabled:opacity-50"
+        @click="$emit('load-more')"
       >
-        {{ isLoading ? 'Loading...' : 'Load More' }}
+        {{ isLoading ? "Loading..." : "Load More" }}
       </button>
     </div>
 
@@ -102,8 +105,8 @@
 </template>
 
 <script setup lang="ts">
-import { DocumentTextIcon, FolderIcon } from '@heroicons/vue/24/outline';
-import { computed } from 'vue';
+import { DocumentTextIcon, FolderIcon } from "@heroicons/vue/24/outline";
+import { computed } from "vue";
 
 interface TopSubmission {
   id: number;
@@ -126,7 +129,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 defineEmits<{
-  'load-more': [];
+  "load-more": [];
 }>();
 
 // Computed values
@@ -146,10 +149,12 @@ const avgEngagement = computed(() => {
 
 // Methods
 function formatGala(amount: number): string {
-  if (amount >= 100000000000) { // 1000+ GALA
+  if (amount >= 100000000000) {
+    // 1000+ GALA
     return `${(amount / 100000000).toFixed(1)}K`;
   }
-  if (amount >= 100000000) { // 1+ GALA
+  if (amount >= 100000000) {
+    // 1+ GALA
     return `${(amount / 100000000).toFixed(1)}`;
   }
   return `${(amount / 100000000).toFixed(2)}`;
