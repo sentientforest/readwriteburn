@@ -58,9 +58,9 @@
 
 <script setup lang="ts">
 import type { MetamaskConnectClient } from "@gala-chain/connect";
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
-import { ref, computed, watch, onMounted } from "vue";
+import { sha256 } from "@noble/hashes/sha256";
+import { bytesToHex } from "@noble/hashes/utils";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
@@ -96,14 +96,14 @@ const contentTimestamp = ref(Date.now());
 // Computed hash preview
 const contentHash = computed(() => {
   if (!form.value.name.trim() && !form.value.description.trim()) {
-    return '';
+    return "";
   }
 
   try {
     const hashableContent = {
       title: form.value.name.trim(),
       description: form.value.description.trim(),
-      url: form.value.url?.trim() || '',
+      url: form.value.url?.trim() || "",
       timestamp: contentTimestamp.value
     };
 
@@ -112,7 +112,7 @@ const contentHash = computed(() => {
     const hashBytes = sha256(contentBytes);
     return `sha256:${bytesToHex(hashBytes)}`;
   } catch {
-    return '';
+    return "";
   }
 });
 

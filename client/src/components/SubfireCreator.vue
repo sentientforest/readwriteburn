@@ -2,9 +2,7 @@
   <div class="subfire-creator max-w-2xl mx-auto p-6">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">Create Subfire</h1>
-      <p class="text-gray-600 mt-2">
-        Create a new subfire under {{ parentFire?.name || 'Unknown Fire' }}
-      </p>
+      <p class="text-gray-600 mt-2">Create a new subfire under {{ parentFire?.name || "Unknown Fire" }}</p>
     </div>
 
     <!-- Parent Fire Context -->
@@ -18,22 +16,23 @@
       </div>
     </div>
 
-    <form class="subfire-form bg-white rounded-lg shadow-sm border border-gray-200 p-6" @submit.prevent="handleSubmit">
+    <form
+      class="subfire-form bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+      @submit.prevent="handleSubmit"
+    >
       <div class="space-y-6">
         <!-- Basic Information -->
         <div class="form-section">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="form-group">
-              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-                Subfire Name
-              </label>
-              <input 
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1"> Subfire Name </label>
+              <input
                 id="name"
-                v-model="formData.name" 
-                type="text" 
-                required 
+                v-model="formData.name"
+                type="text"
+                required
                 :disabled="isSubmitting"
                 placeholder="Enter subfire name"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -41,9 +40,7 @@
             </div>
 
             <div class="form-group">
-              <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">
-                URL Slug
-              </label>
+              <label for="slug" class="block text-sm font-medium text-gray-700 mb-1"> URL Slug </label>
               <input
                 id="slug"
                 v-model="formData.slug"
@@ -76,14 +73,14 @@
         <!-- Hierarchy Information -->
         <div class="form-section">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Hierarchy</h3>
-          
+
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div class="flex items-start gap-3">
               <InformationCircleIcon class="h-5 w-5 text-blue-500 mt-0.5" />
               <div class="text-sm">
                 <p class="font-medium text-blue-800">Subfire Structure</p>
                 <p class="text-blue-700 mt-1">
-                  This subfire will be created under <strong>{{ parentFire?.name }}</strong> and will inherit 
+                  This subfire will be created under <strong>{{ parentFire?.name }}</strong> and will inherit
                   its permissions and moderation settings. You can create nested subfires up to any depth.
                 </p>
               </div>
@@ -94,14 +91,16 @@
         <!-- Permissions (Optional) -->
         <div class="form-section">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Additional Permissions (Optional)</h3>
-          
+
           <div class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Additional Authorities
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-2"> Additional Authorities </label>
               <div class="space-y-2">
-                <div v-for="(authority, index) in formData.authorities" :key="`auth-${index}`" class="flex items-center gap-2">
+                <div
+                  v-for="(authority, index) in formData.authorities"
+                  :key="`auth-${index}`"
+                  class="flex items-center gap-2"
+                >
                   <input
                     v-model="formData.authorities[index]"
                     type="text"
@@ -110,18 +109,18 @@
                     title="Format: eth|0x followed by 40 hex characters"
                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
-                  <button 
-                    type="button" 
-                    @click="removeAuthority(index)"
+                  <button
+                    type="button"
                     class="px-3 py-2 text-sm bg-error-600 text-white rounded hover:bg-error-700"
+                    @click="removeAuthority(index)"
                   >
                     Remove
                   </button>
                 </div>
-                <button 
-                  type="button" 
-                  @click="addAuthority"
+                <button
+                  type="button"
                   class="px-3 py-2 text-sm bg-success-600 text-white rounded hover:bg-success-700"
+                  @click="addAuthority"
                 >
                   Add Authority
                 </button>
@@ -129,11 +128,13 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">
-                Additional Moderators
-              </label>
+              <label class="block text-sm font-medium text-gray-700 mb-2"> Additional Moderators </label>
               <div class="space-y-2">
-                <div v-for="(moderator, index) in formData.moderators" :key="`mod-${index}`" class="flex items-center gap-2">
+                <div
+                  v-for="(moderator, index) in formData.moderators"
+                  :key="`mod-${index}`"
+                  class="flex items-center gap-2"
+                >
                   <input
                     v-model="formData.moderators[index]"
                     type="text"
@@ -142,18 +143,18 @@
                     title="Format: eth|0x followed by 40 hex characters"
                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
-                  <button 
-                    type="button" 
-                    @click="removeModerator(index)"
+                  <button
+                    type="button"
                     class="px-3 py-2 text-sm bg-error-600 text-white rounded hover:bg-error-700"
+                    @click="removeModerator(index)"
                   >
                     Remove
                   </button>
                 </div>
-                <button 
-                  type="button" 
-                  @click="addModerator"
+                <button
+                  type="button"
                   class="px-3 py-2 text-sm bg-success-600 text-white rounded hover:bg-success-700"
+                  @click="addModerator"
                 >
                   Add Moderator
                 </button>
@@ -165,7 +166,7 @@
         <!-- Fee Preview (if available) -->
         <div v-if="estimatedFees && estimatedFees.length > 0" class="form-section">
           <h3 class="text-lg font-medium text-gray-900 mb-4">Transaction Fees</h3>
-          
+
           <div class="bg-warning-50 border border-warning-200 rounded-lg p-4">
             <div v-for="fee in estimatedFees" :key="fee.feeCode" class="flex justify-between items-center">
               <span class="text-sm font-medium text-warning-800">{{ fee.feeCode }}:</span>
@@ -189,8 +190,8 @@
             <ArrowPathIcon v-else class="h-4 w-4 animate-spin" />
             {{ isSubmitting ? "Creating..." : "Create Subfire" }}
           </button>
-          
-          <router-link 
+
+          <router-link
             :to="`/f/${parentFireSlug}`"
             class="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
           >
@@ -211,19 +212,20 @@
 </template>
 
 <script setup lang="ts">
+import { useFiresStore, useUserStore } from "@/stores";
+import { asValidUserRef } from "@gala-chain/api";
 import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderPlusIcon,
   InformationCircleIcon
-} from '@heroicons/vue/24/outline';
-import { asValidUserRef } from "@gala-chain/api";
+} from "@heroicons/vue/24/outline";
 import BigNumber from "bignumber.js";
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useFiresStore, useUserStore } from '@/stores';
-import { randomUniqueKey } from '../utils';
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+import { randomUniqueKey } from "../utils";
 
 const route = useRoute();
 const router = useRouter();
@@ -294,19 +296,18 @@ async function handleSubmit() {
       name: formData.value.name,
       starter: asValidUserRef(userStore.address),
       description: formData.value.description,
-      authorities: formData.value.authorities.filter(auth => auth.trim() !== ""),
-      moderators: formData.value.moderators.filter(mod => mod.trim() !== ""),
+      authorities: formData.value.authorities.filter((auth) => auth.trim() !== ""),
+      moderators: formData.value.moderators.filter((mod) => mod.trim() !== ""),
       uniqueKey: randomUniqueKey()
     };
 
     // Create the subfire using fires store
     const result = await firesStore.createFire(subfireDto, userStore.metamaskClient);
-    
+
     console.log("Subfire created successfully:", result);
-    
+
     // Navigate to the new subfire
     router.push(`/f/${formData.value.slug}`);
-
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to create subfire";
     console.error("Subfire creation error:", err);
@@ -318,7 +319,7 @@ async function handleSubmit() {
 // Load initial data
 onMounted(async () => {
   await firesStore.fetchFires();
-  
+
   if (!parentFire.value) {
     error.value = "Parent fire not found";
   }

@@ -2,9 +2,7 @@
   <div class="user-insights-dashboard max-w-4xl mx-auto p-6">
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900">User Insights</h1>
-      <p class="text-gray-600 mt-2">
-        Analyze your voting patterns, engagement, and contribution history
-      </p>
+      <p class="text-gray-600 mt-2">Analyze your voting patterns, engagement, and contribution history</p>
     </div>
 
     <!-- User Selection (for admins) -->
@@ -18,9 +16,9 @@
           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <button
-          @click="loadUserData"
           :disabled="isLoading"
           class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
+          @click="loadUserData"
         >
           Load Data
         </button>
@@ -115,26 +113,31 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ArrowPathIcon,
-  ExclamationTriangleIcon,
-  UserIcon
-} from '@heroicons/vue/24/outline';
-import { ref, onMounted } from 'vue';
-import { useUserStore, useAnalyticsStore } from '@/stores';
+import { useAnalyticsStore, useUserStore } from "@/stores";
+import { ArrowPathIcon, ExclamationTriangleIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { onMounted, ref } from "vue";
+
 // Mock components for now
-const UserVotingChart = { template: '<div class="text-center py-8 text-gray-500">Voting chart coming soon</div>' };
-const UserContentList = { template: '<div class="text-center py-8 text-gray-500">Content list coming soon</div>' };
-const VotingPreferences = { template: '<div class="text-center py-8 text-gray-500">Preferences coming soon</div>' };
-const UserActivityInsights = { template: '<div class="text-center py-8 text-gray-500">Activity insights coming soon</div>' };
+const UserVotingChart = {
+  template: '<div class="text-center py-8 text-gray-500">Voting chart coming soon</div>'
+};
+const UserContentList = {
+  template: '<div class="text-center py-8 text-gray-500">Content list coming soon</div>'
+};
+const VotingPreferences = {
+  template: '<div class="text-center py-8 text-gray-500">Preferences coming soon</div>'
+};
+const UserActivityInsights = {
+  template: '<div class="text-center py-8 text-gray-500">Activity insights coming soon</div>'
+};
 
 const userStore = useUserStore();
 const analyticsStore = useAnalyticsStore();
 
 // State
-const selectedUser = ref('');
+const selectedUser = ref("");
 const isLoading = ref(false);
-const error = ref('');
+const error = ref("");
 const isAdmin = ref(false); // Would be determined by user permissions
 
 const userProfile = ref<any>(null);
@@ -155,18 +158,18 @@ function formatGala(amount: number): string {
 async function loadUserData() {
   const targetUser = selectedUser.value || userStore.address;
   if (!targetUser) {
-    error.value = 'No user address available';
+    error.value = "No user address available";
     return;
   }
 
   isLoading.value = true;
-  error.value = '';
+  error.value = "";
 
   try {
     // Fetch user profile and analytics
     const [profile, history] = await Promise.all([
       fetchUserProfile(targetUser),
-      analyticsStore.fetchVoteHistory(targetUser, '90d')
+      analyticsStore.fetchVoteHistory(targetUser, "90d")
     ]);
 
     userProfile.value = profile;
@@ -174,11 +177,10 @@ async function loadUserData() {
     topSubmissions.value = history.topSubmissions || [];
     votingPreferences.value = history.votingPreferences || {};
     activityInsights.value = history.activityInsights || {};
-
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load user data';
-    console.error('User insights error:', err);
-    
+    error.value = err instanceof Error ? err.message : "Failed to load user data";
+    console.error("User insights error:", err);
+
     // Load mock data for development
     if (import.meta.env.DEV) {
       loadMockUserData(targetUser);
@@ -191,25 +193,25 @@ async function loadUserData() {
 async function fetchUserProfile(address: string) {
   const apiBase = import.meta.env.VITE_PROJECT_API;
   const response = await fetch(`${apiBase}/api/users/${address}/profile`);
-  
+
   if (!response.ok) {
-    throw new Error('Failed to fetch user profile');
+    throw new Error("Failed to fetch user profile");
   }
-  
+
   return await response.json();
 }
 
 function loadMockUserData(address: string) {
   userProfile.value = {
     address,
-    alias: address === userStore.address ? 'You' : null,
+    alias: address === userStore.address ? "You" : null,
     reputation: 85.3,
     votesGiven: 156,
     galaSpent: 78200000000, // 782 GALA
     submissionsCreated: 23,
     votesReceived: 87,
-    joinedDate: '2024-01-15',
-    lastActive: '2024-03-10'
+    joinedDate: "2024-01-15",
+    lastActive: "2024-03-10"
   };
 
   votingHistory.value = Array.from({ length: 30 }, (_, i) => ({
@@ -219,20 +221,20 @@ function loadMockUserData(address: string) {
   }));
 
   topSubmissions.value = [
-    { id: 1, name: 'DeFi Innovation Proposal', votes: 45, galaReceived: 23400000000 },
-    { id: 2, name: 'Gaming Protocol Update', votes: 32, galaReceived: 18900000000 },
-    { id: 3, name: 'NFT Marketplace Feature', votes: 28, galaReceived: 14500000000 }
+    { id: 1, name: "DeFi Innovation Proposal", votes: 45, galaReceived: 23400000000 },
+    { id: 2, name: "Gaming Protocol Update", votes: 32, galaReceived: 18900000000 },
+    { id: 3, name: "NFT Marketplace Feature", votes: 28, galaReceived: 14500000000 }
   ];
 
   votingPreferences.value = {
     favoriteCategories: [
-      { fire: 'defi', percentage: 45 },
-      { fire: 'gaming', percentage: 30 },
-      { fire: 'nft', percentage: 25 }
+      { fire: "defi", percentage: 45 },
+      { fire: "gaming", percentage: 30 },
+      { fire: "nft", percentage: 25 }
     ],
     avgVoteAmount: 5.2,
-    votingDays: ['Monday', 'Wednesday', 'Friday'],
-    peakHours: ['14:00', '16:00', '20:00']
+    votingDays: ["Monday", "Wednesday", "Friday"],
+    peakHours: ["14:00", "16:00", "20:00"]
   };
 
   activityInsights.value = {
@@ -240,7 +242,7 @@ function loadMockUserData(address: string) {
     totalEngagement: 89.4,
     growthRate: 15.7,
     communityRank: 47,
-    badges: ['Early Adopter', 'Top Contributor', 'Verified Creator']
+    badges: ["Early Adopter", "Top Contributor", "Verified Creator"]
   };
 }
 

@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
 interface TimeSeriesData {
   timestamp: number;
@@ -94,7 +94,7 @@ interface ContentInsights {
   };
 }
 
-export const useAnalyticsStore = defineStore('analytics', () => {
+export const useAnalyticsStore = defineStore("analytics", () => {
   // State
   const overview = ref<AnalyticsOverview>({
     totalVotes: 0,
@@ -132,7 +132,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const insights = ref<ContentInsights>({
     avgVotesPerSubmission: 0,
     avgGalaPerVote: 0,
-    topVotingTime: '',
+    topVotingTime: "",
     contentVerificationRate: 0,
     engagementGrowth: 0,
     popularCategories: [],
@@ -149,55 +149,49 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   });
 
   const isLoading = ref(false);
-  const error = ref<string>('');
+  const error = ref<string>("");
 
   // Actions
-  async function fetchAnalytics(timeRange: string = '7d') {
+  async function fetchAnalytics(timeRange = "7d") {
     isLoading.value = true;
-    error.value = '';
+    error.value = "";
 
     try {
       const apiBase = import.meta.env.VITE_PROJECT_API;
-      
+
       // Fetch all analytics data in parallel
-      const [
-        overviewRes,
-        trendsRes,
-        chartsRes,
-        topContentRes,
-        leaderboardRes,
-        insightsRes
-      ] = await Promise.all([
-        fetch(`${apiBase}/api/analytics/overview?timeRange=${timeRange}`),
-        fetch(`${apiBase}/api/analytics/trends?timeRange=${timeRange}`),
-        fetch(`${apiBase}/api/analytics/charts?timeRange=${timeRange}`),
-        fetch(`${apiBase}/api/analytics/top-content?timeRange=${timeRange}`),
-        fetch(`${apiBase}/api/analytics/leaderboard?timeRange=${timeRange}`),
-        fetch(`${apiBase}/api/analytics/insights?timeRange=${timeRange}`)
-      ]);
+      const [overviewRes, trendsRes, chartsRes, topContentRes, leaderboardRes, insightsRes] =
+        await Promise.all([
+          fetch(`${apiBase}/api/analytics/overview?timeRange=${timeRange}`),
+          fetch(`${apiBase}/api/analytics/trends?timeRange=${timeRange}`),
+          fetch(`${apiBase}/api/analytics/charts?timeRange=${timeRange}`),
+          fetch(`${apiBase}/api/analytics/top-content?timeRange=${timeRange}`),
+          fetch(`${apiBase}/api/analytics/leaderboard?timeRange=${timeRange}`),
+          fetch(`${apiBase}/api/analytics/insights?timeRange=${timeRange}`)
+        ]);
 
       // Check for errors
-      if (!overviewRes.ok || !trendsRes.ok || !chartsRes.ok || 
-          !topContentRes.ok || !leaderboardRes.ok || !insightsRes.ok) {
-        throw new Error('Failed to fetch analytics data');
+      if (
+        !overviewRes.ok ||
+        !trendsRes.ok ||
+        !chartsRes.ok ||
+        !topContentRes.ok ||
+        !leaderboardRes.ok ||
+        !insightsRes.ok
+      ) {
+        throw new Error("Failed to fetch analytics data");
       }
 
       // Parse responses
-      const [
-        overviewData,
-        trendsData,
-        chartsData,
-        topContentData,
-        leaderboardData,
-        insightsData
-      ] = await Promise.all([
-        overviewRes.json(),
-        trendsRes.json(),
-        chartsRes.json(),
-        topContentRes.json(),
-        leaderboardRes.json(),
-        insightsRes.json()
-      ]);
+      const [overviewData, trendsData, chartsData, topContentData, leaderboardData, insightsData] =
+        await Promise.all([
+          overviewRes.json(),
+          trendsRes.json(),
+          chartsRes.json(),
+          topContentRes.json(),
+          leaderboardRes.json(),
+          insightsRes.json()
+        ]);
 
       // Update store state
       overview.value = overviewData;
@@ -206,11 +200,10 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       topContent.value = topContentData;
       leaderboard.value = leaderboardData;
       insights.value = insightsData;
-
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch analytics';
-      console.error('Analytics fetch error:', err);
-      
+      error.value = err instanceof Error ? err.message : "Failed to fetch analytics";
+      console.error("Analytics fetch error:", err);
+
       // Provide fallback mock data for development
       if (import.meta.env.DEV) {
         loadMockData(timeRange);
@@ -223,7 +216,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   function loadMockData(timeRange: string) {
     const now = Date.now();
     const dayMs = 24 * 60 * 60 * 1000;
-    
+
     // Generate mock time series data
     const generateTimeSeries = (days: number, baseValue: number, variance: number) => {
       return Array.from({ length: days }, (_, i) => ({
@@ -232,7 +225,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       }));
     };
 
-    const days = timeRange === '24h' ? 1 : timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
+    const days = timeRange === "24h" ? 1 : timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
 
     overview.value = {
       totalVotes: 12543,
@@ -254,7 +247,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
     chartData.value = {
       voteTrends: generateTimeSeries(days, 100, 50).map((item, index) => ({
-        date: new Date(item.timestamp).toISOString().split('T')[0],
+        date: new Date(item.timestamp).toISOString().split("T")[0],
         votes: Math.floor(item.value),
         gala: Math.floor(item.value * 1.5)
       })),
@@ -274,28 +267,124 @@ export const useAnalyticsStore = defineStore('analytics', () => {
 
     topContent.value = {
       submissions: [
-        { id: 1, name: "Revolutionary DeFi Protocol", fire: "defi", votes: 456, galaAmount: 12300000000, engagement: 87.5 },
-        { id: 2, name: "NFT Gaming Innovation", fire: "gaming", votes: 342, galaAmount: 9800000000, engagement: 72.1 },
-        { id: 3, name: "Web3 Infrastructure", fire: "infrastructure", votes: 289, galaAmount: 7650000000, engagement: 65.3 },
-        { id: 4, name: "Smart Contract Audit", fire: "security", votes: 234, galaAmount: 6100000000, engagement: 58.9 },
-        { id: 5, name: "Cross-chain Bridge", fire: "interoperability", votes: 198, galaAmount: 5200000000, engagement: 52.7 }
+        {
+          id: 1,
+          name: "Revolutionary DeFi Protocol",
+          fire: "defi",
+          votes: 456,
+          galaAmount: 12300000000,
+          engagement: 87.5
+        },
+        {
+          id: 2,
+          name: "NFT Gaming Innovation",
+          fire: "gaming",
+          votes: 342,
+          galaAmount: 9800000000,
+          engagement: 72.1
+        },
+        {
+          id: 3,
+          name: "Web3 Infrastructure",
+          fire: "infrastructure",
+          votes: 289,
+          galaAmount: 7650000000,
+          engagement: 65.3
+        },
+        {
+          id: 4,
+          name: "Smart Contract Audit",
+          fire: "security",
+          votes: 234,
+          galaAmount: 6100000000,
+          engagement: 58.9
+        },
+        {
+          id: 5,
+          name: "Cross-chain Bridge",
+          fire: "interoperability",
+          votes: 198,
+          galaAmount: 5200000000,
+          engagement: 52.7
+        }
       ],
       fires: [
-        { slug: "defi", name: "DeFi", submissions: 67, totalVotes: 1234, totalGala: 45600000000, growth: 23.5 },
-        { slug: "gaming", name: "Gaming", submissions: 45, totalVotes: 987, totalGala: 32100000000, growth: 18.2 },
+        {
+          slug: "defi",
+          name: "DeFi",
+          submissions: 67,
+          totalVotes: 1234,
+          totalGala: 45600000000,
+          growth: 23.5
+        },
+        {
+          slug: "gaming",
+          name: "Gaming",
+          submissions: 45,
+          totalVotes: 987,
+          totalGala: 32100000000,
+          growth: 18.2
+        },
         { slug: "nft", name: "NFTs", submissions: 38, totalVotes: 756, totalGala: 28900000000, growth: 15.7 },
-        { slug: "infrastructure", name: "Infrastructure", submissions: 29, totalVotes: 543, totalGala: 19800000000, growth: 12.1 },
-        { slug: "security", name: "Security", submissions: 23, totalVotes: 432, totalGala: 16700000000, growth: 9.8 }
+        {
+          slug: "infrastructure",
+          name: "Infrastructure",
+          submissions: 29,
+          totalVotes: 543,
+          totalGala: 19800000000,
+          growth: 12.1
+        },
+        {
+          slug: "security",
+          name: "Security",
+          submissions: 23,
+          totalVotes: 432,
+          totalGala: 16700000000,
+          growth: 9.8
+        }
       ]
     };
 
     leaderboard.value = {
       users: [
-        { address: "0x1234...5678", alias: "CryptoWhale", votesGiven: 234, galaSpent: 12300000000, submissionsCreated: 12, reputation: 95.2 },
-        { address: "0x2345...6789", alias: "DeFiMaster", votesGiven: 198, galaSpent: 10800000000, submissionsCreated: 8, reputation: 88.7 },
-        { address: "0x3456...7890", votesGiven: 176, galaSpent: 9200000000, submissionsCreated: 15, reputation: 82.1 },
-        { address: "0x4567...8901", alias: "GameFi", votesGiven: 154, galaSpent: 7900000000, submissionsCreated: 6, reputation: 76.8 },
-        { address: "0x5678...9012", votesGiven: 132, galaSpent: 6800000000, submissionsCreated: 11, reputation: 71.3 }
+        {
+          address: "0x1234...5678",
+          alias: "CryptoWhale",
+          votesGiven: 234,
+          galaSpent: 12300000000,
+          submissionsCreated: 12,
+          reputation: 95.2
+        },
+        {
+          address: "0x2345...6789",
+          alias: "DeFiMaster",
+          votesGiven: 198,
+          galaSpent: 10800000000,
+          submissionsCreated: 8,
+          reputation: 88.7
+        },
+        {
+          address: "0x3456...7890",
+          votesGiven: 176,
+          galaSpent: 9200000000,
+          submissionsCreated: 15,
+          reputation: 82.1
+        },
+        {
+          address: "0x4567...8901",
+          alias: "GameFi",
+          votesGiven: 154,
+          galaSpent: 7900000000,
+          submissionsCreated: 6,
+          reputation: 76.8
+        },
+        {
+          address: "0x5678...9012",
+          votesGiven: 132,
+          galaSpent: 6800000000,
+          submissionsCreated: 11,
+          reputation: 71.3
+        }
       ]
     };
 
@@ -325,40 +414,40 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     };
   }
 
-  async function fetchVoteHistory(userId?: string, timeRange: string = '30d') {
+  async function fetchVoteHistory(userId?: string, timeRange = "30d") {
     // Fetch detailed vote history for a specific user or all users
     const apiBase = import.meta.env.VITE_PROJECT_API;
-    const url = userId 
+    const url = userId
       ? `${apiBase}/api/analytics/vote-history/${userId}?timeRange=${timeRange}`
       : `${apiBase}/api/analytics/vote-history?timeRange=${timeRange}`;
-    
+
     try {
       const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch vote history');
-      
+      if (!response.ok) throw new Error("Failed to fetch vote history");
+
       return await response.json();
     } catch (err) {
-      console.error('Vote history fetch error:', err);
+      console.error("Vote history fetch error:", err);
       throw err;
     }
   }
 
-  async function generateReport(type: 'summary' | 'detailed' | 'export', timeRange: string = '30d') {
+  async function generateReport(type: "summary" | "detailed" | "export", timeRange = "30d") {
     // Generate analytics reports
     const apiBase = import.meta.env.VITE_PROJECT_API;
-    
+
     try {
       const response = await fetch(`${apiBase}/api/analytics/report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, timeRange })
       });
-      
-      if (!response.ok) throw new Error('Failed to generate report');
-      
+
+      if (!response.ok) throw new Error("Failed to generate report");
+
       return await response.json();
     } catch (err) {
-      console.error('Report generation error:', err);
+      console.error("Report generation error:", err);
       throw err;
     }
   }
@@ -373,7 +462,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
     insights,
     isLoading,
     error,
-    
+
     // Actions
     fetchAnalytics,
     fetchVoteHistory,

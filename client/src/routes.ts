@@ -1,20 +1,23 @@
 import { createMemoryHistory, createRouter } from "vue-router";
 
 import "./assets/main.css";
-import AccountDetails from "./components/AccountDetails.vue";
-import AdminDashboard from "./components/AdminDashboard.vue";
-import AnalyticsDashboard from "./components/AnalyticsDashboard.vue";
-import ContentVerification from "./components/ContentVerification.vue";
+// Core components (loaded immediately)
 import FireList from "./components/FireList.vue";
 import FireStarter from "./components/FireStarter.vue";
-import InfoPage from "./components/InfoPage.vue";
-import ModerationPanel from "./components/ModerationPanel.vue";
 import NewSubmission from "./components/NewSubmission.vue";
 import SubmissionList from "./components/SubmissionList.vue";
-import SubfireCreator from "./components/SubfireCreator.vue";
-import UserInsightsDashboard from "./components/UserInsightsDashboard.vue";
-import VoteExplorer from "./components/VoteExplorer.vue";
-import VoteLeaderboard from "./components/VoteLeaderboard.vue";
+
+// Non-critical components (lazy loaded)
+const AccountDetails = () => import("./components/AccountDetails.vue");
+const AdminDashboard = () => import("./components/AdminDashboard.vue");
+const AnalyticsDashboard = () => import("./components/AnalyticsDashboard.vue");
+const ContentVerification = () => import("./components/ContentVerification.vue");
+const InfoPage = () => import("./components/InfoPage.vue");
+const ModerationPanel = () => import("./components/ModerationPanel.vue");
+const SubfireCreator = () => import("./components/SubfireCreator.vue");
+const UserInsightsDashboard = () => import("./components/UserInsightsDashboard.vue");
+const VoteExplorer = () => import("./components/VoteExplorer.vue");
+const VoteLeaderboard = () => import("./components/VoteLeaderboard.vue");
 
 const routes = [
   { path: "/", component: FireList },

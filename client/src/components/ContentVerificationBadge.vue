@@ -12,7 +12,7 @@
       >
         <CheckCircleIcon v-if="verified" class="h-3 w-3" />
         <ExclamationTriangleIcon v-else class="h-3 w-3" />
-        {{ verified ? 'Verified' : 'Unverified' }}
+        {{ verified ? "Verified" : "Unverified" }}
       </span>
 
       <!-- Moderation Status Badge -->
@@ -29,13 +29,13 @@
       <!-- Verify Button -->
       <button
         v-if="showVerifyButton && !verified"
-        @click="handleVerify"
         :disabled="verifying"
         class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50"
+        @click="handleVerify"
       >
         <ArrowPathIcon v-if="verifying" class="h-3 w-3 animate-spin" />
         <ShieldCheckIcon v-else class="h-3 w-3" />
-        {{ verifying ? 'Verifying...' : 'Verify' }}
+        {{ verifying ? "Verifying..." : "Verify" }}
       </button>
     </div>
 
@@ -60,15 +60,15 @@
 </template>
 
 <script setup lang="ts">
-import { 
-  CheckCircleIcon, 
-  ExclamationTriangleIcon, 
-  ShieldCheckIcon, 
-  ArrowPathIcon 
-} from '@heroicons/vue/24/outline';
-import { ref, computed, onMounted, watch } from 'vue';
-import { useSubmissionsStore } from '@/stores';
-import type { ContentVerificationResponse } from '@/types/api';
+import { useSubmissionsStore } from "@/stores";
+import type { ContentVerificationResponse } from "@/types/api";
+import {
+  ArrowPathIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ShieldCheckIcon
+} from "@heroicons/vue/24/outline";
+import { computed, onMounted, ref, watch } from "vue";
 
 interface Props {
   submissionId: number;
@@ -95,14 +95,12 @@ const submissionsStore = useSubmissionsStore();
 
 // Local state
 const verified = ref(props.initialVerified);
-const moderationStatus = ref(props.initialModerationStatus || 'active');
+const moderationStatus = ref(props.initialModerationStatus || "active");
 const verifying = ref(false);
 const verificationData = ref<ContentVerificationResponse | null>(null);
 
 // Get verification data from store if available
-const storedVerification = computed(() => 
-  submissionsStore.getVerificationStatus(props.submissionId)
-);
+const storedVerification = computed(() => submissionsStore.getVerificationStatus(props.submissionId));
 
 // Update local state when store data changes
 watch(storedVerification, (newVerification) => {
@@ -117,23 +115,23 @@ async function handleVerify() {
   if (verifying.value) return;
 
   verifying.value = true;
-  
+
   try {
     const result = await submissionsStore.verifyContent(props.submissionId);
-    
+
     verified.value = result.verified;
     moderationStatus.value = result.moderationStatus;
     verificationData.value = result;
-    
-    emit('verified', result);
-    
+
+    emit("verified", result);
+
     if (!result.verified) {
-      console.warn('Content verification failed:', result);
+      console.warn("Content verification failed:", result);
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Verification failed';
-    emit('verificationFailed', errorMessage);
-    console.error('Verification error:', error);
+    const errorMessage = error instanceof Error ? error.message : "Verification failed";
+    emit("verificationFailed", errorMessage);
+    console.error("Verification error:", error);
   } finally {
     verifying.value = false;
   }
@@ -141,29 +139,29 @@ async function handleVerify() {
 
 function getModerationStatusClass(status: string): string {
   switch (status) {
-    case 'flagged':
-      return 'bg-warning-100 text-warning-800 border border-warning-200';
-    case 'removed':
-      return 'bg-error-100 text-error-800 border border-error-200';
-    case 'modified':
-      return 'bg-primary-100 text-primary-800 border border-primary-200';
-    case 'restored':
-      return 'bg-success-100 text-success-800 border border-success-200';
+    case "flagged":
+      return "bg-warning-100 text-warning-800 border border-warning-200";
+    case "removed":
+      return "bg-error-100 text-error-800 border border-error-200";
+    case "modified":
+      return "bg-primary-100 text-primary-800 border border-primary-200";
+    case "restored":
+      return "bg-success-100 text-success-800 border border-success-200";
     default:
-      return 'bg-gray-100 text-gray-800 border border-gray-200';
+      return "bg-gray-100 text-gray-800 border border-gray-200";
   }
 }
 
 function formatModerationStatus(status: string): string {
   switch (status) {
-    case 'flagged':
-      return 'Flagged';
-    case 'removed':
-      return 'Removed';
-    case 'modified':
-      return 'Modified';
-    case 'restored':
-      return 'Restored';
+    case "flagged":
+      return "Flagged";
+    case "removed":
+      return "Removed";
+    case "modified":
+      return "Modified";
+    case "restored":
+      return "Restored";
     default:
       return status.charAt(0).toUpperCase() + status.slice(1);
   }
@@ -171,11 +169,11 @@ function formatModerationStatus(status: string): string {
 
 function formatDate(dateString: string): string {
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
     });
   } catch {
     return dateString;

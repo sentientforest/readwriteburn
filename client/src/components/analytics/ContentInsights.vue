@@ -24,14 +24,16 @@
     <!-- Content Quality -->
     <div class="space-y-2">
       <h4 class="text-sm font-medium text-gray-900">Content Quality</h4>
-      
+
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600">Verified Content</span>
-          <span class="text-sm font-medium text-green-600">{{ insights.contentVerificationRate.toFixed(1) }}%</span>
+          <span class="text-sm font-medium text-green-600"
+            >{{ insights.contentVerificationRate.toFixed(1) }}%</span
+          >
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
-          <div 
+          <div
             class="bg-green-500 h-2 rounded-full transition-all duration-500"
             :style="{ width: `${insights.contentVerificationRate}%` }"
           ></div>
@@ -41,10 +43,12 @@
       <div class="space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-sm text-gray-600">Moderated Content</span>
-          <span class="text-sm font-medium text-orange-600">{{ insights.contentQuality.moderatedPercentage.toFixed(1) }}%</span>
+          <span class="text-sm font-medium text-orange-600"
+            >{{ insights.contentQuality.moderatedPercentage.toFixed(1) }}%</span
+          >
         </div>
         <div class="w-full bg-gray-200 rounded-full h-2">
-          <div 
+          <div
             class="bg-orange-500 h-2 rounded-full transition-all duration-500"
             :style="{ width: `${insights.contentQuality.moderatedPercentage}%` }"
           ></div>
@@ -56,8 +60,8 @@
     <div v-if="insights.popularCategories && insights.popularCategories.length > 0">
       <h4 class="text-sm font-medium text-gray-900 mb-2">Popular Categories</h4>
       <div class="space-y-2">
-        <div 
-          v-for="category in insights.popularCategories" 
+        <div
+          v-for="category in insights.popularCategories"
           :key="category.fire"
           class="flex items-center justify-between"
         >
@@ -100,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ClockIcon, ArrowTrendingUpIcon } from '@heroicons/vue/24/outline';
+import { ArrowTrendingUpIcon, ClockIcon } from "@heroicons/vue/24/outline";
 
 interface ContentInsights {
   avgVotesPerSubmission: number;

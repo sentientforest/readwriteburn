@@ -41,7 +41,7 @@ export interface SubmissionResponse {
   subfire_id: string;
   content_hash: string;
   hash_verified: boolean;
-  moderation_status: 'active' | 'flagged' | 'removed' | 'modified';
+  moderation_status: "active" | "flagged" | "removed" | "modified";
   content_timestamp: number;
   created_at: string;
   updated_at?: string;
@@ -76,7 +76,7 @@ export interface BulkVerificationRequest {
 export interface BulkVerificationResponse {
   results: Array<{
     id: number;
-    status: 'verified' | 'hash_mismatch' | 'not_found' | 'error';
+    status: "verified" | "hash_mismatch" | "not_found" | "error";
     sqliteHash?: string;
     currentHash?: string;
     error?: string;
@@ -85,14 +85,12 @@ export interface BulkVerificationResponse {
 
 // Content Moderation Types
 export interface ModerationAction {
-  action: 'flagged' | 'removed' | 'modified' | 'restored';
+  action: "flagged" | "removed" | "modified" | "restored";
   reason: string;
   newContent?: string;
 }
 
-export interface ModerationRequest extends ModerationAction {
-  // Action details included via extends
-}
+export type ModerationRequest = ModerationAction;
 
 export interface ModerationResponse {
   success: boolean;
@@ -104,7 +102,7 @@ export interface ModerationResponse {
 export interface ModerationLogEntry {
   id: number;
   submission_id: number;
-  action: 'flagged' | 'removed' | 'modified' | 'restored';
+  action: "flagged" | "removed" | "modified" | "restored";
   reason: string;
   admin_user: string;
   original_hash: string;
@@ -262,7 +260,7 @@ export interface SearchParams {
 
 // WebSocket Event Types (for future real-time features)
 export interface WebSocketEvent {
-  type: 'submission_created' | 'vote_cast' | 'content_moderated' | 'fire_created';
+  type: "submission_created" | "vote_cast" | "content_moderated" | "fire_created";
   data: any;
   timestamp: number;
 }
@@ -278,11 +276,11 @@ export interface HashableContent {
 export interface ContentHashResult {
   hash: string;
   timestamp: number;
-  algorithm: 'sha256';
+  algorithm: "sha256";
 }
 
 // Utility Types
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type LoadingState = "idle" | "loading" | "success" | "error";
 
 export interface AsyncState<T> {
   data: T | null;

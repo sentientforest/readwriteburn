@@ -1,15 +1,15 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { 
-  VoteResponse, 
-  FetchVotesRequest, 
-  FetchVotesResponse,
+import type {
   CountVotesRequest,
   CountVotesResponse,
-  VoteCountResponse
-} from '@/types/api';
+  FetchVotesRequest,
+  FetchVotesResponse,
+  VoteCountResponse,
+  VoteResponse
+} from "@/types/api";
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 
-export const useVotesStore = defineStore('votes', () => {
+export const useVotesStore = defineStore("votes", () => {
   // State
   const votes = ref<VoteResponse[]>([]);
   const voteCounts = ref<VoteCountResponse[]>([]);
@@ -22,7 +22,7 @@ export const useVotesStore = defineStore('votes', () => {
   // Getters
   const votesByEntry = computed(() => {
     const map = new Map<string, VoteResponse[]>();
-    votes.value.forEach(vote => {
+    votes.value.forEach((vote) => {
       if (!map.has(vote.entry)) {
         map.set(vote.entry, []);
       }
@@ -33,7 +33,7 @@ export const useVotesStore = defineStore('votes', () => {
 
   const votesByFire = computed(() => {
     const map = new Map<string, VoteResponse[]>();
-    votes.value.forEach(vote => {
+    votes.value.forEach((vote) => {
       if (!map.has(vote.fire)) {
         map.set(vote.fire, []);
       }
@@ -50,7 +50,7 @@ export const useVotesStore = defineStore('votes', () => {
 
   const voteCountsByEntry = computed(() => {
     const map = new Map<string, VoteCountResponse>();
-    voteCounts.value.forEach(count => {
+    voteCounts.value.forEach((count) => {
       map.set(count.entry, count);
     });
     return map;
@@ -63,35 +63,35 @@ export const useVotesStore = defineStore('votes', () => {
 
     try {
       const searchParams = new URLSearchParams();
-      
-      if (params.entryType) searchParams.append('entryType', params.entryType);
-      if (params.fire) searchParams.append('fire', params.fire);
-      if (params.submission) searchParams.append('submission', params.submission);
-      if (params.bookmark) searchParams.append('bookmark', params.bookmark);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
+
+      if (params.entryType) searchParams.append("entryType", params.entryType);
+      if (params.fire) searchParams.append("fire", params.fire);
+      if (params.submission) searchParams.append("submission", params.submission);
+      if (params.bookmark) searchParams.append("bookmark", params.bookmark);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
 
       const response = await fetch(
         `${import.meta.env.VITE_PROJECT_API}/api/votes?${searchParams.toString()}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch votes: ${response.status}`);
       }
 
       const result: FetchVotesResponse = await response.json();
-      
+
       if (append) {
         votes.value = [...votes.value, ...result.votes];
       } else {
         votes.value = result.votes;
       }
-      
+
       bookmark.value = result.bookmark || null;
       hasMore.value = result.hasMore;
       lastFetch.value = Date.now();
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch votes';
-      console.error('Error fetching votes:', err);
+      error.value = err instanceof Error ? err.message : "Failed to fetch votes";
+      console.error("Error fetching votes:", err);
     } finally {
       loading.value = false;
     }
@@ -99,12 +99,12 @@ export const useVotesStore = defineStore('votes', () => {
 
   async function loadMoreVotes(params: FetchVotesRequest = {}) {
     if (!hasMore.value || loading.value) return;
-    
+
     const requestParams = {
       ...params,
       bookmark: bookmark.value || undefined
     };
-    
+
     await fetchVotes(requestParams, true);
   }
 
@@ -114,27 +114,27 @@ export const useVotesStore = defineStore('votes', () => {
 
     try {
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/votes/count`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(request)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to count votes');
+        throw new Error(errorData.message || "Failed to count votes");
       }
 
       const result = await response.json();
-      
+
       // Refresh vote counts after processing
       await fetchVoteCounts();
-      
+
       return result;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to count votes';
-      console.error('Error counting votes:', err);
+      error.value = err instanceof Error ? err.message : "Failed to count votes";
+      console.error("Error counting votes:", err);
       throw err;
     } finally {
       loading.value = false;
@@ -144,13 +144,13 @@ export const useVotesStore = defineStore('votes', () => {
   async function fetchVoteCounts(fire?: string, submission?: string) {
     try {
       const searchParams = new URLSearchParams();
-      if (fire) searchParams.append('fire', fire);
-      if (submission) searchParams.append('submission', submission);
+      if (fire) searchParams.append("fire", fire);
+      if (submission) searchParams.append("submission", submission);
 
       const response = await fetch(
         `${import.meta.env.VITE_PROJECT_API}/api/votes/counts?${searchParams.toString()}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch vote counts: ${response.status}`);
       }
@@ -158,16 +158,13 @@ export const useVotesStore = defineStore('votes', () => {
       const result = await response.json();
       voteCounts.value = Array.isArray(result) ? result : [];
     } catch (err) {
-      console.error('Error fetching vote counts:', err);
+      console.error("Error fetching vote counts:", err);
       // Don't set error state for vote counts as it's supplementary data
     }
   }
 
   async function refreshVoteData(params: FetchVotesRequest = {}) {
-    await Promise.all([
-      fetchVotes(params),
-      fetchVoteCounts(params.fire, params.submission)
-    ]);
+    await Promise.all([fetchVotes(params), fetchVoteCounts(params.fire, params.submission)]);
   }
 
   function getVotesForEntry(entryId: string): VoteResponse[] {
@@ -205,14 +202,14 @@ export const useVotesStore = defineStore('votes', () => {
 
   function addVote(vote: VoteResponse) {
     // Add vote if not already present
-    const exists = votes.value.some(v => v.id === vote.id);
+    const exists = votes.value.some((v) => v.id === vote.id);
     if (!exists) {
       votes.value.unshift(vote); // Add to beginning for latest first
     }
   }
 
   function removeVote(voteId: string) {
-    const index = votes.value.findIndex(v => v.id === voteId);
+    const index = votes.value.findIndex((v) => v.id === voteId);
     if (index !== -1) {
       votes.value.splice(index, 1);
     }
@@ -228,9 +225,9 @@ export const useVotesStore = defineStore('votes', () => {
       entryBreakdown: new Map<string, { count: number; amount: number }>()
     };
 
-    votes.value.forEach(vote => {
+    votes.value.forEach((vote) => {
       const amount = parseFloat(vote.quantity);
-      
+
       // Fire breakdown
       if (!stats.fireBreakdown.has(vote.fire)) {
         stats.fireBreakdown.set(vote.fire, { count: 0, amount: 0 });
@@ -280,6 +277,6 @@ export const useVotesStore = defineStore('votes', () => {
     clearVoteCounts,
     clearError,
     addVote,
-    removeVote,
+    removeVote
   };
 });

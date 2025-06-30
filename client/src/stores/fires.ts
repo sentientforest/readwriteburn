@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { FireResponse, FireCreateRequest, AsyncState, ApiResponse } from '@/types/api';
+import type { ApiResponse, AsyncState, FireCreateRequest, FireResponse } from "@/types/api";
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 
-export const useFiresStore = defineStore('fires', () => {
+export const useFiresStore = defineStore("fires", () => {
   // State
   const fires = ref<FireResponse[]>([]);
   const currentFire = ref<FireResponse | null>(null);
@@ -13,7 +13,7 @@ export const useFiresStore = defineStore('fires', () => {
   // Getters
   const firesById = computed(() => {
     const map = new Map<string, FireResponse>();
-    fires.value.forEach(fire => map.set(fire.slug, fire));
+    fires.value.forEach((fire) => map.set(fire.slug, fire));
     return map;
   });
 
@@ -33,22 +33,22 @@ export const useFiresStore = defineStore('fires', () => {
 
     try {
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch fires: ${response.status}`);
       }
 
       const data = await response.json();
-      
+
       if (!Array.isArray(data)) {
-        throw new Error('Invalid response format');
+        throw new Error("Invalid response format");
       }
 
       fires.value = data;
       lastFetch.value = Date.now();
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch fires';
-      console.error('Error fetching fires:', err);
+      error.value = err instanceof Error ? err.message : "Failed to fetch fires";
+      console.error("Error fetching fires:", err);
     } finally {
       loading.value = false;
     }
@@ -66,7 +66,7 @@ export const useFiresStore = defineStore('fires', () => {
 
     try {
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires/${slug}`);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch fire: ${response.status}`);
       }
@@ -75,7 +75,7 @@ export const useFiresStore = defineStore('fires', () => {
       currentFire.value = fire;
 
       // Update fires array if fire exists there
-      const index = fires.value.findIndex(f => f.slug === slug);
+      const index = fires.value.findIndex((f) => f.slug === slug);
       if (index !== -1) {
         fires.value[index] = fire;
       } else {
@@ -84,8 +84,8 @@ export const useFiresStore = defineStore('fires', () => {
 
       return fire;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to fetch fire';
-      console.error('Error fetching fire:', err);
+      error.value = err instanceof Error ? err.message : "Failed to fetch fire";
+      console.error("Error fetching fire:", err);
       return null;
     } finally {
       loading.value = false;
@@ -99,42 +99,42 @@ export const useFiresStore = defineStore('fires', () => {
     try {
       // Create placeholder fee for dry run
       const placeholderFee = {
-        feeCode: 'FIRE_CREATION_FEE',
-        uniqueKey: fireData.uniqueKey + '_fee'
+        feeCode: "FIRE_CREATION_FEE",
+        uniqueKey: fireData.uniqueKey + "_fee"
       };
 
       // Create FireStarterDto for the request
       const fireStarterDto = {
         fire: fireData,
         fee: placeholderFee,
-        uniqueKey: fireData.uniqueKey + '_starter'
+        uniqueKey: fireData.uniqueKey + "_starter"
       };
 
       // Sign the transaction
       const signedDto = await metamaskClient.sign(fireStarterDto);
 
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(signedDto)
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create fire');
+        throw new Error(errorData.message || "Failed to create fire");
       }
 
       const result = await response.json();
-      
+
       // Refresh fires list to include new fire
       await fetchFires(true);
-      
+
       return result;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Failed to create fire';
-      console.error('Error creating fire:', err);
+      error.value = err instanceof Error ? err.message : "Failed to create fire";
+      console.error("Error creating fire:", err);
       throw err;
     } finally {
       loading.value = false;
@@ -145,39 +145,39 @@ export const useFiresStore = defineStore('fires', () => {
     try {
       // Create placeholder fee for dry run
       const placeholderFee = {
-        feeCode: 'FIRE_CREATION_FEE',
-        uniqueKey: fireData.uniqueKey + '_fee'
+        feeCode: "FIRE_CREATION_FEE",
+        uniqueKey: fireData.uniqueKey + "_fee"
       };
 
       // Create FireStarterDto for dry run
       const fireStarterDto = {
         fire: fireData,
         fee: placeholderFee,
-        uniqueKey: fireData.uniqueKey + '_starter'
+        uniqueKey: fireData.uniqueKey + "_starter"
       };
 
       const dryRunDto = {
         callerPublicKey,
-        method: 'FireStarter',
+        method: "FireStarter",
         dto: fireStarterDto
       };
 
       const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/product/ReadWriteBurn/DryRun`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(dryRunDto)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to estimate fees');
+        throw new Error("Failed to estimate fees");
       }
 
       const result = await response.json();
       return result;
     } catch (err) {
-      console.error('Error estimating fees:', err);
+      console.error("Error estimating fees:", err);
       throw err;
     }
   }
@@ -191,7 +191,7 @@ export const useFiresStore = defineStore('fires', () => {
   }
 
   function addFire(fire: FireResponse) {
-    const existingIndex = fires.value.findIndex(f => f.slug === fire.slug);
+    const existingIndex = fires.value.findIndex((f) => f.slug === fire.slug);
     if (existingIndex !== -1) {
       fires.value[existingIndex] = fire;
     } else {
@@ -200,7 +200,7 @@ export const useFiresStore = defineStore('fires', () => {
   }
 
   function removeFire(slug: string) {
-    const index = fires.value.findIndex(f => f.slug === slug);
+    const index = fires.value.findIndex((f) => f.slug === slug);
     if (index !== -1) {
       fires.value.splice(index, 1);
     }
@@ -227,6 +227,6 @@ export const useFiresStore = defineStore('fires', () => {
     clearCurrentFire,
     clearError,
     addFire,
-    removeFire,
+    removeFire
   };
 });

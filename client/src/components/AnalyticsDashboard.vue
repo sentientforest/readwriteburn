@@ -12,10 +12,10 @@
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-gray-900">Time Range</h2>
         <div class="flex items-center gap-2">
-          <select 
-            v-model="selectedTimeRange" 
-            @change="refreshData"
+          <select
+            v-model="selectedTimeRange"
             class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            @change="refreshData"
           >
             <option value="24h">Last 24 Hours</option>
             <option value="7d">Last 7 Days</option>
@@ -24,9 +24,9 @@
             <option value="all">All Time</option>
           </select>
           <button
-            @click="refreshData"
             :disabled="isLoading"
             class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
+            @click="refreshData"
           >
             <ArrowPathIcon :class="['h-4 w-4', isLoading && 'animate-spin']" />
             Refresh
@@ -137,8 +137,8 @@
           <h3 class="font-medium text-error-900">Failed to load analytics data</h3>
           <p class="text-error-700 mt-1">{{ error }}</p>
           <button
-            @click="refreshData"
             class="mt-3 px-4 py-2 bg-error-600 text-white rounded-md hover:bg-error-700"
+            @click="refreshData"
           >
             Try Again
           </button>
@@ -149,27 +149,25 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ArrowPathIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/vue/24/outline';
-import { ref, onMounted } from 'vue';
-import { useAnalyticsStore } from '@/stores';
-import MetricCard from './analytics/MetricCard.vue';
-import VoteTrendsChart from './analytics/VoteTrendsChart.vue';
-import TopContentList from './analytics/TopContentList.vue';
-import VotingPatternsChart from './analytics/VotingPatternsChart.vue';
-import FireActivityList from './analytics/FireActivityList.vue';
-import UserLeaderboard from './analytics/UserLeaderboard.vue';
-import EngagementHeatmap from './analytics/EngagementHeatmap.vue';
-import ContentInsights from './analytics/ContentInsights.vue';
+import { useAnalyticsStore } from "@/stores";
+import { ArrowPathIcon, ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
+import { onMounted, ref } from "vue";
+
+import ContentInsights from "./analytics/ContentInsights.vue";
+import EngagementHeatmap from "./analytics/EngagementHeatmap.vue";
+import FireActivityList from "./analytics/FireActivityList.vue";
+import MetricCard from "./analytics/MetricCard.vue";
+import TopContentList from "./analytics/TopContentList.vue";
+import UserLeaderboard from "./analytics/UserLeaderboard.vue";
+import VoteTrendsChart from "./analytics/VoteTrendsChart.vue";
+import VotingPatternsChart from "./analytics/VotingPatternsChart.vue";
 
 const analyticsStore = useAnalyticsStore();
 
 // State
-const selectedTimeRange = ref('7d');
+const selectedTimeRange = ref("7d");
 const isLoading = ref(false);
-const error = ref('');
+const error = ref("");
 
 // Computed data from store
 const overview = ref({
@@ -208,7 +206,7 @@ const leaderboard = ref({
 const insights = ref({
   avgVotesPerSubmission: 0,
   avgGalaPerVote: 0,
-  topVotingTime: '',
+  topVotingTime: "",
   contentVerificationRate: 0,
   engagementGrowth: 0
 });
@@ -230,11 +228,11 @@ function formatGala(amount: number): string {
 
 async function refreshData() {
   isLoading.value = true;
-  error.value = '';
+  error.value = "";
 
   try {
     await analyticsStore.fetchAnalytics(selectedTimeRange.value);
-    
+
     // Update reactive data from store
     overview.value = analyticsStore.overview;
     trendData.value = analyticsStore.trendData;
@@ -242,10 +240,9 @@ async function refreshData() {
     topContent.value = analyticsStore.topContent;
     leaderboard.value = analyticsStore.leaderboard;
     insights.value = analyticsStore.insights;
-
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load analytics data';
-    console.error('Analytics error:', err);
+    error.value = err instanceof Error ? err.message : "Failed to load analytics data";
+    console.error("Analytics error:", err);
   } finally {
     isLoading.value = false;
   }

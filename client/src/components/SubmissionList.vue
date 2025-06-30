@@ -1,11 +1,7 @@
 <template>
   <div class="submission-list">
     <!-- Fire Hierarchy Navigation -->
-    <FireHierarchy 
-      :fire-slug="subfireSlug" 
-      :show-tree-view="false"
-      class="mb-6"
-    />
+    <FireHierarchy :fire-slug="subfireSlug" :show-tree-view="false" class="mb-6" />
     <div v-if="loading">
       <p><i>Loading submissions...</i></p>
     </div>
@@ -21,7 +17,7 @@
             ({{ totalReplies }} replies)
           </span>
         </h2>
-        
+
         <div class="flex items-center gap-2">
           <label class="flex items-center gap-2 text-sm text-gray-600">
             <input
@@ -93,9 +89,15 @@
             </div>
             <p class="item-description">{{ submission.description }}</p>
             <div class="flex items-center gap-4 mt-2">
-              <a v-if="submission.url" :href="submission.url" target="_blank" rel="noopener noreferrer"
-                class="text-primary-600 hover:text-primary-700 text-sm">View Source</a>
-              <router-link 
+              <a
+                v-if="submission.url"
+                :href="submission.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary-600 hover:text-primary-700 text-sm"
+                >View Source</a
+              >
+              <router-link
                 :to="`/submissions/${submission.id}/verify`"
                 class="text-primary-600 hover:text-primary-700 text-sm"
               >
@@ -115,13 +117,13 @@
 <script setup lang="ts">
 import type { MetamaskConnectClient } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
-import { onMounted, ref, computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+
+import type { SubmissionResponse } from "../types/api";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import FireHierarchy from "./FireHierarchy.vue";
 import ThreadedSubmission from "./ThreadedSubmission.vue";
-
-import type { SubmissionResponse } from "../types/api";
 
 interface ExtendedSubmissionResDto extends SubmissionResponse {
   userVoteQty: number | null;
@@ -148,11 +150,11 @@ const showThreaded = ref(true); // Default to threaded view
 
 // Computed properties for threaded discussions
 const topLevelSubmissions = computed(() => {
-  return submissions.value.filter(sub => !sub.entryParent);
+  return submissions.value.filter((sub) => !sub.entryParent);
 });
 
 const totalReplies = computed(() => {
-  return submissions.value.filter(sub => sub.entryParent).length;
+  return submissions.value.filter((sub) => sub.entryParent).length;
 });
 
 async function fetchSubmissions() {
