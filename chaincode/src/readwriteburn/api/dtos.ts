@@ -83,7 +83,7 @@ export class FireDto extends ChainCallDTO {
 
 export interface IFireStarterDto {
   fire: FireDto;
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
   uniqueKey: string;
 }
 
@@ -92,9 +92,10 @@ export class FireStarterDto extends SubmitCallDTO {
   @Type(() => FireDto)
   public fire: FireDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  public fee: FeeVerificationDto;
+  public fee?: FeeVerificationDto;
 
   constructor(data: IFireStarterDto) {
     super();
@@ -245,7 +246,7 @@ export interface SubmissionResDto {
 
 export interface IContributeSubmissionDto {
   submission: SubmissionDto;
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
   uniqueKey: string;
 }
 
@@ -254,9 +255,10 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
   @Type(() => SubmissionDto)
   submission: SubmissionDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
 
   constructor(data: IContributeSubmissionDto) {
     super();
@@ -358,7 +360,7 @@ export class VoteDto extends SubmitCallDTO {
 
 export interface ICastVoteDto {
   vote: VoteDto;
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
   uniqueKey: string;
 }
 
@@ -367,9 +369,10 @@ export class CastVoteDto extends SubmitCallDTO {
   @Type(() => VoteDto)
   vote: VoteDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
 
   constructor(data: ICastVoteDto) {
     super();

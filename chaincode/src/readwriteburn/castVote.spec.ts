@@ -218,7 +218,7 @@ describe("castVote chaincode call", () => {
 
     // Then - Should fail due to unique key conflict
     expect(result2.Status).toBe(0);
-    expect(result2.Message).toContain("Unique Transaction key");
+    expect(result2.Message).toContain("Unique transaction key");
   });
 
   test("vote with negative quantity should fail validation", async () => {
