@@ -17,8 +17,8 @@
     "deploy": "sh deploy.sh"
   },
   "dependencies": {
-    "@gala-chain/api": "2.2.0",
-    "@gala-chain/connect": "2.2.0",
+    "@gala-chain/api": "2.3.4",
+    "@gala-chain/connect": "2.3.4",
     "@headlessui/vue": "^1.7.16",
     "@heroicons/vue": "^2.0.18",
     "buffer": "^6.0.3",

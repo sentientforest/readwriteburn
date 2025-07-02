@@ -1,6 +1,6 @@
-import { ChainCallDTO, FeeAuthorization, FeeAuthorizationDto, SubmitCallDTO } from "@gala-chain/api";
+import { ChainCallDTO, FeeVerificationDto, IsUserRef, SubmitCallDTO, UserRef } from "@gala-chain/api";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export interface AssociativeId {
   id: string;
@@ -20,7 +20,22 @@ export interface TokenInstanceKey {
   instance: string;
 }
 
+export interface IFireDto {
+  entryParent?: string | undefined;
+  slug: string;
+  name: string;
+  starter: UserRef;
+  description?: string;
+  authorities?: UserRef[];
+  moderators?: UserRef[];
+  uniqueKey?: string;
+}
+
 export class FireDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -29,25 +44,55 @@ export class FireDto extends ChainCallDTO {
   @IsString()
   public name: string;
 
+  @IsUserRef()
+  public starter: UserRef;
+
   @IsOptional()
   @IsString()
   public description?: string;
 
-  @IsString({ each: true })
-  public authorities: string[];
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
+  public authorities: UserRef[];
 
-  @IsString({ each: true })
-  public moderators: string[];
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
+  public moderators: UserRef[];
+
+  constructor(data: IFireDto) {
+    super();
+    this.entryParent = data?.entryParent ?? "";
+    this.slug = data?.slug ?? "";
+    this.name = data?.name ?? "";
+    this.starter = data?.starter ?? "";
+    this.description = data?.description ?? "";
+    this.authorities = data?.authorities ?? [];
+    this.moderators = data?.moderators ?? [];
+    this.uniqueKey = data?.uniqueKey ?? "";
+  }
 }
 
-export class FireStarterDto extends ChainCallDTO {
+export interface IFireStarterDto {
+  fire: FireDto;
+  fee: FeeVerificationDto;
+  uniqueKey: string;
+}
+
+export class FireStarterDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => FireDto)
   public fire: FireDto;
 
   @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  public fee: FeeAuthorizationDto;
+  @Type(() => FeeVerificationDto)
+  public fee: FeeVerificationDto;
+
+  constructor(data: IFireStarterDto) {
+    super();
+    this.fire = data?.fire;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
+  }
 }
 
 export class SubmissionDto extends ChainCallDTO {
@@ -78,8 +123,8 @@ export class ContributeSubmissionDto extends ChainCallDTO {
   submission: SubmissionDto;
 
   @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  @Type(() => FeeVerificationDto)
+  fee: FeeVerificationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {
@@ -88,6 +133,6 @@ export class CastVoteDto extends ChainCallDTO {
   entry: string;
 
   @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  @Type(() => FeeVerificationDto)
+  fee: FeeVerificationDto;
 }

@@ -1,5 +1,6 @@
 import { createPinia } from "pinia";
 import { createApp } from "vue";
+import { BrowserConnectClient } from "@gala-chain/connect";
 
 import App from "./App.vue";
 import "./assets/main.css";
@@ -59,6 +60,13 @@ if (import.meta.env.MODE === "development") {
     console.warn("Vue Warning:", msg, trace);
   };
 }
+
+// Initialize BrowserConnectClient as global property
+let metamaskClient: BrowserConnectClient | null = null;
+if (typeof window !== "undefined" && window.ethereum) {
+  metamaskClient = new BrowserConnectClient();
+}
+app.config.globalProperties.$metamaskClient = metamaskClient;
 
 app.use(pinia);
 app.use(router);

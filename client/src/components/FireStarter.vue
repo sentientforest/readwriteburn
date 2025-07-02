@@ -130,20 +130,21 @@
 </template>
 
 <script setup lang="ts">
-import { DryRunDto, FeeVerificationDto, asValidUserRef } from "@gala-chain/api";
-import { BrowserConnectClient } from "@gala-chain/connect";
+import { asValidUserRef, FeeVerificationDto } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
-import { computed, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
+import { useUserStore } from "../stores";
+import { FireDto, FireStarterDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const router = useRouter();
+const userStore = useUserStore();
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: BrowserConnectClient;
-}>();
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const formData = ref({
   name: "",
@@ -160,7 +161,8 @@ const showFeeConfirmation = ref(false);
 const estimatedFees = ref<Array<{ feeCode: string; quantity: BigNumber }>>([]);
 const pendingFireDto = ref<any>(null);
 
-const apiBase = import.meta.env.VITE_GALASWAP_API;
+const apiBase = import.meta.env.VITE_PROJECT_API;
+
 
 const totalFee = computed(() => {
   return estimatedFees.value.reduce((total, fee) => total.plus(fee.quantity), new BigNumber(0));
@@ -200,36 +202,66 @@ async function handleSubmit() {
   error.value = "";
 
   try {
-    // Create FireDto with all required fields
-    const fireDto = {
+    // Debug: Check what we have in the store
+    console.log("FireStarter debug:", {
+      isConnected: userStore.isConnected,
+      hasMetamaskClient: !!metamaskClient.value,
+      address: userStore.address,
+      isAuthenticated: userStore.isAuthenticated
+    });
+
+    // Check if wallet is connected using reactive boolean
+    if (!userStore.isConnected || !metamaskClient.value) {
+      throw new Error(`No account connected: isConnected? ${userStore.isConnected}, metamaskClient? ${!!metamaskClient.value}`);
+    }
+
+    console.log("Creating fire with wallet address:", userStore.address);
+
+    // Create FireDto with all required fields using proper DTO class
+    const fireDto = new FireDto({
       entryParent: formData.value.entryParent || "",
       slug: formData.value.slug,
       name: formData.value.name,
-      starter: asValidUserRef(props.walletAddress),
+      starter: asValidUserRef(userStore.address),
       description: formData.value.description,
-      authorities: formData.value.authorities.filter((auth) => auth.trim() !== ""),
-      moderators: formData.value.moderators.filter((mod) => mod.trim() !== ""),
+      authorities: formData.value.authorities.filter((auth) => auth.trim() !== "").map(auth => asValidUserRef(auth)),
+      moderators: formData.value.moderators.filter((mod) => mod.trim() !== "").map(mod => asValidUserRef(mod)),
       uniqueKey: randomUniqueKey()
-    };
+    });
+
+    // Validate the FireDto
+    const fireValidationErrors = await fireDto.validate();
+    if (fireValidationErrors.length > 0) {
+      const errorMessages = fireValidationErrors.map(err => `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`);
+      throw new Error(`Fire validation failed: ${errorMessages.join('; ')}`);
+    }
 
     // Store the fire DTO for later use
     pendingFireDto.value = fireDto;
 
-    // Create placeholder fee for dry run
-    const placeholderFee = {
-      feeCode: "FIRE_CREATION_FEE",
+    // Create placeholder fee for dry run with all required properties
+    const placeholderFee = new FeeVerificationDto({
+      authorization: "",
+      authority: asValidUserRef(userStore.address),
+      created: Date.now(),
+      txId: "",
+      quantity: new BigNumber(0),
+      feeAuthorizationKey: "",
       uniqueKey: randomUniqueKey()
-    };
+    });
 
     // Create FireStarterDto for dry run
-    const fireStarterDto = {
+    const fireStarterDto = new FireStarterDto({
       fire: fireDto,
       fee: placeholderFee,
       uniqueKey: randomUniqueKey()
-    };
+    });
 
     // Execute dry run to estimate fees
-    const publicKey = await props.metamaskClient.getPublicKey();
+    console.log("Getting public key from MetaMask client...");
+    const publicKey = await metamaskClient.value.getPublicKey().catch((e) => {
+      throw new Error(`getPublicKey failed: ${e}`);
+    });
     const dryRunDto = {
       callerPublicKey: publicKey.publicKey,
       method: "FireStarter",
@@ -277,24 +309,65 @@ async function confirmFireCreation() {
 
   try {
     // Create actual fee verification DTOs based on estimated fees
-    const feeVerifications = estimatedFees.value.map((fee) => ({
-      feeCode: fee.feeCode,
+    const feeVerifications = estimatedFees.value.map((fee) => new FeeVerificationDto({
+      authorization: "",
+      authority: asValidUserRef(userStore.address),
+      created: Date.now(),
+      txId: "",
+      quantity: fee.quantity,
+      feeAuthorizationKey: "",
       uniqueKey: randomUniqueKey()
     }));
 
-    // Use first fee or placeholder if no fees
-    const primaryFee =
-      feeVerifications.length > 0 ? feeVerifications[0] : { feeCode: "NO_FEE", uniqueKey: randomUniqueKey() };
+    // Use first fee or create zero-fee placeholder if no fees
+    const primaryFee = feeVerifications.length > 0 
+      ? feeVerifications[0] 
+      : new FeeVerificationDto({ 
+          authorization: "",
+          authority: asValidUserRef(userStore.address),
+          created: Date.now(),
+          txId: "",
+          quantity: new BigNumber(0),
+          feeAuthorizationKey: "",
+          uniqueKey: randomUniqueKey()
+        });
 
     // Create final FireStarterDto
-    const fireStarterDto = {
-      fire: pendingFireDto.value,
+    const fireStarterDto = new FireStarterDto({
+      fire: pendingFireDto.value!,
       fee: primaryFee,
       uniqueKey: randomUniqueKey()
-    };
+    });
+
+    // Validate the FireStarterDto
+    const validationErrors = await fireStarterDto.validate();
+    if (validationErrors.length > 0) {
+      const errorMessages = validationErrors.map(err => `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`);
+      error.value = `FireStarter validation failed: ${errorMessages.join('; ')}`;
+      console.error("FireStarter validation errors:", validationErrors);
+      return;
+    }
+
+    console.log("FireStarterDto before signing:", JSON.stringify(fireStarterDto, null, 2));
+    console.log("MetaMask client available:", !!metamaskClient.value);
+    console.log("MetaMask client type:", typeof metamaskClient.value);
+    console.log("MetaMask client constructor:", metamaskClient.value?.constructor?.name);
 
     // Sign and submit the transaction
-    const signedDto = await props.metamaskClient.sign(fireStarterDto);
+    let signedDto;
+    try {
+      console.log("About to call sign method...");
+      signedDto = await metamaskClient.value.sign("Firestarter", fireStarterDto);
+      console.log("Sign method completed successfully");
+    } catch (signError) {
+      console.error("Sign method failed:", signError);
+      console.error("Sign error details:", {
+        message: signError.message,
+        stack: signError.stack,
+        name: signError.name
+      });
+      throw signError;
+    }
 
     const response = await fetch(`${apiBase}/api/fires`, {
       method: "POST",

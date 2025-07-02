@@ -162,7 +162,7 @@ export const useFiresStore = defineStore("fires", () => {
         dto: fireStarterDto
       };
 
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/api/product/ReadWriteBurn/DryRun`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/ReadWriteBurn/DryRun`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

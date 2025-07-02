@@ -1,15 +1,18 @@
-import { BrowserConnectClient } from "@gala-chain/connect";
+import { signatures } from "@gala-chain/api";
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
 
 export const useUserStore = defineStore("user", () => {
+  // Access global metamaskClient
+  const instance = getCurrentInstance();
+  const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
+
   // State
   const address = ref("");
   const publicKey = ref("");
   const isConnected = ref(false);
   const isRegistered = ref(false);
   const balance = ref(0);
-  const metamaskClient = ref<BrowserConnectClient | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -20,107 +23,36 @@ export const useUserStore = defineStore("user", () => {
     return `${address.value.slice(0, 6)}...${address.value.slice(-4)}`;
   });
 
-  // Actions
-  async function initializeMetamask() {
-    try {
-      // Check if MetaMask is available
-      if (typeof window === "undefined" || !window.ethereum) {
-        throw new Error("MetaMask not detected");
-      }
-
-      // Try to initialize the GalaChain client
-      try {
-        metamaskClient.value = new BrowserConnectClient();
-        console.log("BrowserConnectClient initialized successfully");
-        return true;
-      } catch (initError) {
-        console.error("Failed to initialize BrowserConnectClient:", initError);
-        // Don't throw - we can still proceed with basic MetaMask functionality
-        return false;
-      }
-    } catch (e) {
-      console.error("MetaMask initialization error:", e);
-      error.value = e instanceof Error ? e.message : "MetaMask not available";
+  // Actions - connectWallet uses the global client
+  async function connectWallet() {
+    if (!metamaskClient.value) {
+      error.value = "MetaMask client not available";
       return false;
     }
-  }
 
-  // Fallback wallet connection that bypasses GalaChain client
-  async function connectWalletBasic() {
+    console.log("Starting GalaChain wallet connection...");
+
     loading.value = true;
     error.value = null;
 
     try {
-      console.log("Starting basic wallet connection...");
-
       // Check if MetaMask is available
       if (typeof window === "undefined" || !window.ethereum) {
-        throw new Error("MetaMask not detected");
+        throw new Error("MetaMask not detected. Please install MetaMask to use this application.");
       }
-
-      // Connect to MetaMask directly
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts || accounts.length === 0) {
-        throw new Error("No MetaMask accounts available");
-      }
-
-      console.log("MetaMask connected successfully");
-
-      // Set the address using the eth| format
-      address.value = `eth|${accounts[0]}`;
-
-      // Mark as connected (but without GalaChain client)
-      isConnected.value = true;
-
-      console.log("Basic wallet connection successful:", {
-        address: address.value
-      });
-
-      // Check registration status
-      await checkRegistration();
-
-      return true;
-    } catch (err) {
-      console.error("Basic wallet connection error:", err);
-      error.value = err instanceof Error ? err.message : "Failed to connect wallet";
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  async function connectWallet() {
-    console.log("Starting wallet connection...");
-
-    // Try full GalaChain connection first
-    try {
-      loading.value = true;
-      error.value = null;
 
       // First, ensure MetaMask is connected at the browser level
-      const accounts = await window.ethereum?.request({ method: "eth_requestAccounts" });
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       if (!accounts || accounts.length === 0) {
         throw new Error("No MetaMask accounts available");
       }
 
       console.log("MetaMask accounts available:", accounts.length);
 
-      // Set the address immediately from MetaMask
-      address.value = `eth|${accounts[0]}`;
-
-      // Initialize the GalaChain client if not already done
-      if (!metamaskClient.value) {
-        const initialized = await initializeMetamask();
-        if (!initialized) {
-          console.warn("GalaChain client initialization failed, falling back to basic connection");
-          throw new Error("GalaChain client initialization failed");
-        }
-      }
-
-      // Try to connect the GalaChain client - this is where the private field error occurs
+      // Connect the GalaChain client
       console.log("Attempting GalaChain connect...");
-      await metamaskClient.value.connect();
-      console.log("GalaChain connect successful");
+      const galaAddress = await metamaskClient.value.connect();
+      console.log("GalaChain connect successful, address:", galaAddress);
 
       // Try to get public key for GalaChain operations
       console.log("Attempting to get public key...");
@@ -129,24 +61,34 @@ export const useUserStore = defineStore("user", () => {
         publicKey.value = keyResult.publicKey;
         console.log("Public key retrieved successfully");
       } else {
-        console.warn("Public key not available in expected format");
+        throw new Error("Failed to retrieve public key from MetaMask");
       }
 
-      console.log("Full GalaChain wallet connection successful:", {
+      // Set the address using the proper eth| format (without 0x prefix)
+      const normalizedAddress = signatures.normalizeEthAddress(accounts[0]);
+      address.value = `eth|${normalizedAddress}`;
+
+      console.log("GalaChain wallet connection successful:", {
         address: address.value,
         hasPublicKey: !!publicKey.value
       });
 
       isConnected.value = true;
+      
+      // Check registration status
       await checkRegistration();
 
       return true;
-    } catch (galaChainError) {
-      console.warn("GalaChain connection failed, attempting basic MetaMask connection:", galaChainError);
-
-      // Reset state and try basic connection
-      loading.value = false;
-      return await connectWalletBasic();
+    } catch (err) {
+      console.error("GalaChain wallet connection error:", err);
+      error.value = err instanceof Error ? err.message : "Failed to connect wallet via GalaChain";
+      
+      // Reset state on error
+      address.value = "";
+      publicKey.value = "";
+      isConnected.value = false;
+      
+      return false;
     } finally {
       loading.value = false;
     }
@@ -156,7 +98,7 @@ export const useUserStore = defineStore("user", () => {
     if (!address.value) return false;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_PUBLIC_KEY_API}/GetPublicKey`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/PublicKeyContract/GetPublicKey`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user: address.value })
@@ -177,7 +119,7 @@ export const useUserStore = defineStore("user", () => {
     error.value = null;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_GALASWAP_API}/CreateHeadlessWallet`, {
+      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/identities/CreateHeadlessWallet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ publicKey: publicKey.value })
@@ -204,7 +146,6 @@ export const useUserStore = defineStore("user", () => {
     isConnected.value = false;
     isRegistered.value = false;
     balance.value = 0;
-    metamaskClient.value = null;
     error.value = null;
   }
 
@@ -221,16 +162,13 @@ export const useUserStore = defineStore("user", () => {
     isConnected,
     isRegistered,
     balance,
-    metamaskClient,
     loading,
     error,
     // Getters
     isAuthenticated,
     shortAddress,
     // Actions
-    initializeMetamask,
     connectWallet,
-    connectWalletBasic,
     checkRegistration,
     registerUser,
     disconnect,
