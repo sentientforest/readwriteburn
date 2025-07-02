@@ -1,8 +1,6 @@
-import { RegisterEthUserDto, createValidDTO, createValidSubmitDTO } from "@gala-chain/api";
+import { ChainUser, RegisterEthUserDto, createValidDTO, createValidSubmitDTO } from "@gala-chain/api";
 import { Request, Response } from "express";
 import fs from "fs";
-
-import { ChainUser } from "../ChainUser";
 
 let adminPrivateKeyString: string = process.env.CHAIN_ADMIN_SECRET_KEY ?? "";
 const adminPrivateKeyPath: string | undefined = process.env.CHAIN_ADMIN_SECRET_KEY_PATH;
