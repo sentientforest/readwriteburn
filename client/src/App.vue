@@ -165,29 +165,16 @@
               <p id="wallet-connect-description" class="text-gray-600 text-sm mb-6">
                 Connect your MetaMask wallet to start burning $GALA and voting on content.
               </p>
-              <div
-                class="space-y-3"
-                role="group"
-                aria-labelledby="wallet-connect-title"
+              <button
+                class="w-full px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium"
+                :disabled="isConnecting"
+                :aria-busy="isConnecting"
                 aria-describedby="wallet-connect-description"
+                @click="connectWallet"
               >
-                <button
-                  class="w-full px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium"
-                  :disabled="isConnecting"
-                  :aria-busy="isConnecting"
-                  @click="connectWallet"
-                >
-                  <span v-if="isConnecting">Connecting...</span>
-                  <span v-else>Connect Wallet</span>
-                </button>
-                <button
-                  class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors text-sm"
-                  :disabled="isConnecting"
-                  @click="connectBasic"
-                >
-                  Connect Basic (Debug)
-                </button>
-              </div>
+                <span v-if="isConnecting">Connecting...</span>
+                <span v-else>Connect Wallet</span>
+              </button>
             </div>
           </div>
 
@@ -225,7 +212,7 @@
                 </div>
               </div>
             </div>
-            <RouterView :wallet-address="walletAddress" :metamask-client="userStore.metamaskClient" />
+            <RouterView />
           </div>
         </main>
       </ErrorBoundary>
@@ -248,10 +235,12 @@ const mobileMenuId = generateId("mobile-menu");
 const isConnecting = ref(false);
 
 // Computed properties from store
-const metamaskSupport = computed(() => !!userStore.metamaskClient);
+const metamaskSupport = computed(() => {
+  // Check for MetaMask availability directly
+  return typeof window !== "undefined" && !!window.ethereum;
+});
 const isConnected = computed(() => userStore.isConnected);
 const walletAddress = computed(() => userStore.address);
-const isAuthenticated = computed(() => userStore.isAuthenticated);
 
 // Mobile menu functions
 function toggleMobileMenu() {
@@ -305,28 +294,6 @@ async function connectWallet() {
   }
 }
 
-async function connectBasic() {
-  isConnecting.value = true;
-  announce("Connecting to wallet in basic mode...", "polite");
-
-  try {
-    const success = await userStore.connectWalletBasic();
-    if (!success && userStore.error) {
-      console.error("Basic connection failed:", userStore.error);
-      announce(`Basic wallet connection failed: ${userStore.error}`, "assertive");
-    } else if (success) {
-      announce("Wallet connected successfully in basic mode", "polite");
-    }
-
-    // If connected but not registered, attempt registration
-    if (userStore.isConnected && !userStore.isRegistered) {
-      announce("Registering user...", "polite");
-      await userStore.registerUser();
-    }
-  } finally {
-    isConnecting.value = false;
-  }
-}
 
 onMounted(async () => {
   // Initialize MetaMask support check

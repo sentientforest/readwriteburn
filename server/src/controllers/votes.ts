@@ -19,7 +19,7 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     if (limit) dto.limit = parseInt(limit as string, 10);
 
     // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurnContract/FetchVotes", {
+    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/FetchVotes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -87,7 +87,7 @@ export async function countVotes(req: Request, res: Response): Promise<void> {
     dto.uniqueKey = uniqueKey;
 
     // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurnContract/CountVotes", {
+    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/CountVotes", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

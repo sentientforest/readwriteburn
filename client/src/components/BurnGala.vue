@@ -71,7 +71,7 @@ async function burnTokens() {
 
     const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto);
 
-    const response = await fetch(`${import.meta.env.VITE_BURN_GATEWAY_API}/BurnTokens`, {
+    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/BurnTokens`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(signedBurnDto)

@@ -117,7 +117,6 @@ config.global.mocks = {
 // Mock environment variables
 vi.mock("meta.env", () => ({
   VITE_PROJECT_API: "http://localhost:4000",
-  VITE_GALASWAP_API: "http://localhost:3000",
   VITE_PROJECT_ID: "readwriteburn",
   MODE: "test"
 }));
