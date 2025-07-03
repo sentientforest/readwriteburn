@@ -55,9 +55,10 @@ export class FireStarterDto extends ChainCallDTO {
   @Type(() => FireDto)
   public fire: FireDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeAuthorizationDto)
-  public fee: FeeAuthorizationDto;
+  public fee?: FeeAuthorizationDto;
 }
 
 export class SubmissionDto extends ChainCallDTO {
@@ -88,9 +89,10 @@ export class ContributeSubmissionDto extends ChainCallDTO {
   @Type(() => SubmissionDto)
   submission: SubmissionDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  fee?: FeeAuthorizationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {
