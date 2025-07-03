@@ -1,4 +1,9 @@
-import { ConflictError, ValidationFailedError, createValidDTO } from "@gala-chain/api";
+import {
+  ConflictError,
+  ValidationFailedError,
+  asValidUserAlias,
+  createValidDTO
+} from "@gala-chain/api";
 import {
   GalaChainContext,
   ensureIsAuthenticatedBy,
@@ -51,9 +56,11 @@ export async function fireStarter(
   const authorities = dto.fire.authorities;
   const moderators = dto.fire.moderators;
 
-  await ensureIsAuthenticatedBy(ctx, dto.fire, starter);
+  const starterAlias = asValidUserAlias(starter);
 
-  const fire = new Fire(entryParent, slug, name, starter, description);
+  await ensureIsAuthenticatedBy(ctx, dto.fire, starterAlias);
+
+  const fire = new Fire(entryParent, slug, name, starterAlias, description);
 
   const fireKey = fire.getCompositeKey();
 
@@ -63,7 +70,7 @@ export async function fireStarter(
 
   await putChainObject(ctx, fire);
 
-  const startedBy = new FireStarter(starter, fireKey);
+  const startedBy = new FireStarter(starterAlias, fireKey);
 
   const fireRes: IFireResDto = {
     metadata: fire,
@@ -92,7 +99,7 @@ export async function fireStarter(
       fireRes.authorities.push(fireAuthority);
     } else {
       for (const identity of authorities) {
-        const fireAuthority = new FireAuthority(fireKey, identity);
+        const fireAuthority = new FireAuthority(fireKey, asValidUserAlias(identity));
 
         await putChainObject(ctx, fireAuthority);
         fireRes.authorities.push(fireAuthority);
@@ -112,7 +119,7 @@ export async function fireStarter(
       fireRes.moderators.push(fireModerator);
     } else {
       for (const identity of moderators) {
-        const fireModerator = new FireModerator(fireKey, identity);
+        const fireModerator = new FireModerator(fireKey, asValidUserAlias(identity));
 
         await putChainObject(ctx, fireModerator);
         fireRes.moderators.push(fireModerator);

@@ -74,7 +74,7 @@ export const useUserStore = defineStore("user", () => {
       });
 
       isConnected.value = true;
-      
+
       // Check registration status
       await checkRegistration();
 
@@ -82,12 +82,12 @@ export const useUserStore = defineStore("user", () => {
     } catch (err) {
       console.error("GalaChain wallet connection error:", err);
       error.value = err instanceof Error ? err.message : "Failed to connect wallet via GalaChain";
-      
+
       // Reset state on error
       address.value = "";
       publicKey.value = "";
       isConnected.value = false;
-      
+
       return false;
     } finally {
       loading.value = false;
@@ -98,11 +98,14 @@ export const useUserStore = defineStore("user", () => {
     if (!address.value) return false;
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/PublicKeyContract/GetPublicKey`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: address.value })
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_PROJECT_API}/api/product/PublicKeyContract/GetPublicKey`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user: address.value })
+        }
+      );
 
       isRegistered.value = response.ok;
       return response.ok;

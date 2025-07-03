@@ -1,11 +1,13 @@
 #!/bin/Node
 import "dotenv/config";
 
-import { FeeVerificationDto, asValidUserAlias, signatures } from "@gala-chain/api";
+import { FeeVerificationDto, asValidUserRef, createValidDTO, signatures } from "@gala-chain/api";
 import { plainToInstance } from "class-transformer";
+import { FireDto, FireStarterDto } from "../dist/types.js";
 
 const CHAIN_API = process.env.CHAIN_API ?? "http://localhost:3000";
 const CHAIN_ADMIN_SK = process.env.CHAIN_ADMIN_SECRET_KEY ?? "";
+const CHAIN_ADMIN_ALIAS = process.env.CHAIN_ADMIN_ALIAS ?? "";
 
 const productChannel = process.env.PRODUCT_CHANNEL ?? "product";
 const fireStarterEndpoint = `${CHAIN_API}/api/${productChannel}/ReadWriteBurn/FireStarter`;
@@ -57,64 +59,56 @@ export async function createFire(
   }
 
   // Determine starter user
-  let starterAlias;
+  let starterRef;
+  let adminEthAddress;
   if (starterAddress) {
     // If user provided, validate it's a valid Ethereum address
     if (!/^0x[a-fA-F0-9]{40}$/.test(starterAddress)) {
       throw new Error(`Invalid Ethereum address: ${starterAddress}`);
     }
-    starterAlias = asValidUserAlias(`eth|${starterAddress}`);
+    starterRef = asValidUserRef(`eth|${starterAddress}`);
   } else {
     // Default to admin user
-    const CHAIN_ADMIN_PK = process.env.CHAIN_ADMIN_PUBLIC_KEY ?? "";
-    if (!CHAIN_ADMIN_PK) {
+    
+    if (!CHAIN_ADMIN_ALIAS) {
       throw new Error(
-        `CHAIN_ADMIN_PUBLIC_KEY not provided when no starter specified. ` +
+        `CHAIN_ADMIN_ALIAS not provided when no starter specified. ` +
           `Set this environment variable or provide a starter address argument.`
       );
     }
-    const adminEthAddress = signatures.getEthAddress(CHAIN_ADMIN_PK);
-    starterAlias = asValidUserAlias(`eth|${adminEthAddress}`);
+    starterRef = asValidUserRef(CHAIN_ADMIN_ALIAS);
   }
 
   // Create FireDto
-  const fireDto = {
+  const fireDto = await createValidDTO(FireDto, {
     entryParent: DEFAULT_FIRE_CONFIG.entryParent,
     slug: slug,
     name: name,
-    starter: starterAlias,
+    starter: starterRef,
     description: description,
-    authorities: [], // Will default to starter as authority
-    moderators: [], // Will default to starter as moderator
+    authorities: [starterRef],
+    moderators: [starterRef],
     uniqueKey: `fire-init-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-  };
-
-  // Create fee verification (empty for now - may need to be updated based on fee requirements)
-  const feeDto = plainToInstance(FeeVerificationDto, {
-    feeCode: "NO_FEE", // This may need to be adjusted based on actual fee requirements
-    uniqueKey: `fee-${Date.now()}-${Math.floor(Math.random() * 1000)}`
   });
 
-  // Create FireStarterDto
-  const fireStarterDto = {
-    fire: fireDto,
-    fee: feeDto,
+
+  const fireStarterDto = await createValidDTO(FireStarterDto, {
+    fire: fireDto.signed(CHAIN_ADMIN_SK),
     uniqueKey: `fire-starter-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-  };
+  });
 
   console.log(`Creating fire: "${name}" with slug "${slug}"`);
-  console.log(`Fire starter: ${starterAlias}`);
+  console.log(`Fire starter: ${starterRef}`);
   console.log(`Description: ${description || "No description provided"}`);
 
   // Convert to DTO instance for proper serialization
-  const dto = plainToInstance(Object, fireStarterDto);
+  const dto = fireStarterDto.signed(CHAIN_ADMIN_SK);
 
   const response = await fetch(fireStarterEndpoint, {
     method: "POST",
-    body: JSON.stringify(dto),
+    body: dto.serialize(),
     headers: {
-      "Content-Type": "application/json",
-      "X-Signature": await signRequest(JSON.stringify(dto), CHAIN_ADMIN_SK)
+      "Content-Type": "application/json"
     }
   });
 
@@ -131,13 +125,6 @@ export async function createFire(
   console.log(`FireStarter response: ${JSON.stringify(data, null, 2)}`);
 
   return data;
-}
-
-// Simple signature helper (may need to be adjusted based on GalaChain requirements)
-async function signRequest(payload, privateKey) {
-  // This is a placeholder - actual signing implementation may be more complex
-  // based on how GalaChain expects signed requests for the FireStarter endpoint
-  return `signed-${Date.now()}`;
 }
 
 // CLI handling

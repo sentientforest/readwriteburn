@@ -14,7 +14,7 @@
     "format": "prettier --config .prettierrc 'src/**/*.ts' 'e2e/**/*.ts' --write",
     "prepublishOnly": "npm run format && npm run build && npm run lint && npm run test",
     "network:start": "galachain network:up -C=product-channel -t=curator -n=basic-product -d=./ --envConfig=./.dev-env",
-    "network:up": "galachain network:up -C=product-channel -t=curator -n=basic-product -d=./ --envConfig=./.dev-env --contracts='[{\"contractName\":\"ReadWriteBurn\"},{\"contractName\":\"GalaChainToken\"},{\"contractName\":\"PublicKeyContract\"}]' -C=asset-channel -t=curator -n=basic-asset -d=../ctx/assets-chaincode/ --contracts='[{\"contractName\":\"PublicKeyContract\"},{\"contractName\":\"GalaChainToken\"},{\"contractName\":\"GalaChainFee\"}]'",
+    "network:up": "galachain network:up -C=product-channel -t=curator -n=basic-product -d=./ --envConfig=./.dev-env --contracts='[{\"contractName\":\"ReadWriteBurn\"},{\"contractName\":\"GalaChainToken\"},{\"contractName\":\"PublicKeyContract\"}]' -C=asset-channel -t=curator -n=basic-asset -d=../ext/assets-chaincode/ --contracts='[{\"contractName\":\"PublicKeyContract\"},{\"contractName\":\"GalaChainToken\"},{\"contractName\":\"GalaChainFee\"}]'",
     "network:prune": "galachain network:prune",
     "network:recreate": "npm run network:prune && rm -rf ./test-network && npm run network:start",
     "test": "jest",
@@ -23,17 +23,17 @@
     "update-snapshot": "jest --updateSnapshot"
   },
   "dependencies": {
-    "@gala-chain/api": "2.2.0",
-    "@gala-chain/chaincode": "2.2.0",
+    "@gala-chain/api": "2.3.4",
+    "@gala-chain/chaincode": "2.3.4",
     "@grpc/grpc-js": "1.10.10",
     "dotenv": "^16.0.1",
     "fabric-contract-api": "2.5.6",
     "fabric-shim": "2.5.6"
   },
   "devDependencies": {
-    "@gala-chain/cli": "2.2.0",
-    "@gala-chain/client": "2.2.0",
-    "@gala-chain/test": "2.2.0",
+    "@gala-chain/cli": "2.3.4",
+    "@gala-chain/client": "2.3.4",
+    "@gala-chain/test": "2.3.4",
     "class-validator-jsonschema": "^5.0.0",
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "@types/jest": "^29.5.12",

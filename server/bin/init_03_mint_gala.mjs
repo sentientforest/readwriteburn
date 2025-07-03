@@ -26,7 +26,7 @@ const assetChannel = process.env.ASSET_CHANNEL ?? "asset";
 const mintEndpoint = `${CHAIN_API}/api/${assetChannel}/GalaChainToken/MintTokenWithAllowance`;
 
 // Default values
-const DEFAULT_MINT_AMOUNT = new BigNumber(1000 * 100000000); // 1000 GALA (8 decimals)
+const DEFAULT_MINT_AMOUNT = new BigNumber(1000);
 
 function printUsage() {
   console.log("Usage: node init_03_mint_gala.mjs [user_address] [amount]");
@@ -84,7 +84,7 @@ export async function mintGala(targetUser = null, amount = DEFAULT_MINT_AMOUNT) 
       type: "none",
       additionalKey: "none"
     },
-    tokenInstance: galaTokenQueryKey,
+    tokenInstance: galaTokenQueryKey.instance,
     owner: userAlias,
     quantity: new BigNumber(amount),
     uniqueKey: `galachain-dev-mint-${Date.now()}-${Math.floor(Math.random() * 1000)}`

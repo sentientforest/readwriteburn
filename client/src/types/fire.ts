@@ -1,4 +1,6 @@
-import { ChainCallDTO, FeeVerificationDto, IsUserRef, SubmitCallDTO, UserRef } from "@gala-chain/api";
+import { ChainCallDTO, FeeVerificationDto, IsUserRef, SubmitCallDTO } from "@gala-chain/api";
+import type { UserRef } from "@gala-chain/api";
+
 import { Type } from "class-transformer";
 import { ArrayMinSize, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
@@ -74,7 +76,7 @@ export class FireDto extends ChainCallDTO {
 
 export interface IFireStarterDto {
   fire: FireDto;
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
   uniqueKey: string;
 }
 
@@ -83,9 +85,10 @@ export class FireStarterDto extends SubmitCallDTO {
   @Type(() => FireDto)
   public fire: FireDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  public fee: FeeVerificationDto;
+  public fee?: FeeVerificationDto;
 
   constructor(data: IFireStarterDto) {
     super();
@@ -122,9 +125,10 @@ export class ContributeSubmissionDto extends ChainCallDTO {
   @Type(() => SubmissionDto)
   submission: SubmissionDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {
@@ -132,7 +136,8 @@ export class CastVoteDto extends ChainCallDTO {
   @IsString()
   entry: string;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
-  fee: FeeVerificationDto;
+  fee?: FeeVerificationDto;
 }

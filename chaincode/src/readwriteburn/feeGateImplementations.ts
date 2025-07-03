@@ -50,7 +50,11 @@ export async function fireStarterFeeGate(ctx: GalaChainContext, dto: FireStarter
   // alongside FireDto signed by the FireStarter identity.
   // We credit the fee balance and debit via the standard fee gate to atomically
   // process two steps in one, avoiding the need for a separate `creditFeeBalance` call.
-  await creditFeeBalance(ctx, fee);
+  // To continue supporting fee exemptions and dry run fee estimation, we make the fee
+  // optional in the DTO and defer enforcement to the `galaFeeGate` rather than in DTO validation.
+  if (fee !== undefined) {
+    await creditFeeBalance(ctx, fee);
+  }
 
   return galaFeeGate(ctx, { feeCode: ReadWriteBurnFeeGateCodes.FireStarter });
 }

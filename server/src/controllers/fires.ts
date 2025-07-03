@@ -94,7 +94,7 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
 
   const feeQty = await fireStarterFee(fire);
 
-  if (fee.quantity.isLessThan(feeQty)) {
+  if (fee && fee.quantity.isLessThan(feeQty)) {
     const msg =
       `Chain requires fee of ${feeQty.toString()}, ` +
       `fire starter only authorized: ${fee.quantity.toString()}`;
@@ -103,7 +103,8 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
     return res.status(500).send(msg);
   }
 
-  const { authorization } = await authorizeFee(fee);
+  // todo: implement cross-channel fee authorization
+  // const { authorization } = await authorizeFee(fee);
 
   try {
     const subfire = req.body as FireDto;

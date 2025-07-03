@@ -3,8 +3,8 @@ import {
   BigNumberProperty,
   ChainKey,
   ChainObject,
-  IsUserRef,
-  UserRef
+  IsUserAlias,
+  UserAlias
 } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
@@ -27,8 +27,8 @@ export class VoterReceipt extends ChainObject {
 
   /** User reference of the voter */
   @ChainKey({ position: 0 })
-  @IsUserRef()
-  voter: UserRef;
+  @IsUserAlias()
+  voter: UserAlias;
 
   /** Reference to the original vote's composite key */
   @ChainKey({ position: 1 })
@@ -48,7 +48,7 @@ export class VoterReceipt extends ChainObject {
    * @param id - Reference to the original vote's composite key
    * @param quantity - Quantity of GALA tokens burned in the original vote
    */
-  constructor(voter: UserRef, id: string, quantity: BigNumber) {
+  constructor(voter: UserAlias, id: string, quantity: BigNumber) {
     super();
     this.voter = voter;
     this.id = id;

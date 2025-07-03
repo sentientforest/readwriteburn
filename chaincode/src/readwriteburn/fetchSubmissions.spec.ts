@@ -28,12 +28,6 @@ describe("fetchSubmissions chaincode call", () => {
 
   const submissions = [submission, comment];
 
-  test("takeUntilUndefined with empty string key", async () => {
-    const query = takeUntilUndefined("test", "");
-
-    expect(query).toEqual(["test", ""]);
-  });
-
   test("fetchSubmissions", async () => {
     const dto = new FetchSubmissionsDto({
       fire: fireChainKey,

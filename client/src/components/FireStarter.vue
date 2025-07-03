@@ -107,7 +107,7 @@
           <div v-if="estimatedFees && estimatedFees.length > 0">
             <div v-for="fee in estimatedFees" :key="fee.feeCode" class="fee-item">
               <span class="fee-label">{{ fee.feeCode }}:</span>
-              <span class="fee-amount">{{ formatFee(fee.quantity) }} GALA</span>
+              <span class="fee-amount">{{ fee.formattedQuantity }} GALA</span>
             </div>
             <div class="total-fee">
               <strong>Total: {{ formatFee(totalFee) }} GALA</strong>
@@ -130,8 +130,9 @@
 </template>
 
 <script setup lang="ts">
-import { asValidUserRef, FeeVerificationDto } from "@gala-chain/api";
+import { DryRunResultDto, FeeVerificationDto, GalaChainResponse, asValidUserRef } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
+import { ValidationError } from "class-validator";
 import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -155,14 +156,19 @@ const formData = ref({
   moderators: [] as string[]
 });
 
+interface IEstimatedFee {
+  feeCode: string;
+  quantity: BigNumber;
+  formattedQuantity: string;
+}
+
 const isSubmitting = ref(false);
 const error = ref("");
 const showFeeConfirmation = ref(false);
-const estimatedFees = ref<Array<{ feeCode: string; quantity: BigNumber }>>([]);
+const estimatedFees = ref<Array<IEstimatedFee>>([]);
 const pendingFireDto = ref<any>(null);
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
-
 
 const totalFee = computed(() => {
   return estimatedFees.value.reduce((total, fee) => total.plus(fee.quantity), new BigNumber(0));
@@ -196,6 +202,21 @@ function cancelFireCreation() {
   error.value = "";
 }
 
+// Helper function to format validation errors including nested ones
+const formatValidationErrors = (errors: ValidationError[], prefix = ""): string[] => {
+  const messages: string[] = [];
+  for (const err of errors) {
+    const property = prefix ? `${prefix}.${err.property}` : err.property;
+    if (err.constraints) {
+      messages.push(`${property}: ${Object.values(err.constraints).join(", ")}`);
+    }
+    if (err.children && err.children.length > 0) {
+      messages.push(...formatValidationErrors(err.children, property));
+    }
+  }
+  return messages;
+};
+
 // Step 1: Handle form submission - execute dry run
 async function handleSubmit() {
   isSubmitting.value = true;
@@ -212,7 +233,9 @@ async function handleSubmit() {
 
     // Check if wallet is connected using reactive boolean
     if (!userStore.isConnected || !metamaskClient.value) {
-      throw new Error(`No account connected: isConnected? ${userStore.isConnected}, metamaskClient? ${!!metamaskClient.value}`);
+      throw new Error(
+        `No account connected: isConnected? ${userStore.isConnected}, metamaskClient? ${!!metamaskClient.value}`
+      );
     }
 
     console.log("Creating fire with wallet address:", userStore.address);
@@ -224,36 +247,38 @@ async function handleSubmit() {
       name: formData.value.name,
       starter: asValidUserRef(userStore.address),
       description: formData.value.description,
-      authorities: formData.value.authorities.filter((auth) => auth.trim() !== "").map(auth => asValidUserRef(auth)),
-      moderators: formData.value.moderators.filter((mod) => mod.trim() !== "").map(mod => asValidUserRef(mod)),
+      authorities: formData.value.authorities
+        .filter((auth) => auth.trim() !== "")
+        .map((auth) => asValidUserRef(auth)),
+      moderators: formData.value.moderators
+        .filter((mod) => mod.trim() !== "")
+        .map((mod) => asValidUserRef(mod)),
       uniqueKey: randomUniqueKey()
     });
 
     // Validate the FireDto
     const fireValidationErrors = await fireDto.validate();
     if (fireValidationErrors.length > 0) {
-      const errorMessages = fireValidationErrors.map(err => `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`);
-      throw new Error(`Fire validation failed: ${errorMessages.join('; ')}`);
+      const errorMessages = formatValidationErrors(fireValidationErrors);
+      throw new Error(`Fire validation failed: ${errorMessages.join("; ")}`);
     }
 
     // Store the fire DTO for later use
     pendingFireDto.value = fireDto;
 
     // Create placeholder fee for dry run with all required properties
-    const placeholderFee = new FeeVerificationDto({
-      authorization: "",
-      authority: asValidUserRef(userStore.address),
-      created: Date.now(),
-      txId: "",
-      quantity: new BigNumber(0),
-      feeAuthorizationKey: "",
-      uniqueKey: randomUniqueKey()
-    });
+    const placeholderFee = new FeeVerificationDto();
+    placeholderFee.authorization = "";
+    placeholderFee.authority = asValidUserRef(userStore.address);
+    placeholderFee.created = Date.now();
+    placeholderFee.txId = "";
+    placeholderFee.quantity = new BigNumber(0);
+    placeholderFee.feeAuthorizationKey = "";
+    placeholderFee.uniqueKey = randomUniqueKey();
 
     // Create FireStarterDto for dry run
     const fireStarterDto = new FireStarterDto({
       fire: fireDto,
-      fee: placeholderFee,
       uniqueKey: randomUniqueKey()
     });
 
@@ -281,7 +306,7 @@ async function handleSubmit() {
       throw new Error(errorData.message || "Failed to estimate fees");
     }
 
-    const dryRunResult = await dryRunResponse.json();
+    const dryRunResult: GalaChainResponse<DryRunResultDto> = await dryRunResponse.json();
     console.log("Dry run result:", dryRunResult);
 
     // Parse fees from dry run response
@@ -309,28 +334,32 @@ async function confirmFireCreation() {
 
   try {
     // Create actual fee verification DTOs based on estimated fees
-    const feeVerifications = estimatedFees.value.map((fee) => new FeeVerificationDto({
-      authorization: "",
-      authority: asValidUserRef(userStore.address),
-      created: Date.now(),
-      txId: "",
-      quantity: fee.quantity,
-      feeAuthorizationKey: "",
-      uniqueKey: randomUniqueKey()
-    }));
+    const feeVerifications = estimatedFees.value.map((fee) => {
+      const feeDto = new FeeVerificationDto();
+      feeDto.authorization = "";
+      feeDto.authority = asValidUserRef(userStore.address);
+      feeDto.created = Date.now();
+      feeDto.txId = "";
+      feeDto.quantity = new BigNumber(fee.quantity);
+      feeDto.feeAuthorizationKey = "";
+      feeDto.uniqueKey = randomUniqueKey();
+      return feeDto;
+    });
 
     // Use first fee or create zero-fee placeholder if no fees
-    const primaryFee = feeVerifications.length > 0 
-      ? feeVerifications[0] 
-      : new FeeVerificationDto({ 
-          authorization: "",
-          authority: asValidUserRef(userStore.address),
-          created: Date.now(),
-          txId: "",
-          quantity: new BigNumber(0),
-          feeAuthorizationKey: "",
-          uniqueKey: randomUniqueKey()
-        });
+    let primaryFee;
+    if (feeVerifications.length > 0) {
+      primaryFee = feeVerifications[0];
+    } else {
+      primaryFee = new FeeVerificationDto();
+      primaryFee.authorization = "";
+      primaryFee.authority = asValidUserRef(userStore.address);
+      primaryFee.created = Date.now();
+      primaryFee.txId = "";
+      primaryFee.quantity = new BigNumber(0);
+      primaryFee.feeAuthorizationKey = "";
+      primaryFee.uniqueKey = randomUniqueKey();
+    }
 
     // Create final FireStarterDto
     const fireStarterDto = new FireStarterDto({
@@ -342,8 +371,8 @@ async function confirmFireCreation() {
     // Validate the FireStarterDto
     const validationErrors = await fireStarterDto.validate();
     if (validationErrors.length > 0) {
-      const errorMessages = validationErrors.map(err => `${err.property}: ${Object.values(err.constraints || {}).join(', ')}`);
-      error.value = `FireStarter validation failed: ${errorMessages.join('; ')}`;
+      const errorMessages = formatValidationErrors(validationErrors);
+      error.value = `FireStarter validation failed: ${errorMessages.join("; ")}`;
       console.error("FireStarter validation errors:", validationErrors);
       return;
     }
@@ -357,15 +386,10 @@ async function confirmFireCreation() {
     let signedDto;
     try {
       console.log("About to call sign method...");
-      signedDto = await metamaskClient.value.sign("Firestarter", fireStarterDto);
+      signedDto = await metamaskClient?.value?.sign("Firestarter", fireStarterDto);
       console.log("Sign method completed successfully");
     } catch (signError) {
       console.error("Sign method failed:", signError);
-      console.error("Sign error details:", {
-        message: signError.message,
-        stack: signError.stack,
-        name: signError.name
-      });
       throw signError;
     }
 
@@ -397,27 +421,18 @@ async function confirmFireCreation() {
 }
 
 // Parse fee estimation from dry run response
-function parseFeeEstimation(dryRunResult: any): Array<{ feeCode: string; quantity: BigNumber }> {
-  const fees: Array<{ feeCode: string; quantity: BigNumber }> = [];
+function parseFeeEstimation(dryRunResult: GalaChainResponse<DryRunResultDto>): Array<IEstimatedFee> {
+  const fees: Array<IEstimatedFee> = [];
 
-  // Parse the dry run response to extract fee information
-  // This structure may need adjustment based on actual GalaChain dry run response format
-  if (dryRunResult.Data && dryRunResult.Data.fees) {
-    for (const [feeCode, feeData] of Object.entries(dryRunResult.Data.fees)) {
-      fees.push({
-        feeCode,
-        quantity: new BigNumber(feeData as string)
-      });
-    }
-  } else if (dryRunResult.feeRequirements) {
-    // Alternative parsing if fees are in different structure
-    dryRunResult.feeRequirements.forEach((req: any) => {
-      fees.push({
-        feeCode: req.feeCode,
-        quantity: new BigNumber(req.amount)
-      });
-    });
-  }
+  // todo: parse DryRunResponse
+  console.log("parseFeeEstimate with DryRunResult:");
+  console.log(dryRunResult);
+  
+  fees.push({
+    feeCode: "ReadWriteBurn",
+    quantity: new BigNumber("0"),
+    formattedQuantity: formatFee(new BigNumber("0"))
+  });
 
   return fees;
 }

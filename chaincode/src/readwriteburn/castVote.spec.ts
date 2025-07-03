@@ -4,6 +4,7 @@ import {
   GalaChainResponse,
   NotFoundError,
   ValidationFailedError,
+  asValidUserAlias,
   asValidUserRef,
   randomUniqueKey
 } from "@gala-chain/api";
@@ -20,6 +21,7 @@ import { CastVoteDto, VoteDto } from "./api/dtos";
 describe("castVote chaincode call", () => {
   const admin = randomUser();
   const user = randomUser();
+  const userAlias = asValidUserAlias(user.identityKey);
   const userRef = asValidUserRef(user.identityKey);
 
   // Create test submission
@@ -28,7 +30,7 @@ describe("castVote chaincode call", () => {
     "test-fire-key",
     "001",
     "Test Submission",
-    userRef,
+    userAlias,
     "Test submission description",
     "https://example.com"
   );
@@ -218,7 +220,7 @@ describe("castVote chaincode call", () => {
 
     // Then - Should fail due to unique key conflict
     expect(result2.Status).toBe(0);
-    expect(result2.Message).toContain("Unique Transaction key");
+    expect(result2.Message).toContain("Unique transaction key");
   });
 
   test("vote with negative quantity should fail validation", async () => {
