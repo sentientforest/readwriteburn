@@ -107,7 +107,7 @@
           <div v-if="estimatedFees && estimatedFees.length > 0">
             <div v-for="fee in estimatedFees" :key="fee.feeCode" class="fee-item">
               <span class="fee-label">{{ fee.feeCode }}:</span>
-              <span class="fee-amount">{{ formatFee(fee.quantity) }} GALA</span>
+              <span class="fee-amount">{{ fee.formattedQuantity }} GALA</span>
             </div>
             <div class="total-fee">
               <strong>Total: {{ formatFee(totalFee) }} GALA</strong>
@@ -130,8 +130,9 @@
 </template>
 
 <script setup lang="ts">
-import { FeeVerificationDto, asValidUserRef } from "@gala-chain/api";
+import { DryRunResultDto, FeeVerificationDto, GalaChainResponse, asValidUserRef } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
+import { ValidationError } from "class-validator";
 import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -155,10 +156,16 @@ const formData = ref({
   moderators: [] as string[]
 });
 
+interface IEstimatedFee {
+  feeCode: string;
+  quantity: BigNumber;
+  formattedQuantity: string;
+}
+
 const isSubmitting = ref(false);
 const error = ref("");
 const showFeeConfirmation = ref(false);
-const estimatedFees = ref<Array<{ feeCode: string; quantity: BigNumber }>>([]);
+const estimatedFees = ref<Array<IEstimatedFee>>([]);
 const pendingFireDto = ref<any>(null);
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
@@ -196,7 +203,7 @@ function cancelFireCreation() {
 }
 
 // Helper function to format validation errors including nested ones
-const formatValidationErrors = (errors: unknown[], prefix = ""): string[] => {
+const formatValidationErrors = (errors: ValidationError[], prefix = ""): string[] => {
   const messages: string[] = [];
   for (const err of errors) {
     const property = prefix ? `${prefix}.${err.property}` : err.property;
@@ -272,7 +279,6 @@ async function handleSubmit() {
     // Create FireStarterDto for dry run
     const fireStarterDto = new FireStarterDto({
       fire: fireDto,
-      fee: placeholderFee,
       uniqueKey: randomUniqueKey()
     });
 
@@ -300,7 +306,7 @@ async function handleSubmit() {
       throw new Error(errorData.message || "Failed to estimate fees");
     }
 
-    const dryRunResult = await dryRunResponse.json();
+    const dryRunResult: GalaChainResponse<DryRunResultDto> = await dryRunResponse.json();
     console.log("Dry run result:", dryRunResult);
 
     // Parse fees from dry run response
@@ -334,7 +340,7 @@ async function confirmFireCreation() {
       feeDto.authority = asValidUserRef(userStore.address);
       feeDto.created = Date.now();
       feeDto.txId = "";
-      feeDto.quantity = fee.quantity;
+      feeDto.quantity = new BigNumber(fee.quantity);
       feeDto.feeAuthorizationKey = "";
       feeDto.uniqueKey = randomUniqueKey();
       return feeDto;
@@ -380,15 +386,10 @@ async function confirmFireCreation() {
     let signedDto;
     try {
       console.log("About to call sign method...");
-      signedDto = await metamaskClient.value.sign("Firestarter", fireStarterDto);
+      signedDto = await metamaskClient?.value?.sign("Firestarter", fireStarterDto);
       console.log("Sign method completed successfully");
     } catch (signError) {
       console.error("Sign method failed:", signError);
-      console.error("Sign error details:", {
-        message: signError.message,
-        stack: signError.stack,
-        name: signError.name
-      });
       throw signError;
     }
 
@@ -420,27 +421,18 @@ async function confirmFireCreation() {
 }
 
 // Parse fee estimation from dry run response
-function parseFeeEstimation(dryRunResult: any): Array<{ feeCode: string; quantity: BigNumber }> {
-  const fees: Array<{ feeCode: string; quantity: BigNumber }> = [];
+function parseFeeEstimation(dryRunResult: GalaChainResponse<DryRunResultDto>): Array<IEstimatedFee> {
+  const fees: Array<IEstimatedFee> = [];
 
-  // Parse the dry run response to extract fee information
-  // This structure may need adjustment based on actual GalaChain dry run response format
-  if (dryRunResult.Data && dryRunResult.Data.fees) {
-    for (const [feeCode, feeData] of Object.entries(dryRunResult.Data.fees)) {
-      fees.push({
-        feeCode,
-        quantity: new BigNumber(feeData as string)
-      });
-    }
-  } else if (dryRunResult.feeRequirements) {
-    // Alternative parsing if fees are in different structure
-    dryRunResult.feeRequirements.forEach((req: any) => {
-      fees.push({
-        feeCode: req.feeCode,
-        quantity: new BigNumber(req.amount)
-      });
-    });
-  }
+  // todo: parse DryRunResponse
+  console.log("parseFeeEstimate with DryRunResult:");
+  console.log(dryRunResult);
+  
+  fees.push({
+    feeCode: "ReadWriteBurn",
+    quantity: new BigNumber("0"),
+    formattedQuantity: formatFee(new BigNumber("0"))
+  });
 
   return fees;
 }
