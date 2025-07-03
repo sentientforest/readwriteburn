@@ -3,8 +3,8 @@ import {
   BigNumberProperty,
   ChainKey,
   ChainObject,
-  IsUserRef,
-  UserRef
+  IsUserAlias,
+  UserAlias
 } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
@@ -50,8 +50,8 @@ export class Vote extends ChainObject {
 
   /** User reference of the voter */
   @ChainKey({ position: 4 })
-  @IsUserRef()
-  voter: UserRef;
+  @IsUserAlias()
+  voter: UserAlias;
 
   /** Amount of GALA tokens burned for this vote */
   @BigNumberIsPositive()
@@ -73,7 +73,7 @@ export class Vote extends ChainObject {
     entryParent: string,
     entry: string,
     id: string,
-    voter: UserRef,
+    voter: UserAlias,
     quantity: BigNumber
   ) {
     super();

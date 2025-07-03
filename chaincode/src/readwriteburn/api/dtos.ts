@@ -156,8 +156,9 @@ export class FireResDto extends ChainCallDTO {
   @Type(() => FireModerator)
   moderators: FireModerator[];
 
-  constructor(data: IFireResDto) {
+  constructor(args: unknown) {
     super();
+    const data: IFireResDto = args as IFireResDto;
     this.metadata = data?.metadata;
     this.starter = data?.starter ?? "";
     this.authorities = data?.authorities ?? [];

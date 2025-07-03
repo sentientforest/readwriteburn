@@ -1,6 +1,7 @@
 import {
   ChainUser,
   FeeVerificationDto,
+  asValidUserAlias,
   asValidUserRef,
   createValidDTO,
   randomUniqueKey
@@ -37,7 +38,8 @@ describe("readwriteburn DTOs", () => {
   const user = ChainUser.withRandomKeys();
 
   const userRef = asValidUserRef(user.identityKey);
-
+  const userAlias = asValidUserAlias(userRef);
+  
   test("FireDto", async () => {
     fireDto = new FireDto({
       slug: "test-fire",
@@ -152,7 +154,7 @@ describe("readwriteburn DTOs", () => {
   });
 
   test("FireResDto", async () => {
-    const starter = asValidUserRef("client|abc");
+    const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
       "",
@@ -185,7 +187,7 @@ describe("readwriteburn DTOs", () => {
   });
 
   test("FireResDto with class transformer", async () => {
-    const starter = asValidUserRef("client|abc");
+    const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
       "",
@@ -218,7 +220,7 @@ describe("readwriteburn DTOs", () => {
   });
 
   test("FetchFiresResDto", async () => {
-    const starter = asValidUserRef("client|abc");
+    const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
       "",

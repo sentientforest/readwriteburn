@@ -1,4 +1,4 @@
-import { GalaChainResponse, asValidUserRef, randomUniqueKey } from "@gala-chain/api";
+import { GalaChainResponse, asValidUserAlias, randomUniqueKey } from "@gala-chain/api";
 import { GalaChainContext } from "@gala-chain/chaincode";
 import { fixture, randomUser, transactionSuccess } from "@gala-chain/test";
 import BigNumber from "bignumber.js";
@@ -12,8 +12,8 @@ describe("fetchVotes chaincode call", () => {
   const admin = randomUser();
   const user1 = randomUser();
   const user2 = randomUser();
-  const user1Ref = asValidUserRef(user1.identityKey);
-  const user2Ref = asValidUserRef(user2.identityKey);
+  const user1Alias = asValidUserAlias(user1.identityKey);
+  const user2Alias = asValidUserAlias(user2.identityKey);
 
   // Create test fire and submissions
   const fireKey = "test-fire-key";
@@ -22,7 +22,7 @@ describe("fetchVotes chaincode call", () => {
     fireKey,
     "001",
     "Submission 1",
-    user1Ref,
+    user1Alias,
     "First submission"
   );
   const submission2 = new Submission(
@@ -30,7 +30,7 @@ describe("fetchVotes chaincode call", () => {
     fireKey,
     "002",
     "Submission 2",
-    user2Ref,
+    user2Alias,
     "Second submission"
   );
 
@@ -40,7 +40,7 @@ describe("fetchVotes chaincode call", () => {
     fireKey,
     submission1.getCompositeKey(),
     "vote-001",
-    user1Ref,
+    user1Alias,
     new BigNumber("100")
   );
 
@@ -49,7 +49,7 @@ describe("fetchVotes chaincode call", () => {
     fireKey,
     submission1.getCompositeKey(),
     "vote-002",
-    user2Ref,
+    user2Alias,
     new BigNumber("200")
   );
 
@@ -58,7 +58,7 @@ describe("fetchVotes chaincode call", () => {
     fireKey,
     submission2.getCompositeKey(),
     "vote-003",
-    user1Ref,
+    user1Alias,
     new BigNumber("150")
   );
 
@@ -283,7 +283,7 @@ describe("fetchVotes chaincode call", () => {
     expect(voteResult).toHaveProperty("value");
     expect(voteResult.key).toBe(vote1.getCompositeKey());
     expect(voteResult.value).toBeInstanceOf(Vote);
-    expect(voteResult.value.voter).toBe(user1Ref);
+    expect(voteResult.value.voter).toBe(user1Alias);
     expect(voteResult.value.quantity.toString()).toBe("100");
   });
 

@@ -1,4 +1,4 @@
-import { ChainKey, ChainObject, IsUserRef, UserRef } from "@gala-chain/api";
+import { ChainKey, ChainObject, IsUserAlias, UserAlias } from "@gala-chain/api";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
@@ -37,9 +37,9 @@ export class Fire extends ChainObject {
   @IsString()
   public description?: string;
 
-  /** User reference of the fire creator */
-  @IsUserRef()
-  public starter: UserRef;
+  /** User alias of the fire creator */
+  @IsUserAlias()
+  public starter: UserAlias;
 
   /**
    * Create a new Fire instance
@@ -54,7 +54,7 @@ export class Fire extends ChainObject {
     entryParent: string,
     slug: string,
     name: string,
-    starter: UserRef,
+    starter: UserAlias,
     description: string | undefined
   ) {
     super();
@@ -82,8 +82,8 @@ export class FireStarter extends ChainObject {
 
   /** User reference of the fire creator */
   @ChainKey({ position: 0 })
-  @IsUserRef()
-  public identity: UserRef;
+  @IsUserAlias()
+  public identity: UserAlias;
 
   /** Composite key of the fire that was started */
   @ChainKey({ position: 1 })
@@ -97,7 +97,7 @@ export class FireStarter extends ChainObject {
    * @param identity - User reference of the fire creator
    * @param fire - Composite key of the fire
    */
-  constructor(identity: UserRef, fire: string) {
+  constructor(identity: UserAlias, fire: string) {
     super();
     this.identity = identity;
     this.fire = fire;
@@ -125,8 +125,8 @@ export class FireAuthority extends ChainObject {
 
   /** User reference of the authority */
   @ChainKey({ position: 1 })
-  @IsUserRef()
-  public identity: UserRef;
+  @IsUserAlias()
+  public identity: UserAlias;
 
   /**
    * Create a new FireAuthority relationship
@@ -134,7 +134,7 @@ export class FireAuthority extends ChainObject {
    * @param fire - Composite key of the fire
    * @param identity - User reference of the authority
    */
-  constructor(fire: string, identity: UserRef) {
+  constructor(fire: string, identity: UserAlias) {
     super();
     this.fire = fire;
     this.identity = identity;
@@ -162,8 +162,8 @@ export class FireModerator extends ChainObject {
 
   /** User reference of the moderator */
   @ChainKey({ position: 1 })
-  @IsUserRef()
-  public identity: UserRef;
+  @IsUserAlias()
+  public identity: UserAlias;
 
   /**
    * Create a new FireModerator relationship
@@ -171,7 +171,7 @@ export class FireModerator extends ChainObject {
    * @param fire - Composite key of the fire
    * @param identity - User reference of the moderator
    */
-  constructor(fire: string, identity: UserRef) {
+  constructor(fire: string, identity: UserAlias) {
     super();
     this.fire = fire;
     this.identity = identity;

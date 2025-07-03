@@ -1,4 +1,4 @@
-import { ChainObject, ValidationFailedError, asValidUserRef } from "@gala-chain/api";
+import { ChainObject, ValidationFailedError, asValidUserAlias, asValidUserRef } from "@gala-chain/api";
 import {
   GalaChainContext,
   UniqueTransactionService,
@@ -64,7 +64,7 @@ export async function castVote(ctx: GalaChainContext, dto: CastVoteDto): Promise
     existingEntry.entryParent,
     entry,
     voteId,
-    asValidUserRef(voter.alias),
+    asValidUserAlias(voter.alias),
     quantity
   );
 

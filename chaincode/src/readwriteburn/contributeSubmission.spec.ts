@@ -3,6 +3,7 @@ import {
   FeeVerificationDto,
   GalaChainResponse,
   ValidationFailedError,
+  asValidUserAlias,
   asValidUserRef,
   randomUniqueKey
 } from "@gala-chain/api";
@@ -19,10 +20,10 @@ import { ContributeSubmissionDto, SubmissionDto } from "./api/dtos";
 describe("contributeSubmission chaincode call", () => {
   const admin = randomUser();
   const user = randomUser();
+  const userAlias = asValidUserAlias(user.identityKey);
   const userRef = asValidUserRef(user.identityKey);
-
   // Create test fire
-  const fire = new Fire("", "test-fire", "Test Fire", userRef, "Test fire description");
+  const fire = new Fire("", "test-fire", "Test Fire", userAlias, "Test fire description");
   const fireKey = fire.getCompositeKey();
 
   test("successful submission creation", async () => {
@@ -70,7 +71,7 @@ describe("contributeSubmission chaincode call", () => {
     expect(submission.name).toBe("Test Submission");
     expect(submission.fire).toBe(fireKey);
     expect(submission.entryParent).toBe(fireKey);
-    expect(submission.contributor).toBe(userRef);
+    expect(submission.contributor).toBe(userAlias);
     expect(submission.description).toBe("Test submission description");
     expect(submission.url).toBe("https://example.com/article");
     expect(submission.id).toBeDefined();
@@ -122,7 +123,7 @@ describe("contributeSubmission chaincode call", () => {
       fireKey,
       "001",
       "Parent Submission",
-      userRef,
+      userAlias,
       "Parent submission description"
     );
 

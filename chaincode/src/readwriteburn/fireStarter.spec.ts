@@ -2,6 +2,7 @@ import {
   ChainUser,
   FeeVerificationDto,
   GalaChainResponse,
+  asValidUserAlias,
   asValidUserRef,
   createValidDTO,
   randomUniqueKey
@@ -49,13 +50,13 @@ describe("fireStarter chaincode call", () => {
       uniqueKey: randomUniqueKey()
     }).signed(admin.privateKey);
 
-    const starter = asValidUserRef(user.identityKey);
+    const starter = asValidUserAlias(user.identityKey);
 
     const expectedMetadata = new Fire(
       fire.entryParent,
       fire.slug,
       fire.name,
-      fire.starter,
+      starter,
       fire.description
     );
 

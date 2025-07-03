@@ -1,6 +1,7 @@
 import {
   GalaChainResponse,
   NotFoundError,
+  asValidUserAlias,
   asValidUserRef,
   randomUniqueKey
 } from "@gala-chain/api";
@@ -21,7 +22,9 @@ describe("countVotes chaincode call", () => {
   const user1 = randomUser();
   const user2 = randomUser();
   const user1Ref = asValidUserRef(user1.identityKey);
+  const user1Alias = asValidUserAlias(user1.identityKey);
   const user2Ref = asValidUserRef(user2.identityKey);
+  const user2Alias = asValidUserAlias(user2.identityKey);
 
   // Create test submission
   const submission = new Submission(
@@ -29,7 +32,7 @@ describe("countVotes chaincode call", () => {
     "test-fire-key",
     "001",
     "Test Submission",
-    user1Ref,
+    user1Alias,
     "Test submission description"
   );
 
@@ -40,7 +43,7 @@ describe("countVotes chaincode call", () => {
       submission.fire,
       submission.getCompositeKey(),
       "vote-001",
-      user1Ref,
+      user1Alias,
       new BigNumber("100")
     );
 
@@ -92,7 +95,7 @@ describe("countVotes chaincode call", () => {
     // Verify VoterReceipt was created
     const voterReceiptKey = VoterReceipt.getCompositeKeyFromParts(
       VoterReceipt.INDEX_KEY,
-      [user1Ref, vote.getCompositeKey()]
+      [user1Alias, vote.getCompositeKey()]
     );
 
     const voterReceiptState = await ctx.stub.getState(voterReceiptKey);
@@ -116,7 +119,7 @@ describe("countVotes chaincode call", () => {
       submission.fire,
       submission.getCompositeKey(),
       "vote-001",
-      user1Ref,
+      user1Alias,
       new BigNumber("100")
     );
 
@@ -125,7 +128,7 @@ describe("countVotes chaincode call", () => {
       submission.fire,
       submission.getCompositeKey(),
       "vote-002",
-      user2Ref,
+      user2Alias,
       new BigNumber("200")
     );
 
@@ -168,11 +171,11 @@ describe("countVotes chaincode call", () => {
 
     // Verify both voter receipts were created
     const receipt1Key = VoterReceipt.getCompositeKeyFromParts(VoterReceipt.INDEX_KEY, [
-      user1Ref,
+      user1Alias,
       vote1.getCompositeKey()
     ]);
     const receipt2Key = VoterReceipt.getCompositeKeyFromParts(VoterReceipt.INDEX_KEY, [
-      user2Ref,
+      user2Alias,
       vote2.getCompositeKey()
     ]);
 
@@ -204,7 +207,7 @@ describe("countVotes chaincode call", () => {
       submission.fire,
       submission.getCompositeKey(),
       "vote-003",
-      user1Ref,
+      user1Alias,
       new BigNumber("50")
     );
 
@@ -291,7 +294,7 @@ describe("countVotes chaincode call", () => {
         submission.fire,
         submission.getCompositeKey(),
         `vote-${i.toString().padStart(3, "0")}`,
-        user1Ref,
+        user1Alias,
         new BigNumber("1")
       );
       votes.push(vote);
