@@ -1,6 +1,8 @@
-# ReadWriteBurn Documentation
+# ReadWriteBurn Contextual Development Files
 
 This directory contains design documents, planning materials, and implementation details for the ReadWriteBurn dApp.
+
+Keep files here that are useful for development context, for both people and AI agents.
 
 ## Directory Structure
 

@@ -22,5 +22,5 @@ tsconfig.tsbuildinfo
 # database
 readwriteburn.db
 
-# contextual development resources
-/ctx
+# external development resources
+/ext
