@@ -374,15 +374,15 @@ async function confirmFireCreation() {
     console.log("FireStarterDto before signing:", JSON.stringify(fireStarterDto, null, 2));
     console.log(`UserRef typeof: ${typeof fireStarterParams.fire.starter}`);
 
-    // Sign and submit the transaction
+    // Sign and submit the transaction using our strongly-typed method
     let signedDto;
     try {
-      console.log("About to call sign method...");
+      console.log("About to call signFireStarter method...");
       console.log(`DTO: ${fireStarterDto.serialize()}`);
-      signedDto = await metamaskClient?.value?.sign("Firestarter", fireStarterDto, SigningType.PERSONAL_SIGN);
-      console.log("Sign method completed successfully");
+      signedDto = await metamaskClient?.value?.signFireStarter(fireStarterDto, SigningType.SIGN_TYPED_DATA);
+      console.log("signFireStarter method completed successfully");
     } catch (signError) {
-      console.error("Sign method failed:", signError);
+      console.error("signFireStarter method failed:", signError);
       throw signError;
     }
 

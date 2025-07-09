@@ -1,8 +1,8 @@
 import { createPinia } from "pinia";
 import { createApp } from "vue";
-import { BrowserConnectClient } from "@gala-chain/connect";
 
 import App from "./App.vue";
+import { ReadWriteBurnConnectClient } from "./services/ReadWriteBurnConnectClient";
 import "./assets/main.css";
 import { useAnalytics } from "./composables/useAnalytics";
 import { initializeErrorReporting } from "./composables/useErrorReporting";
@@ -61,10 +61,10 @@ if (import.meta.env.MODE === "development") {
   };
 }
 
-// Initialize BrowserConnectClient as global property
-let metamaskClient: BrowserConnectClient | null = null;
+// Initialize ReadWriteBurnConnectClient as global property
+let metamaskClient: ReadWriteBurnConnectClient | null = null;
 if (typeof window !== "undefined" && window.ethereum) {
-  metamaskClient = new BrowserConnectClient();
+  metamaskClient = new ReadWriteBurnConnectClient();
 }
 app.config.globalProperties.$metamaskClient = metamaskClient;
 
