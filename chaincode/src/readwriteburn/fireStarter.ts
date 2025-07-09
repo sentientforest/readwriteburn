@@ -58,7 +58,9 @@ export async function fireStarter(
 
   const starterAlias = asValidUserAlias(starter);
 
-  await ensureIsAuthenticatedBy(ctx, dto.fire, starterAlias);
+  if (!ctx.isDryRun) {
+    await ensureIsAuthenticatedBy(ctx, dto.fire, starterAlias);
+  }
 
   const fire = new Fire(entryParent, slug, name, starterAlias, description);
 
