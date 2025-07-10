@@ -82,11 +82,14 @@ async function transferTokens() {
 
     const signedTransferDto = await props.metamaskClient.sign("TransferTokens", transferTokensDto);
 
-    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/TransferToken`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(signedTransferDto)
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/TransferToken`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signedTransferDto)
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to transfer tokens: ${JSON.stringify(response)}`);

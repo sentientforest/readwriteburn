@@ -5,7 +5,7 @@ import { SigningType } from "@gala-chain/connect";
 import { GalaChainProviderOptions } from "@gala-chain/connect";
 import { BrowserProvider, Eip1193Provider } from "ethers";
 
-import { CastVoteDto, ContributeSubmissionDto, FireStarterDto, VoteDto } from "../types/fire";
+import { CastVoteDto, ContributeSubmissionDto, FireDto, FireStarterDto, VoteDto } from "../types/fire";
 
 // Implement calculatePersonalSignPrefix locally
 function calculatePersonalSignPrefix(payload: object): string {
@@ -63,6 +63,19 @@ const FIRE_STARTER_EIP712_TYPES_WITH_FEE = {
   ]
 };
 
+const FIRE_EIP712_TYPES = {
+  Fire: [
+    { name: "entryParent", type: "string" },
+    { name: "slug", type: "string" },
+    { name: "name", type: "string" },
+    { name: "starter", type: "string" },
+    { name: "description", type: "string" },
+    { name: "authorities", type: "string[]" },
+    { name: "moderators", type: "string[]" },
+    { name: "uniqueKey", type: "string" }
+  ]
+};
+
 /**
  * Extended BrowserConnectClient with strongly-typed methods for ReadWriteBurn DTOs
  *
@@ -74,6 +87,65 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
     super(provider, options);
   }
 
+  /**
+   * Signs a FireDto with statically generated EIP712 Types
+   */
+  async signFire(
+    fireDto: FireDto,
+    signingType: SigningType = SigningType.SIGN_TYPED_DATA
+  ): Promise<FireDto & { signature: string; prefix: string }> {
+    if (!this.provider) {
+      throw new Error("Ethereum provider not found");
+    }
+
+    if (!this.address) {
+      throw new Error("No account connected");
+    }
+
+    try {
+      // Calculate prefix using our local implementation
+      const prefix = calculatePersonalSignPrefix(fireDto);
+      const prefixedPayload = { ...fireDto, prefix };
+
+      const signer = await this.provider.getSigner();
+
+      if (signingType === SigningType.SIGN_TYPED_DATA) {
+        // Use our static EIP712 types instead of dynamic generation
+        const domain = { name: "GalaChain" };
+
+        // Choose the right type definition based on whether fee is present
+        const types = FIRE_EIP712_TYPES;
+
+        // Prepare the message with proper structure
+        const message: any = {
+          entryParent: fireDto.entryParent || "",
+          slug: fireDto.slug,
+          name: fireDto.name,
+          starter: fireDto.starter,
+          description: fireDto.description || "",
+          authorities: fireDto.authorities || [],
+          moderators: fireDto.moderators || [],
+          uniqueKey: fireDto.uniqueKey
+        };
+
+        const signature = await signer.signTypedData(domain, types, message);
+
+        return {
+          ...prefixedPayload,
+          signature,
+          types,
+          domain
+        } as FireDto & { signature: string; prefix: string; types: any; domain: any };
+      } else if (signingType === SigningType.PERSONAL_SIGN) {
+        const signature = await signer.signMessage(serialize(prefixedPayload));
+        return { ...prefixedPayload, signature };
+      } else {
+        throw new Error("Unsupported signing type");
+      }
+    } catch (error: unknown) {
+      throw new Error(`Fire signing failed: ${(error as Error).message}`);
+    }
+  }
   /**
    * Signs a FireStarter transaction with statically generated EIP712 Types
    *

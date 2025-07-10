@@ -294,7 +294,6 @@ async function connectWallet() {
   }
 }
 
-
 onMounted(async () => {
   // Initialize MetaMask support check
   await userStore.initializeMetamask();

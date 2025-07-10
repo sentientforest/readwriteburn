@@ -130,7 +130,13 @@
 </template>
 
 <script setup lang="ts">
-import { DryRunResultDto, FeeVerificationDto, GalaChainResponse, asValidUserRef } from "@gala-chain/api";
+import {
+  DryRunResultDto,
+  FeeVerificationDto,
+  GalaChainResponse,
+  asValidUserRef,
+  createValidDTO
+} from "@gala-chain/api";
 import { SigningType } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
 import { ValidationError } from "class-validator";
@@ -138,7 +144,7 @@ import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { useUserStore } from "../stores";
-import { FireDto, FireStarterDto, IFireStarterDto } from "../types/fire";
+import { FireDto, FireStarterAuthorizationDto, FireStarterDto, IFireStarterDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const router = useRouter();
@@ -375,12 +381,16 @@ async function confirmFireCreation() {
     console.log(`UserRef typeof: ${typeof fireStarterParams.fire.starter}`);
 
     // Sign and submit the transaction using our strongly-typed method
-    let signedDto;
+    let signedFire, dto: FireStarterAuthorizationDto;
     try {
       console.log("About to call signFireStarter method...");
       console.log(`DTO: ${fireStarterDto.serialize()}`);
-      signedDto = await metamaskClient?.value?.signFireStarter(fireStarterDto, SigningType.SIGN_TYPED_DATA);
+      signedFire = await metamaskClient?.value?.signFire(fireStarterParams.fire, SigningType.SIGN_TYPED_DATA);
       console.log("signFireStarter method completed successfully");
+      dto = await createValidDTO(FireStarterAuthorizationDto, {
+        fire: signedFire as FireDto
+      });
+      // todo: add signed `FeeAuthorizationDto` as dto.fee if user needs to authorize fee here
     } catch (signError) {
       console.error("signFireStarter method failed:", signError);
       throw signError;
@@ -391,7 +401,7 @@ async function confirmFireCreation() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(signedDto)
+      body: JSON.stringify(dto)
     });
 
     if (!response.ok) {

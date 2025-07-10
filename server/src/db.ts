@@ -88,34 +88,50 @@ export function initializeDatabase() {
 export const dbService = {
   closeDatabase,
   // Subfire methods
-  createSubfire: (subfire: FireDto): FireDto => {
+  createSubfire: (fireData: FireDto | any): FireDto => {
+    // Handle both FireDto and Fire chaincode objects
+    const slug = fireData.slug;
+    const name = fireData.name;
+    const description = fireData.description || "";
+    const authorities = fireData.authorities || [];
+    const moderators = fireData.moderators || [];
+
+    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators });
+
     const insertSubfire = getDb().prepare(`
-      INSERT INTO subfires (slug, name, description)
+      INSERT OR REPLACE INTO subfires (slug, name, description)
       VALUES (?, ?, ?)
     `);
 
-    const insertRole = db.prepare(`
+    const deleteRoles = getDb().prepare(`
+      DELETE FROM subfire_roles WHERE subfire_id = ?
+    `);
+
+    const insertRole = getDb().prepare(`
       INSERT INTO subfire_roles (subfire_id, user_id, role)
       VALUES (?, ?, ?)
     `);
 
     getDb().transaction(() => {
-      insertSubfire.run(subfire.slug, subfire.name, subfire.description);
+      insertSubfire.run(slug, name, description);
+
+      // Clear existing roles and re-add
+      deleteRoles.run(slug);
 
       // Add authorities
-      for (const authority of subfire.authorities) {
-        insertRole.run(subfire.slug, authority, "authority");
+      for (const authority of authorities) {
+        insertRole.run(slug, authority, "authority");
       }
 
       // Add moderators
-      for (const moderator of subfire.moderators) {
-        insertRole.run(subfire.slug, moderator, "moderator");
+      for (const moderator of moderators) {
+        insertRole.run(slug, moderator, "moderator");
       }
 
-      return subfire.slug;
+      return slug;
     })();
 
-    return dbService.getSubfire(subfire.slug)!;
+    return dbService.getSubfire(slug)!;
   },
 
   getSubfire: (slug: string): FireDto | null => {

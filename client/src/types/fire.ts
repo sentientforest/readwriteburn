@@ -2,6 +2,7 @@ import {
   BigNumberIsPositive,
   BigNumberProperty,
   ChainCallDTO,
+  FeeAuthorizationDto,
   FeeVerificationDto,
   IsUserRef,
   SubmitCallDTO
@@ -105,6 +106,17 @@ export class FireStarterDto extends SubmitCallDTO {
     }
     this.uniqueKey = data?.uniqueKey;
   }
+}
+
+export class FireStarterAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => FireDto)
+  public fire: FireDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee?: FeeAuthorizationDto;
 }
 
 export interface ISubmissionDto {

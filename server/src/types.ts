@@ -2,6 +2,7 @@ import {
   ChainCallDTO,
   FeeAuthorization,
   FeeAuthorizationDto,
+  FeeVerificationDto,
   IsUserRef,
   SubmitCallDTO,
   UserRef
@@ -50,7 +51,7 @@ export class FireDto extends ChainCallDTO {
   public moderators: string[];
 }
 
-export class FireStarterDto extends ChainCallDTO {
+export class FireStarterAuthorizationDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FireDto)
   public fire: FireDto;
@@ -59,6 +60,17 @@ export class FireStarterDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FeeAuthorizationDto)
   public fee?: FeeAuthorizationDto;
+}
+
+export class FireStarterDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => FireDto)
+  public fire: FireDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  public fee?: FeeVerificationDto;
 }
 
 export class SubmissionDto extends ChainCallDTO {
