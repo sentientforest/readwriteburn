@@ -1,4 +1,4 @@
-import { ChainKey, ChainObject} from "@gala-chain/api";
+import { ChainKey, ChainObject } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";

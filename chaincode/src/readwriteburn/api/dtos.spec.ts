@@ -39,7 +39,7 @@ describe("readwriteburn DTOs", () => {
 
   const userRef = asValidUserRef(user.identityKey);
   const userAlias = asValidUserAlias(userRef);
-  
+
   test("FireDto", async () => {
     fireDto = new FireDto({
       slug: "test-fire",
