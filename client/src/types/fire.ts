@@ -93,7 +93,9 @@ export class FireStarterDto extends SubmitCallDTO {
   constructor(data: IFireStarterDto) {
     super();
     this.fire = data?.fire;
-    this.fee = data?.fee;
+    if (data?.fee) {
+      this.fee = data?.fee;
+    }
     this.uniqueKey = data?.uniqueKey;
   }
 }

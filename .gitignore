@@ -22,5 +22,5 @@ tsconfig.tsbuildinfo
 # database
 readwriteburn.db
 
-# external development resources
-/ext
+
+

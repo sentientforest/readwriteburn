@@ -131,13 +131,14 @@
 
 <script setup lang="ts">
 import { DryRunResultDto, FeeVerificationDto, GalaChainResponse, asValidUserRef } from "@gala-chain/api";
+import { SigningType } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
 import { ValidationError } from "class-validator";
 import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { useUserStore } from "../stores";
-import { FireDto, FireStarterDto } from "../types/fire";
+import { FireDto, FireStarterDto, IFireStarterDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const router = useRouter();
@@ -266,16 +267,6 @@ async function handleSubmit() {
     // Store the fire DTO for later use
     pendingFireDto.value = fireDto;
 
-    // Create placeholder fee for dry run with all required properties
-    const placeholderFee = new FeeVerificationDto();
-    placeholderFee.authorization = "";
-    placeholderFee.authority = asValidUserRef(userStore.address);
-    placeholderFee.created = Date.now();
-    placeholderFee.txId = "";
-    placeholderFee.quantity = new BigNumber(0);
-    placeholderFee.feeAuthorizationKey = "";
-    placeholderFee.uniqueKey = randomUniqueKey();
-
     // Create FireStarterDto for dry run
     const fireStarterDto = new FireStarterDto({
       fire: fireDto,
@@ -284,11 +275,10 @@ async function handleSubmit() {
 
     // Execute dry run to estimate fees
     console.log("Getting public key from MetaMask client...");
-    const publicKey = await metamaskClient.value.getPublicKey().catch((e) => {
-      throw new Error(`getPublicKey failed: ${e}`);
-    });
+    const publicKey = userStore.publicKey;
+
     const dryRunDto = {
-      callerPublicKey: publicKey.publicKey,
+      callerPublicKey: publicKey,
       method: "FireStarter",
       dto: fireStarterDto
     };
@@ -347,26 +337,30 @@ async function confirmFireCreation() {
     });
 
     // Use first fee or create zero-fee placeholder if no fees
-    let primaryFee;
+    let feeAuthorization;
     if (feeVerifications.length > 0) {
-      primaryFee = feeVerifications[0];
-    } else {
-      primaryFee = new FeeVerificationDto();
-      primaryFee.authorization = "";
-      primaryFee.authority = asValidUserRef(userStore.address);
-      primaryFee.created = Date.now();
-      primaryFee.txId = "";
-      primaryFee.quantity = new BigNumber(0);
-      primaryFee.feeAuthorizationKey = "";
-      primaryFee.uniqueKey = randomUniqueKey();
+      // todo: create feeAuthorizationDto
     }
 
-    // Create final FireStarterDto
-    const fireStarterDto = new FireStarterDto({
-      fire: pendingFireDto.value!,
-      fee: primaryFee,
+    const fireStarterParams: IFireStarterDto = {
+      fire: pendingFireDto.value,
       uniqueKey: randomUniqueKey()
-    });
+    };
+
+    // Metamask @gala-chain/connect integration fails on empty arrays
+    if (fireStarterParams.fire.authorities.length < 1) {
+      fireStarterParams.fire.authorities.push(fireStarterParams.fire.starter);
+    }
+
+    if (fireStarterParams.fire.moderators.length < 1) {
+      fireStarterParams.fire.moderators.push(fireStarterParams.fire.starter);
+    }
+
+    if (feeAuthorization) {
+      fireStarterParams.fee = feeAuthorization;
+    }
+
+    const fireStarterDto = new FireStarterDto(fireStarterParams);
 
     // Validate the FireStarterDto
     const validationErrors = await fireStarterDto.validate();
@@ -378,18 +372,17 @@ async function confirmFireCreation() {
     }
 
     console.log("FireStarterDto before signing:", JSON.stringify(fireStarterDto, null, 2));
-    console.log("MetaMask client available:", !!metamaskClient.value);
-    console.log("MetaMask client type:", typeof metamaskClient.value);
-    console.log("MetaMask client constructor:", metamaskClient.value?.constructor?.name);
+    console.log(`UserRef typeof: ${typeof fireStarterParams.fire.starter}`);
 
-    // Sign and submit the transaction
+    // Sign and submit the transaction using our strongly-typed method
     let signedDto;
     try {
-      console.log("About to call sign method...");
-      signedDto = await metamaskClient?.value?.sign("Firestarter", fireStarterDto);
-      console.log("Sign method completed successfully");
+      console.log("About to call signFireStarter method...");
+      console.log(`DTO: ${fireStarterDto.serialize()}`);
+      signedDto = await metamaskClient?.value?.signFireStarter(fireStarterDto, SigningType.SIGN_TYPED_DATA);
+      console.log("signFireStarter method completed successfully");
     } catch (signError) {
-      console.error("Sign method failed:", signError);
+      console.error("signFireStarter method failed:", signError);
       throw signError;
     }
 
@@ -427,12 +420,12 @@ function parseFeeEstimation(dryRunResult: GalaChainResponse<DryRunResultDto>): A
   // todo: parse DryRunResponse
   console.log("parseFeeEstimate with DryRunResult:");
   console.log(dryRunResult);
-  
-  fees.push({
-    feeCode: "ReadWriteBurn",
-    quantity: new BigNumber("0"),
-    formattedQuantity: formatFee(new BigNumber("0"))
-  });
+
+  // fees.push({
+  //   feeCode: "ReadWriteBurn",
+  //   quantity: new BigNumber("0"),
+  //   formattedQuantity: formatFee(new BigNumber("0"))
+  // });
 
   return fees;
 }

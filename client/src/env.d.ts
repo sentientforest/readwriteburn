@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { BrowserConnectClient } from "@gala-chain/connect";
+import type { ReadWriteBurnConnectClient } from "./services/ReadWriteBurnConnectClient";
 
 interface ImportMetaEnv {
   readonly VITE_PROJECT_API: string; // Local server API - proxies all blockchain and identity operations
@@ -13,6 +13,6 @@ interface ImportMeta {
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
-    $metamaskClient: BrowserConnectClient | null;
+    $metamaskClient: ReadWriteBurnConnectClient | null;
   }
 }

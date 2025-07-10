@@ -29,7 +29,7 @@ export async function proxy(req: Request, res: Response) {
   });
 
   if (!chainRes.ok) {
-    console.log(`proxy request failed: ${chainRes.status}`);
+    console.log(`proxy request failed: ${url} -- ${chainRes.status}`);
 
     return res.status(chainRes.status ?? 500).json({
       status: chainRes.status,

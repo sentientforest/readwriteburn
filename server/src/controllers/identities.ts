@@ -89,12 +89,12 @@ export async function registerEthUser(req: Request, res: Response) {
     uniqueKey: randomUniqueKey()
   });
 
-  dto.sign(adminPrivateKeyString, false);
+  const signedDto = dto.signed(adminPrivateKeyString, false);
 
   const chainRes = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: dto.serialize()
+    body: signedDto.serialize()
   });
 
   if (!chainRes.ok) {
@@ -102,9 +102,9 @@ export async function registerEthUser(req: Request, res: Response) {
       url: url,
       status: chainRes.status,
       body: await chainRes.json(),
-      dto: dto.serialize()
+      dto: signedDto.serialize()
     });
   }
 
-  res.json(dto.serialize());
+  res.json(signedDto.serialize());
 }
