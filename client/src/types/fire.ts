@@ -1,6 +1,13 @@
-import { ChainCallDTO, FeeVerificationDto, IsUserRef, SubmitCallDTO } from "@gala-chain/api";
+import {
+  BigNumberIsPositive,
+  BigNumberProperty,
+  ChainCallDTO,
+  FeeVerificationDto,
+  IsUserRef,
+  SubmitCallDTO
+} from "@gala-chain/api";
 import type { UserRef } from "@gala-chain/api";
-
+import BigNumber from "bignumber.js";
 import { Type } from "class-transformer";
 import { ArrayMinSize, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
@@ -100,12 +107,50 @@ export class FireStarterDto extends SubmitCallDTO {
   }
 }
 
-export class SubmissionDto extends ChainCallDTO {
+export interface ISubmissionDto {
   name: string;
   fire: string;
+  entryParent: string;
   contributor?: string;
   description?: string;
   url?: string;
+  uniqueKey?: string;
+}
+
+export class SubmissionDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  fire: string;
+
+  @IsString()
+  entryParent: string;
+
+  @IsOptional()
+  @IsString()
+  contributor?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  constructor(data: ISubmissionDto) {
+    super();
+    this.name = data?.name;
+    this.fire = data?.fire;
+    this.entryParent = data?.entryParent || "";
+    this.contributor = data?.contributor;
+    this.description = data?.description;
+    this.url = data?.url;
+    this.uniqueKey = data?.uniqueKey;
+  }
 }
 
 export interface SubmissionResDto {
@@ -122,7 +167,13 @@ export interface SubmissionResDto {
   created_at?: string;
 }
 
-export class ContributeSubmissionDto extends ChainCallDTO {
+export interface IContributeSubmissionDto {
+  submission: SubmissionDto;
+  fee?: FeeVerificationDto;
+  uniqueKey: string;
+}
+
+export class ContributeSubmissionDto extends SubmitCallDTO {
   @ValidateNested()
   @Type(() => SubmissionDto)
   submission: SubmissionDto;
@@ -131,15 +182,69 @@ export class ContributeSubmissionDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   fee?: FeeVerificationDto;
+
+  constructor(data: IContributeSubmissionDto) {
+    super();
+    this.submission = data?.submission;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
+  }
 }
 
-export class CastVoteDto extends ChainCallDTO {
+export interface IVoteDto {
+  entryType: string;
+  entryParent: string;
+  entry: string;
+  quantity: BigNumber;
+  uniqueKey: string;
+}
+
+export class VoteDto extends SubmitCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  entryType: string;
+
+  @IsString()
+  entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   entry: string;
+
+  @BigNumberIsPositive()
+  @BigNumberProperty()
+  quantity: BigNumber;
+
+  constructor(data: IVoteDto) {
+    super();
+    this.entryType = data?.entryType;
+    this.entryParent = data?.entryParent || "";
+    this.entry = data?.entry;
+    this.quantity = data?.quantity;
+    this.uniqueKey = data?.uniqueKey;
+  }
+}
+
+export interface ICastVoteDto {
+  vote: VoteDto;
+  fee?: FeeVerificationDto;
+  uniqueKey: string;
+}
+
+export class CastVoteDto extends SubmitCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  vote: VoteDto;
 
   @IsOptional()
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   fee?: FeeVerificationDto;
+
+  constructor(data: ICastVoteDto) {
+    super();
+    this.vote = data?.vote;
+    this.fee = data?.fee;
+    this.uniqueKey = data?.uniqueKey;
+  }
 }
