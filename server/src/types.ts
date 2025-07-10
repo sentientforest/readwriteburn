@@ -103,8 +103,19 @@ export class ContributeSubmissionDto extends ChainCallDTO {
 
   @IsOptional()
   @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  fee?: FeeVerificationDto;
+}
+
+export class ContributeSubmissionAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => SubmissionDto)
+  public submission: SubmissionDto;
+
+  @IsOptional()
+  @ValidateNested()
   @Type(() => FeeAuthorizationDto)
-  fee?: FeeAuthorizationDto;
+  public fee?: FeeAuthorizationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {

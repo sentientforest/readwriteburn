@@ -57,19 +57,22 @@
 </template>
 
 <script setup lang="ts">
-import type { MetamaskConnectClient } from "@gala-chain/connect";
+import { ChainObject, randomUniqueKey } from "@gala-chain/api";
 import { sha256 } from "@noble/hashes/sha256";
 import { bytesToHex } from "@noble/hashes/utils";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import type { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
+import { useFiresStore } from "../stores/fires";
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
+import { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } from "../types/fire";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
 const props = defineProps<{
   walletAddress: string;
-  metamaskClient: MetamaskConnectClient;
+  metamaskClient: ReadWriteBurnConnectClient;
 }>();
 
 const route = useRoute();
@@ -95,14 +98,14 @@ const contentTimestamp = ref(Date.now());
 
 // Computed hash preview
 const contentHash = computed(() => {
-  if (!form.value.name.trim() && !form.value.description.trim()) {
+  if (!form.value.name.trim() && !form.value.description?.trim()) {
     return "";
   }
 
   try {
     const hashableContent = {
       title: form.value.name.trim(),
-      description: form.value.description.trim(),
+      description: form.value.description?.trim(),
       url: form.value.url?.trim() || "",
       timestamp: contentTimestamp.value
     };
@@ -117,7 +120,7 @@ const contentHash = computed(() => {
 });
 
 // Update timestamp when content changes (debounced)
-let timestampTimeout: NodeJS.Timeout | null = null;
+let timestampTimeout: any = null;
 watch([() => form.value.name, () => form.value.description, () => form.value.url], () => {
   if (timestampTimeout) clearTimeout(timestampTimeout);
   timestampTimeout = setTimeout(() => {
@@ -130,23 +133,52 @@ function formatTimestamp(timestamp: number): string {
 }
 
 async function submitForm() {
-  if (isSubmitting.value) return;
+  if (isSubmitting.value || !props.walletAddress || !props.metamaskClient) return;
 
   isSubmitting.value = true;
   error.value = "";
   success.value = "";
 
   try {
+    const fireSlug = subfireSlug;
+    const entryParent = replyToId || fireSlug;
+
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [entryParent, fireSlug]);
+
+    // Create SubmissionDto
+    const submissionDto = new SubmissionDto({
+      name: form.value.name,
+      description: form.value.description || "",
+      url: form.value.url || "",
+      fire: fireChainKey,
+      entryParent: fireChainKey, // top level comments use fire key as entryParent; nested comments use submission key
+      contributor: props.walletAddress,
+      uniqueKey: randomUniqueKey()
+    });
+
+    console.log("Signing submission:", submissionDto);
+
+    // Sign the submission DTO
+    const signedSubmission = await props.metamaskClient.signSubmission(submissionDto);
+
+    // Create authorization DTO (no fee for now)
+    const authDto = new ContributeSubmissionAuthorizationDto({
+      submission: signedSubmission
+    });
+
+    console.log("Sending submission authorization:", authDto);
+
     const response = await fetch(`${apiBase}/api/submissions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(authDto)
     });
 
     if (!response.ok) {
-      throw new Error("Failed to create submission");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to create submission");
     }
 
     success.value = "Submission created successfully!";
@@ -164,7 +196,7 @@ async function submitForm() {
     router.push(`/f/${subfireSlug}`);
   } catch (err: unknown) {
     console.error("Error creating submission:", err);
-    error.value = "Failed to create submission. Please try again.";
+    error.value = err instanceof Error ? err.message : "Failed to create submission. Please try again.";
   } finally {
     isSubmitting.value = false;
   }

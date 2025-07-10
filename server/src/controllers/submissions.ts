@@ -1,19 +1,63 @@
+import { createValidDTO, deserialize } from "@gala-chain/api";
 import { NextFunction, Request, Response } from "express";
 
 import { dbService } from "../db";
-import { CastVoteDto, ContributeSubmissionDto, FireDto } from "../types";
+import { CastVoteDto, ContributeSubmissionAuthorizationDto, ContributeSubmissionDto, FireDto } from "../types";
+import { submitToChaincode } from "../utils/chaincode";
 import { getAdminPrivateKey, randomUniqueKey } from "./identities";
 
 export async function createSubmission(req: Request, res: Response, next: NextFunction) {
   try {
-    const dto = req.body as ContributeSubmissionDto;
+    // 1. Parse authorization DTO from client
+    const authDto: ContributeSubmissionAuthorizationDto = deserialize(
+      ContributeSubmissionAuthorizationDto,
+      req.body
+    );
 
-    // TODO: Implement fee verification
-    // verifyBurnDto(dto.fee, 10);
+    console.log("Submission creation request:", JSON.stringify({
+      name: authDto.submission.name,
+      fire: authDto.submission.fire,
+      contributor: authDto.submission.contributor,
+      hasFee: !!authDto.fee
+    }, null, 2));
 
-    const saved = dbService.saveSubmission(dto.submission);
-    res.status(201).json(saved);
+    // 2. Create server-signed ContributeSubmissionDto
+    const serverDto = await createValidDTO(ContributeSubmissionDto, {
+      submission: authDto.submission, // client-signed submission
+      uniqueKey: `submission-${randomUniqueKey()}`
+    });
+
+    // 3. Sign with server key
+    const signedDto = serverDto.signed(getAdminPrivateKey());
+
+    // 4. Submit to chaincode
+    console.log("Submitting submission to chaincode...");
+    const chainResponse = await submitToChaincode("ContributeSubmission", signedDto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode submission failed:", chainResponse.error);
+      return res.status(500).json({
+        error: `Submission creation failed: ${chainResponse.error}`
+      });
+    }
+
+    console.log("Chaincode submission successful:", chainResponse.data);
+
+    // 5. Extract Submission object from chaincode response
+    const submissionResult = chainResponse.data as any; // Submission object
+    
+    // 6. Save to database with chain metadata
+    const created = dbService.saveSubmission(submissionResult);
+    
+    console.log("Submission created successfully:", {
+      id: submissionResult.id,
+      name: submissionResult.name,
+      chainKey: submissionResult.getCompositeKey ? submissionResult.getCompositeKey() : 'unknown'
+    });
+
+    res.status(201).json(created);
   } catch (error) {
+    console.error("Submission creation error:", error);
     next(error);
   }
 }

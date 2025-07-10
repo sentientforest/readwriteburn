@@ -58,6 +58,38 @@ const migrations: Migration[] = [
         -- For now, we'll leave the columns in place for safety
       `);
     }
+  },
+  {
+    version: 2,
+    description: "Add chaincode integration fields",
+    up: (db: Database.Database) => {
+      db.exec(`
+        -- Add chaincode key fields to submissions table
+        ALTER TABLE submissions ADD COLUMN chain_key TEXT;
+        ALTER TABLE submissions ADD COLUMN chain_id TEXT;
+        ALTER TABLE submissions ADD COLUMN entry_parent TEXT;
+
+        -- Add chaincode key fields to subfires table
+        ALTER TABLE subfires ADD COLUMN chain_key TEXT;
+
+        -- Create indexes for chaincode lookups
+        CREATE INDEX IF NOT EXISTS idx_submissions_chain_key ON submissions(chain_key);
+        CREATE INDEX IF NOT EXISTS idx_submissions_chain_id ON submissions(chain_id);
+        CREATE INDEX IF NOT EXISTS idx_submissions_entry_parent ON submissions(entry_parent);
+        CREATE INDEX IF NOT EXISTS idx_subfires_chain_key ON subfires(chain_key);
+      `);
+    },
+    down: (db: Database.Database) => {
+      db.exec(`
+        -- Remove indexes
+        DROP INDEX IF EXISTS idx_submissions_chain_key;
+        DROP INDEX IF EXISTS idx_submissions_chain_id;
+        DROP INDEX IF EXISTS idx_submissions_entry_parent;
+        DROP INDEX IF EXISTS idx_subfires_chain_key;
+
+        -- Note: We don't remove columns in SQLite for safety
+      `);
+    }
   }
 ];
 

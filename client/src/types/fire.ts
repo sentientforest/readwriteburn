@@ -2,14 +2,18 @@ import {
   BigNumberIsPositive,
   BigNumberProperty,
   ChainCallDTO,
+  ChainKey,
+  ChainObject,
   FeeAuthorizationDto,
   FeeVerificationDto,
+  IsUserAlias,
   IsUserRef,
-  SubmitCallDTO
+  SubmitCallDTO,
+  UserAlias
 } from "@gala-chain/api";
 import type { UserRef } from "@gala-chain/api";
 import BigNumber from "bignumber.js";
-import { Type } from "class-transformer";
+import { Exclude, Type } from "class-transformer";
 import { ArrayMinSize, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export interface AssociativeId {
@@ -203,6 +207,25 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
   }
 }
 
+export class ContributeSubmissionAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => SubmissionDto)
+  public submission: SubmissionDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee?: FeeAuthorizationDto;
+
+  constructor(data?: any) {
+    super();
+    if (data) {
+      this.submission = data.submission;
+      this.fee = data.fee;
+    }
+  }
+}
+
 export interface IVoteDto {
   entryType: string;
   entryParent: string;
@@ -258,5 +281,59 @@ export class CastVoteDto extends SubmitCallDTO {
     this.vote = data?.vote;
     this.fee = data?.fee;
     this.uniqueKey = data?.uniqueKey;
+  }
+}
+
+export class Fire extends ChainObject {
+  /** Index key for chain object type identification */
+  @Exclude()
+  static INDEX_KEY = "RWBF";
+
+  /** Parent fire identifier for hierarchical organization */
+  @ChainKey({ position: 0 })
+  @IsString()
+  public entryParent: string;
+
+  /** Unique slug identifier for the fire */
+  @ChainKey({ position: 1 })
+  @IsString()
+  public slug: string;
+
+  /** Display name of the fire */
+  @IsNotEmpty()
+  @IsString()
+  public name: string;
+
+  /** Optional description of the fire's purpose and rules */
+  @IsOptional()
+  @IsString()
+  public description?: string;
+
+  /** User alias of the fire creator */
+  @IsUserAlias()
+  public starter: UserAlias;
+
+  /**
+   * Create a new Fire instance
+   *
+   * @param entryParent - Parent fire identifier (empty string for top-level fires)
+   * @param slug - Unique slug identifier
+   * @param name - Display name
+   * @param starter - User reference of the creator
+   * @param description - Optional description
+   */
+  constructor(
+    entryParent: string,
+    slug: string,
+    name: string,
+    starter: UserAlias,
+    description: string | undefined
+  ) {
+    super();
+    this.entryParent = entryParent ?? "";
+    this.slug = slug;
+    this.name = name;
+    this.starter = starter;
+    this.description = description;
   }
 }

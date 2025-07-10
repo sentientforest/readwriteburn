@@ -239,35 +239,56 @@ export const dbService = {
   },
 
   // Submission methods
-  saveSubmission: (submission: SubmissionDto): SubmissionResDto => {
+  saveSubmission: (submissionData: SubmissionDto | any): SubmissionResDto => {
+    // Handle both SubmissionDto and chaincode Submission objects
+    const name = submissionData.name;
+    const contributor = submissionData.contributor || "";
+    const description = submissionData.description || "";
+    const url = submissionData.url || "";
+    const fire = submissionData.fire;
+    const entryParent = submissionData.entryParent || fire;
+    const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
+    const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
+
+    console.log("Saving submission to database:", { 
+      name, 
+      fire, 
+      chainKey, 
+      chainId,
+      entryParent 
+    });
+
     // Generate content hash
-    const { hash, timestamp } = hashSubmissionContent(
-      submission.name,
-      submission.description || "",
-      submission.url
-    );
+    const { hash, timestamp } = hashSubmissionContent(name, description, url);
 
     const insertSubmission = getDb().prepare(`
-      INSERT INTO submissions (name, contributor, description, url, subfire_id, content_hash, content_timestamp, hash_verified, moderation_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO submissions (
+        name, contributor, description, url, subfire_id, 
+        content_hash, content_timestamp, hash_verified, moderation_status,
+        chain_key, chain_id, entry_parent
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertVotes = getDb().prepare(`
-      INSERT INTO votes (submission_id, count)
+      INSERT OR IGNORE INTO votes (submission_id, count)
       VALUES (?, 0)
     `);
 
     const submissionId = getDb().transaction(() => {
       const result = insertSubmission.run(
-        submission.name,
-        submission.contributor,
-        submission.description,
-        submission.url,
-        submission.fire,
+        name,
+        contributor,
+        description,
+        url,
+        fire,
         hash,
         timestamp,
         1, // hash_verified (boolean as integer)
-        "active" // moderation_status
+        "active", // moderation_status
+        chainKey,
+        chainId,
+        entryParent
       );
       const newId = result.lastInsertRowid as number;
       insertVotes.run(newId);
