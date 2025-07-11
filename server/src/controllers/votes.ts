@@ -1,6 +1,9 @@
+import { createValidDTO } from "@gala-chain/api";
 import { Request, Response } from "express";
 
-import { CountVotesDto, FetchVotesDto, FetchVotesResDto } from "../types";
+import { CountVotesDto, FetchVotesDto, FetchVotesResDto, VoteResult } from "../types";
+import { evaluateChaincode, submitToChaincode } from "../utils/chaincode";
+import { getAdminPrivateKey, randomUniqueKey } from "./identities";
 
 /**
  * Fetch votes from the chaincode
@@ -149,6 +152,79 @@ export async function getVoteCounts(req: Request, res: Response): Promise<void> 
     console.error("Error getting vote counts:", error);
     res.status(500).json({
       error: "Internal server error while getting vote counts",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
+
+/**
+ * Process all uncounted votes automatically
+ * POST /api/votes/process-all
+ */
+export async function processAllVotes(req: Request, res: Response): Promise<void> {
+  try {
+    const { fire, submission, batchSize = 100, maxBatches = 50 } = req.body;
+    
+    const { VoteProcessor } = await import("../services/voteProcessor");
+    const processor = VoteProcessor.getInstance();
+    
+    // Check if already processing
+    if (processor.isProcessingVotes()) {
+      res.status(409).json({
+        error: "Vote processing already in progress",
+        message: "Please wait for the current processing to complete"
+      });
+      return;
+    }
+    
+    const result = await processor.processVotes({
+      fire,
+      submission,
+      batchSize: parseInt(batchSize),
+      maxBatches: parseInt(maxBatches)
+    });
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: "Vote processing completed successfully",
+        totalProcessed: result.totalProcessed,
+        batchCount: result.batchCount,
+        batchSize: parseInt(batchSize)
+      });
+    } else {
+      res.status(500).json({
+        error: "Vote processing failed",
+        details: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error("Error in automatic vote processing:", error);
+    res.status(500).json({
+      error: "Failed to process votes",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
+}
+
+/**
+ * Get stats about uncounted votes
+ * GET /api/votes/stats
+ */
+export async function getVoteStats(req: Request, res: Response): Promise<void> {
+  try {
+    const { fire, submission } = req.query;
+    
+    const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor");
+    const stats = await getStatsFromProcessor(fire as string, submission as string);
+    
+    res.json(stats);
+    
+  } catch (error) {
+    console.error("Error getting vote stats:", error);
+    res.status(500).json({
+      error: "Failed to get vote statistics",
       details: error instanceof Error ? error.message : "Unknown error"
     });
   }

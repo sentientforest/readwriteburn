@@ -20,7 +20,7 @@ import {
   readSubmission,
   upvoteSubmission
 } from "./controllers/submissions";
-import { countVotes, fetchVotes, getVoteCounts } from "./controllers/votes";
+import { countVotes, fetchVotes, getVoteCounts, getVoteStats, processAllVotes } from "./controllers/votes";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -65,6 +65,8 @@ app.get("/api/admin/verification-stats", getVerificationStats);
 app.get("/api/votes", fetchVotes);
 app.post("/api/votes/count", countVotes);
 app.get("/api/votes/counts", getVoteCounts);
+app.get("/api/votes/stats", getVoteStats);
+app.post("/api/votes/process-all", processAllVotes);
 
 app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);
