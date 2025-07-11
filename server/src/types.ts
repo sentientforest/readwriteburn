@@ -8,7 +8,7 @@ import {
   UserRef
 } from "@gala-chain/api";
 import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export interface AssociativeId {
   id: string;
@@ -71,6 +71,54 @@ export class FireStarterDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FeeVerificationDto)
   public fee?: FeeVerificationDto;
+}
+
+export interface IFetchFiresDto {
+  slug?: string;
+  bookmark?: string;
+  limit?: number;
+}
+
+export class FetchFiresDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public slug?: string;
+
+  @IsOptional()
+  @IsString()
+  public bookmark?: string;
+
+  @IsOptional()
+  @IsNumber()
+  public limit?: number;
+
+  constructor(data: IFetchFiresDto = {}) {
+    super();
+    this.slug = data?.slug;
+    this.bookmark = data?.bookmark;
+    this.limit = data?.limit;
+  }
+}
+
+export interface IFetchFiresResDto {
+  results: FireDto[];
+  nextPageBookmark?: string;
+}
+
+export class FetchFiresResDto extends ChainCallDTO {
+  @ValidateNested({ each: true })
+  @Type(() => FireDto)
+  results: FireDto[];
+
+  @IsOptional()
+  @IsString()
+  nextPageBookmark?: string;
+
+  constructor(data: IFetchFiresResDto) {
+    super();
+    this.results = data?.results || [];
+    this.nextPageBookmark = data?.nextPageBookmark;
+  }
 }
 
 export class SubmissionDto extends ChainCallDTO {
