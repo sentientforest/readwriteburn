@@ -250,12 +250,12 @@ export const dbService = {
     const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
     const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
 
-    console.log("Saving submission to database:", { 
-      name, 
-      fire, 
-      chainKey, 
+    console.log("Saving submission to database:", {
+      name,
+      fire,
+      chainKey,
       chainId,
-      entryParent 
+      entryParent
     });
 
     // Generate content hash
@@ -535,6 +535,29 @@ export const dbService = {
       },
       storedHash: row.content_hash
     }));
+  },
+
+  // Vote casting method for local cache updates
+  recordVoteCast: async (submissionId: number, quantity: any): Promise<boolean> => {
+    try {
+      const updateVotes = getDb().prepare(`
+        UPDATE votes 
+        SET count = count + ?
+        WHERE submission_id = ?
+      `);
+
+      // Convert BigNumber to number for database storage
+      const voteAmount =
+        typeof quantity === "object" && quantity.toString
+          ? parseInt(quantity.toString())
+          : parseInt(quantity);
+
+      const result = updateVotes.run(voteAmount, submissionId);
+      return result.changes > 0;
+    } catch (error) {
+      console.error("Error recording vote cast:", error);
+      return false;
+    }
   }
 };
 

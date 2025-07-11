@@ -284,6 +284,25 @@ export class CastVoteDto extends SubmitCallDTO {
   }
 }
 
+export class CastVoteAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  public vote: VoteDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee?: FeeAuthorizationDto;
+
+  constructor(data?: any) {
+    super();
+    if (data) {
+      this.vote = data.vote;
+      this.fee = data.fee;
+    }
+  }
+}
+
 export class Fire extends ChainObject {
   /** Index key for chain object type identification */
   @Exclude()

@@ -120,7 +120,10 @@ import BigNumber from "bignumber.js";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
+import { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
+import { useUserStore } from "../stores/user";
 import type { SubmissionResponse } from "../types/api";
+import { CastVoteAuthorizationDto, VoteDto } from "../types/fire";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import FireHierarchy from "./FireHierarchy.vue";
 import ThreadedSubmission from "./ThreadedSubmission.vue";
@@ -139,6 +142,7 @@ const props = defineProps<{
 
 const route = useRoute();
 const subfireSlug = route.params.slug as string;
+const userStore = useUserStore();
 
 const submissions = ref<ExtendedSubmissionResDto[]>([]);
 const loading = ref(false);
@@ -156,6 +160,11 @@ const topLevelSubmissions = computed(() => {
 const totalReplies = computed(() => {
   return submissions.value.filter((sub) => sub.entryParent).length;
 });
+
+// Helper function for generating unique keys
+function randomUniqueKey(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
 
 async function fetchSubmissions() {
   loading.value = true;
@@ -184,25 +193,55 @@ async function fetchSubmissions() {
 }
 
 async function submitVote(submission: ExtendedSubmissionResDto) {
-  if (!submission.userVoteQty || isProcessing.value) return;
+  if (!submission.userVoteQty || isProcessing.value || !props.walletAddress || !userStore.metamaskClient) return;
 
   isProcessing.value = true;
   submitError.value = "";
   success.value = "";
 
   try {
+    // Create ReadWriteBurn client
+    const rwbClient = new ReadWriteBurnConnectClient(props.metamaskClient.provider, props.metamaskClient.galaChainProviderOptions);
+
+    // For voting, we need the submission's chain key as the entry
+    // Since we don't have direct access to submission chain keys in the list view,
+    // we'll use a placeholder pattern that the server can resolve
+    // This is a simplification - in a production app, you might store chain keys in the DB
+    const submissionEntry = `RWB_SUBMISSION|${submission.id}`;
+
+    // Create VoteDto
+    const voteDto = new VoteDto({
+      entryType: "RWB_SUBMISSION",
+      entryParent: subfireSlug, // Use fire slug as parent
+      entry: submissionEntry,
+      quantity: new BigNumber(submission.userVoteQty),
+      uniqueKey: randomUniqueKey()
+    });
+
+    console.log("Signing vote:", voteDto);
+
+    // Sign the VoteDto
+    const signedVote = await rwbClient.signVote(voteDto);
+
+    // Create authorization DTO for server
+    const authDto = new CastVoteAuthorizationDto({
+      vote: signedVote
+    });
+
+    console.log("Sending vote authorization to server:", authDto);
+
+    // Send to server
     const response = await fetch(`${apiBase}/api/submissions/${submission.id}/vote`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        amount: submission.userVoteQty
-      })
+      body: JSON.stringify(authDto)
     });
 
     if (!response.ok) {
-      throw new Error("Failed to submit vote");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to submit vote");
     }
 
     success.value = "Vote submitted successfully!";
@@ -210,7 +249,7 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
     await fetchSubmissions(); // Refresh the list
   } catch (error) {
     console.error("Error submitting vote:", error);
-    submitError.value = "Failed to submit vote. Please try again.";
+    submitError.value = error instanceof Error ? error.message : "Failed to submit vote. Please try again.";
   } finally {
     isProcessing.value = false;
   }

@@ -422,6 +422,71 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
   }
 
   /**
+   * Signs a VoteDto with statically generated EIP712 Types
+   */
+  async signVote(
+    voteDto: VoteDto,
+    signingType: SigningType = SigningType.SIGN_TYPED_DATA
+  ): Promise<VoteDto & { signature: string; prefix: string }> {
+    if (!this.provider) {
+      throw new Error("Ethereum provider not found");
+    }
+
+    if (!this.address) {
+      throw new Error("No account connected");
+    }
+
+    try {
+      // Calculate prefix using our local implementation
+      const prefix = calculatePersonalSignPrefix(voteDto);
+      const prefixedPayload = { ...voteDto, prefix };
+
+      const signer = await this.provider.getSigner();
+
+      if (signingType === SigningType.SIGN_TYPED_DATA) {
+        // Use our static EIP712 types instead of dynamic generation
+        const domain = { name: "GalaChain" };
+
+        // Define EIP712 types for Vote
+        const types = {
+          Vote: [
+            { name: "entryType", type: "string" },
+            { name: "entryParent", type: "string" },
+            { name: "entry", type: "string" },
+            { name: "quantity", type: "string" },
+            { name: "uniqueKey", type: "string" }
+          ]
+        };
+
+        // Prepare the message with proper structure
+        const message: any = {
+          entryType: voteDto.entryType,
+          entryParent: voteDto.entryParent || "",
+          entry: voteDto.entry,
+          quantity: voteDto.quantity.toString(), // Convert BigNumber to string
+          uniqueKey: voteDto.uniqueKey
+        };
+
+        const signature = await signer.signTypedData(domain, types, message);
+
+        return {
+          ...prefixedPayload,
+          signature,
+          types,
+          domain
+        } as VoteDto & { signature: string; prefix: string; types: any; domain: any };
+      } else if (signingType === SigningType.PERSONAL_SIGN) {
+        const signature = await signer.signMessage(serialize(prefixedPayload));
+        return { ...prefixedPayload, signature };
+      } else {
+        throw new Error("Unsupported signing type");
+      }
+    } catch (error: unknown) {
+      throw new Error(`Vote signing failed: ${(error as Error).message}`);
+    }
+  }
+
+  /**
    * Signs a CastVote transaction with statically generated types
    *
    * @param castVoteDto - The cast vote DTO to sign
