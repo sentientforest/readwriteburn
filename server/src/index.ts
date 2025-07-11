@@ -20,7 +20,17 @@ import {
   readSubmission,
   upvoteSubmission
 } from "./controllers/submissions";
-import { countVotes, fetchVotes, getVoteCounts, getVoteStats, processAllVotes } from "./controllers/votes";
+import {
+  countVotes,
+  fetchVotes,
+  getVoteCounts,
+  getVoteServiceStatus,
+  getVoteStats,
+  processAllVotes,
+  startVoteService,
+  stopVoteService,
+  toggleVoteService
+} from "./controllers/votes";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -68,6 +78,19 @@ app.get("/api/votes/counts", getVoteCounts);
 app.get("/api/votes/stats", getVoteStats);
 app.post("/api/votes/process-all", processAllVotes);
 
+// Vote service management routes
+app.get("/api/votes/service/status", getVoteServiceStatus);
+app.post("/api/votes/service/toggle", toggleVoteService);
+app.post("/api/votes/service/start", startVoteService);
+app.post("/api/votes/service/stop", stopVoteService);
+
 app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);
+  
+  // Start vote counting service if enabled
+  import("./services/voteProcessor").then(({ startVoteCounting }) => {
+    startVoteCounting();
+  }).catch(error => {
+    console.error("Failed to start vote counting service:", error);
+  });
 });
