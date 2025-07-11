@@ -6,6 +6,7 @@ import {
   FeeVerificationDto,
   GalaChainResponse,
   GalaChainResponseType,
+  asValidUserAlias,
   asValidUserRef,
   commonContractAPI,
   createValidDTO,
@@ -106,13 +107,13 @@ describe("Read Write Burn Contract", () => {
       uniqueKey: randomUniqueKey()
     }).signed(client.readwriteburn.privateKey);
 
-    const starter = asValidUserRef(user.identityKey);
+    const starter = asValidUserAlias(user.identityKey);
 
     const expectedMetadata = new Fire(
       fire.entryParent,
       fire.slug,
       fire.name,
-      fire.starter,
+      asValidUserAlias(fire.starter),
       fire.description
     );
 

@@ -5,6 +5,7 @@ import { computed, ref } from "vue";
 export const useFiresStore = defineStore("fires", () => {
   // State
   const fires = ref<FireResponse[]>([]);
+  const firesNextPageBookmark = ref<string>("");
   const currentFire = ref<FireResponse | null>(null);
   const loading = ref(false);
   const error = ref<string | null>(null);
@@ -30,6 +31,7 @@ export const useFiresStore = defineStore("fires", () => {
 
     loading.value = true;
     error.value = null;
+    firesNextPageBookmark.value = "";
 
     try {
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/fires`);
@@ -40,11 +42,13 @@ export const useFiresStore = defineStore("fires", () => {
 
       const data = await response.json();
 
-      if (!Array.isArray(data)) {
+      if (!data || !Array.isArray(data.results)) {
+        console.log(`Failed to parse results: ${JSON.stringify(data)}`);
         throw new Error("Invalid response format");
       }
 
-      fires.value = data;
+      fires.value = data.results;
+      firesNextPageBookmark.value = "";
       lastFetch.value = Date.now();
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Failed to fetch fires";

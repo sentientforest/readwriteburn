@@ -23,18 +23,21 @@ async function fetchBalance() {
   if (!props.walletAddress) return;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/FetchBalances`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        owner: props.walletAddress,
-        collection: "GALA",
-        category: "Unit",
-        type: "none",
-        additionalKey: "none",
-        instance: "0"
-      })
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/FetchBalances`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          owner: props.walletAddress,
+          collection: "GALA",
+          category: "Unit",
+          type: "none",
+          additionalKey: "none",
+          instance: "0"
+        })
+      }
+    );
 
     const data = await response.json();
     if (data.Data.length > 0) {

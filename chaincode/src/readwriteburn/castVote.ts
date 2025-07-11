@@ -1,4 +1,9 @@
-import { ChainObject, ValidationFailedError, asValidUserAlias, asValidUserRef } from "@gala-chain/api";
+import {
+  ChainObject,
+  ValidationFailedError,
+  asValidUserAlias,
+  asValidUserRef
+} from "@gala-chain/api";
 import {
   GalaChainContext,
   UniqueTransactionService,

@@ -2,6 +2,7 @@ import {
   ChainCallDTO,
   FeeAuthorization,
   FeeAuthorizationDto,
+  FeeVerificationDto,
   IsUserRef,
   SubmitCallDTO,
   UserRef
@@ -50,7 +51,7 @@ export class FireDto extends ChainCallDTO {
   public moderators: string[];
 }
 
-export class FireStarterDto extends ChainCallDTO {
+export class FireStarterAuthorizationDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FireDto)
   public fire: FireDto;
@@ -59,6 +60,17 @@ export class FireStarterDto extends ChainCallDTO {
   @ValidateNested()
   @Type(() => FeeAuthorizationDto)
   public fee?: FeeAuthorizationDto;
+}
+
+export class FireStarterDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => FireDto)
+  public fire: FireDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  public fee?: FeeVerificationDto;
 }
 
 export class SubmissionDto extends ChainCallDTO {
@@ -91,18 +103,68 @@ export class ContributeSubmissionDto extends ChainCallDTO {
 
   @IsOptional()
   @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  fee?: FeeVerificationDto;
+}
+
+export class ContributeSubmissionAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => SubmissionDto)
+  public submission: SubmissionDto;
+
+  @IsOptional()
+  @ValidateNested()
   @Type(() => FeeAuthorizationDto)
-  fee?: FeeAuthorizationDto;
+  public fee?: FeeAuthorizationDto;
 }
 
 export class CastVoteDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  vote: VoteDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  fee?: FeeVerificationDto;
+}
+
+export class CastVoteAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  public vote: VoteDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee?: FeeAuthorizationDto;
+}
+
+export class VoteDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  entryType: string;
+
+  @IsString()
+  entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   entry: string;
 
-  @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  fee: FeeAuthorizationDto;
+  @IsNotEmpty()
+  quantity: any; // BigNumber - will be properly typed when imported
+
+  constructor(data?: any) {
+    super();
+    if (data) {
+      this.entryType = data.entryType;
+      this.entryParent = data.entryParent;
+      this.entry = data.entry;
+      this.quantity = data.quantity;
+      this.uniqueKey = data.uniqueKey;
+    }
+  }
 }
 
 // Content verification and moderation types

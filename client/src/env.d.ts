@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-
 import type { ReadWriteBurnConnectClient } from "./services/ReadWriteBurnConnectClient";
 
 interface ImportMetaEnv {
@@ -11,7 +10,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-declare module '@vue/runtime-core' {
+declare module "@vue/runtime-core" {
   interface ComponentCustomProperties {
     $metamaskClient: ReadWriteBurnConnectClient | null;
   }

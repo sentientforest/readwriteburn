@@ -2,13 +2,13 @@ import { createPinia } from "pinia";
 import { createApp } from "vue";
 
 import App from "./App.vue";
-import { ReadWriteBurnConnectClient } from "./services/ReadWriteBurnConnectClient";
 import "./assets/main.css";
 import { useAnalytics } from "./composables/useAnalytics";
 import { initializeErrorReporting } from "./composables/useErrorReporting";
 import { usePerformanceMonitoring } from "./composables/usePerformanceMonitoring";
 import { useServiceWorker } from "./composables/useServiceWorker";
 import { router } from "./routes";
+import { ReadWriteBurnConnectClient } from "./services/ReadWriteBurnConnectClient";
 import { logAccessibilityReport } from "./utils/accessibilityTesting";
 
 // Initialize global error reporting

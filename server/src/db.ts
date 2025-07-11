@@ -88,34 +88,50 @@ export function initializeDatabase() {
 export const dbService = {
   closeDatabase,
   // Subfire methods
-  createSubfire: (subfire: FireDto): FireDto => {
+  createSubfire: (fireData: FireDto | any): FireDto => {
+    // Handle both FireDto and Fire chaincode objects
+    const slug = fireData.slug;
+    const name = fireData.name;
+    const description = fireData.description || "";
+    const authorities = fireData.authorities || [];
+    const moderators = fireData.moderators || [];
+
+    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators });
+
     const insertSubfire = getDb().prepare(`
-      INSERT INTO subfires (slug, name, description)
+      INSERT OR REPLACE INTO subfires (slug, name, description)
       VALUES (?, ?, ?)
     `);
 
-    const insertRole = db.prepare(`
+    const deleteRoles = getDb().prepare(`
+      DELETE FROM subfire_roles WHERE subfire_id = ?
+    `);
+
+    const insertRole = getDb().prepare(`
       INSERT INTO subfire_roles (subfire_id, user_id, role)
       VALUES (?, ?, ?)
     `);
 
     getDb().transaction(() => {
-      insertSubfire.run(subfire.slug, subfire.name, subfire.description);
+      insertSubfire.run(slug, name, description);
+
+      // Clear existing roles and re-add
+      deleteRoles.run(slug);
 
       // Add authorities
-      for (const authority of subfire.authorities) {
-        insertRole.run(subfire.slug, authority, "authority");
+      for (const authority of authorities) {
+        insertRole.run(slug, authority, "authority");
       }
 
       // Add moderators
-      for (const moderator of subfire.moderators) {
-        insertRole.run(subfire.slug, moderator, "moderator");
+      for (const moderator of moderators) {
+        insertRole.run(slug, moderator, "moderator");
       }
 
-      return subfire.slug;
+      return slug;
     })();
 
-    return dbService.getSubfire(subfire.slug)!;
+    return dbService.getSubfire(slug)!;
   },
 
   getSubfire: (slug: string): FireDto | null => {
@@ -223,35 +239,56 @@ export const dbService = {
   },
 
   // Submission methods
-  saveSubmission: (submission: SubmissionDto): SubmissionResDto => {
+  saveSubmission: (submissionData: SubmissionDto | any): SubmissionResDto => {
+    // Handle both SubmissionDto and chaincode Submission objects
+    const name = submissionData.name;
+    const contributor = submissionData.contributor || "";
+    const description = submissionData.description || "";
+    const url = submissionData.url || "";
+    const fire = submissionData.fire;
+    const entryParent = submissionData.entryParent || fire;
+    const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
+    const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
+
+    console.log("Saving submission to database:", {
+      name,
+      fire,
+      chainKey,
+      chainId,
+      entryParent
+    });
+
     // Generate content hash
-    const { hash, timestamp } = hashSubmissionContent(
-      submission.name,
-      submission.description || "",
-      submission.url
-    );
+    const { hash, timestamp } = hashSubmissionContent(name, description, url);
 
     const insertSubmission = getDb().prepare(`
-      INSERT INTO submissions (name, contributor, description, url, subfire_id, content_hash, content_timestamp, hash_verified, moderation_status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO submissions (
+        name, contributor, description, url, subfire_id, 
+        content_hash, content_timestamp, hash_verified, moderation_status,
+        chain_key, chain_id, entry_parent
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertVotes = getDb().prepare(`
-      INSERT INTO votes (submission_id, count)
+      INSERT OR IGNORE INTO votes (submission_id, count)
       VALUES (?, 0)
     `);
 
     const submissionId = getDb().transaction(() => {
       const result = insertSubmission.run(
-        submission.name,
-        submission.contributor,
-        submission.description,
-        submission.url,
-        submission.fire,
+        name,
+        contributor,
+        description,
+        url,
+        fire,
         hash,
         timestamp,
         1, // hash_verified (boolean as integer)
-        "active" // moderation_status
+        "active", // moderation_status
+        chainKey,
+        chainId,
+        entryParent
       );
       const newId = result.lastInsertRowid as number;
       insertVotes.run(newId);
@@ -498,6 +535,29 @@ export const dbService = {
       },
       storedHash: row.content_hash
     }));
+  },
+
+  // Vote casting method for local cache updates
+  recordVoteCast: async (submissionId: number, quantity: any): Promise<boolean> => {
+    try {
+      const updateVotes = getDb().prepare(`
+        UPDATE votes 
+        SET count = count + ?
+        WHERE submission_id = ?
+      `);
+
+      // Convert BigNumber to number for database storage
+      const voteAmount =
+        typeof quantity === "object" && quantity.toString
+          ? parseInt(quantity.toString())
+          : parseInt(quantity);
+
+      const result = updateVotes.run(voteAmount, submissionId);
+      return result.changes > 0;
+    } catch (error) {
+      console.error("Error recording vote cast:", error);
+      return false;
+    }
   }
 };
 

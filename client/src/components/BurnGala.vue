@@ -71,11 +71,14 @@ async function burnTokens() {
 
     const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto);
 
-    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/BurnTokens`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(signedBurnDto)
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/BurnTokens`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signedBurnDto)
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to burn tokens");
