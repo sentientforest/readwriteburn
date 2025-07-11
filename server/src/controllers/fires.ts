@@ -13,7 +13,7 @@ import { NextFunction, Request, Response } from "express";
 import assert from "node:assert";
 
 import { dbService } from "../db";
-import { FireDto, FireStarterAuthorizationDto, FireStarterDto } from "../types";
+import { FetchFiresDto, FetchFiresResDto, FireDto, FireStarterAuthorizationDto, FireStarterDto } from "../types";
 import { evaluateChaincode, submitToChaincode } from "../utils/chaincode";
 import { getAdminPrivateKey, randomUniqueKey } from "./identities";
 
@@ -143,11 +143,15 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
       });
     }
 
-    console.log("Chaincode submission successful:", chainResponse.data);
+    console.log("Chaincode submission successful:", JSON.stringify(chainResponse.data, null, 2));
 
     // Extract Fire metadata from chaincode response
     const fireResult = chainResponse.data as any; // FireResDto
-    const fireMetadata = fireResult.metadata; // Fire object
+    
+    // The response might be the Fire object directly or wrapped in metadata
+    const fireMetadata = fireResult.metadata || fireResult;
+    
+    console.log("Fire metadata to save:", JSON.stringify(fireMetadata, null, 2));
 
     // Save Fire metadata to database for quick lookups
     const created = dbService.createSubfire(fireMetadata);
@@ -170,25 +174,33 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
     console.log("Fetching fires - Query params:", req.query);
 
     // Create FetchFiresDto from query parameters
-    const fetchDto = {
-      slug: req.query.slug as string,
-      bookmark: req.query.bookmark as string,
+    const fetchDto = new FetchFiresDto({
+      slug: req.query.slug ? (req.query.slug as string) : undefined,
+      bookmark: req.query.bookmark ? (req.query.bookmark as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined
-    };
+    });
 
-    console.log("Fetching fires from chaincode with:", fetchDto);
+    console.log("Fetching fires from chaincode with:", JSON.stringify(fetchDto, null, 2));
 
     // Try to fetch from chaincode first
-    const chainResponse = await evaluateChaincode("FetchFires", fetchDto);
+    const chainResponse = await evaluateChaincode<FetchFiresResDto>("FetchFires", fetchDto);
 
     if (chainResponse.success && chainResponse.data) {
-      console.log("Successfully fetched fires from chaincode:", chainResponse.data);
+      console.log("Successfully fetched fires from chaincode:", JSON.stringify(chainResponse.data, null, 2));
       const fetchResult = chainResponse.data as any; // FetchFiresResDto
-      res.json(fetchResult);
+      
+      // Ensure we have the correct response structure
+      const response = {
+        results: fetchResult.results || fetchResult,
+        nextPageBookmark: fetchResult.nextPageBookmark
+      };
+      
+      res.json(response);
     } else {
       console.warn("Chaincode fetch failed, falling back to database:", chainResponse.error);
       // Fall back to database if chaincode is unavailable
       const subfires = dbService.getAllSubfires();
+      console.log("Database fallback - found subfires:", JSON.stringify(subfires, null, 2));
       res.json({
         results: subfires,
         nextPageBookmark: undefined

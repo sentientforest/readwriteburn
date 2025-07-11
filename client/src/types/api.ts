@@ -130,9 +130,8 @@ export interface FetchVotesRequest {
 }
 
 export interface FetchVotesResponse {
-  votes: VoteResponse[];
-  bookmark?: string;
-  hasMore: boolean;
+  results: VoteResponse[];
+  nextPageBookmark?: string;
 }
 
 export interface CountVotesRequest {

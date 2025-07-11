@@ -10,7 +10,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
 export const useVotesStore = defineStore("votes", () => {
-  // State
+  // State - Initialize with empty array to prevent undefined errors
   const votes = ref<VoteResponse[]>([]);
   const voteCounts = ref<VoteCountResponse[]>([]);
   const loading = ref(false);
@@ -22,7 +22,7 @@ export const useVotesStore = defineStore("votes", () => {
   // Getters
   const votesByEntry = computed(() => {
     const map = new Map<string, VoteResponse[]>();
-    votes.value.forEach((vote) => {
+    (votes.value || []).forEach((vote) => {
       if (!map.has(vote.entry)) {
         map.set(vote.entry, []);
       }
@@ -33,7 +33,7 @@ export const useVotesStore = defineStore("votes", () => {
 
   const votesByFire = computed(() => {
     const map = new Map<string, VoteResponse[]>();
-    votes.value.forEach((vote) => {
+    (votes.value || []).forEach((vote) => {
       if (!map.has(vote.fire)) {
         map.set(vote.fire, []);
       }
@@ -81,13 +81,13 @@ export const useVotesStore = defineStore("votes", () => {
       const result: FetchVotesResponse = await response.json();
 
       if (append) {
-        votes.value = [...votes.value, ...result.votes];
+        votes.value = [...votes.value, ...(result.results || [])];
       } else {
-        votes.value = result.votes;
+        votes.value = result.results || [];
       }
 
-      bookmark.value = result.bookmark || null;
-      hasMore.value = result.hasMore;
+      bookmark.value = result.nextPageBookmark || null;
+      hasMore.value = !!result.nextPageBookmark;
       lastFetch.value = Date.now();
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Failed to fetch votes";
@@ -218,14 +218,14 @@ export const useVotesStore = defineStore("votes", () => {
   // Statistics computed values
   const voteStatistics = computed(() => {
     const stats = {
-      totalVotes: votes.value.length,
+      totalVotes: votes.value?.length || 0,
       totalAmount: totalVoteAmount.value,
-      averageVote: votes.value.length > 0 ? totalVoteAmount.value / votes.value.length : 0,
+      averageVote: votes.value?.length > 0 ? totalVoteAmount.value / votes.value.length : 0,
       fireBreakdown: new Map<string, { count: number; amount: number }>(),
       entryBreakdown: new Map<string, { count: number; amount: number }>()
     };
 
-    votes.value.forEach((vote) => {
+    (votes.value || []).forEach((vote) => {
       const amount = parseFloat(vote.quantity);
 
       // Fire breakdown

@@ -41,7 +41,22 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     }
 
     const result: FetchVotesResDto = await response.json();
-    res.json(result);
+    
+    // Transform the chaincode response to match client expectations
+    const transformedResponse = {
+      results: result.results.map((voteResult: VoteResult) => ({
+        id: voteResult.value.id,
+        voter: voteResult.value.voter,
+        entry: voteResult.value.entry,
+        entryType: voteResult.value.entryType,
+        fire: voteResult.value.entryParent, // entryParent is the fire
+        quantity: voteResult.value.quantity,
+        created: parseInt(voteResult.value.id) // id is timestamp-based
+      })),
+      nextPageBookmark: result.nextPageBookmark
+    };
+    
+    res.json(transformedResponse);
   } catch (error) {
     console.error("Error fetching votes:", error);
     res.status(500).json({

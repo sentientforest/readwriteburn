@@ -113,25 +113,30 @@ export const dbService = {
     `);
 
     getDb().transaction(() => {
-      insertSubfire.run(slug, name, description);
+      const result = insertSubfire.run(slug, name, description);
+      console.log("Subfire insert result:", { changes: result.changes, lastInsertRowid: result.lastInsertRowid });
 
       // Clear existing roles and re-add
       deleteRoles.run(slug);
 
       // Add authorities
       for (const authority of authorities) {
-        insertRole.run(slug, authority, "authority");
+        const roleResult = insertRole.run(slug, authority, "authority");
+        console.log("Authority role insert:", { authority, changes: roleResult.changes });
       }
 
       // Add moderators
       for (const moderator of moderators) {
-        insertRole.run(slug, moderator, "moderator");
+        const roleResult = insertRole.run(slug, moderator, "moderator");
+        console.log("Moderator role insert:", { moderator, changes: roleResult.changes });
       }
 
       return slug;
     })();
 
-    return dbService.getSubfire(slug)!;
+    const created = dbService.getSubfire(slug);
+    console.log("Created subfire retrieved from DB:", JSON.stringify(created, null, 2));
+    return created!;
   },
 
   getSubfire: (slug: string): FireDto | null => {
@@ -185,7 +190,10 @@ export const dbService = {
       slug: string;
     }
     const subfires = getDb().prepare("SELECT slug FROM subfires").all();
-    return subfires.map((s: unknown) => dbService.getSubfire((s as FireRow).slug)!);
+    console.log("getAllSubfires - raw DB result:", JSON.stringify(subfires, null, 2));
+    const result = subfires.map((s: unknown) => dbService.getSubfire((s as FireRow).slug)!);
+    console.log("getAllSubfires - mapped result:", JSON.stringify(result, null, 2));
+    return result;
   },
 
   updateSubfire: (slug: string, subfire: FireDto): FireDto => {

@@ -41,7 +41,7 @@ export async function submitToChaincode<T>(
       headers: {
         "Content-Type": "application/json"
       },
-      body: dto.serialize ? dto.serialize() : JSON.stringify(dto)
+      body: typeof dto.serialize === 'function' ? dto.serialize() : JSON.stringify(dto)
     });
 
     if (!response.ok) {
@@ -54,7 +54,7 @@ export async function submitToChaincode<T>(
     }
 
     const result: GalaChainResponse<T> = await response.json();
-    console.log(`Chaincode response:`, JSON.stringify(result, null, 2));
+    console.log(`Chaincode response for ${method}:`, JSON.stringify(result, null, 2));
 
     if (!GalaChainResponse.isSuccess(result)) {
       console.error(`Chaincode execution error:`, result.Message);
@@ -112,7 +112,7 @@ export async function evaluateChaincode<T>(
       headers: {
         "Content-Type": "application/json"
       },
-      body: dto.serialize ? dto.serialize() : JSON.stringify(dto)
+      body: typeof dto.serialize === 'function' ? dto.serialize() : JSON.stringify(dto)
     });
 
     if (!response.ok) {
@@ -125,7 +125,7 @@ export async function evaluateChaincode<T>(
     }
 
     const result: GalaChainResponse<T> = await response.json();
-    console.log(`Chaincode evaluation result:`, JSON.stringify(result, null, 2));
+    console.log(`Chaincode evaluation result for ${method}:`, JSON.stringify(result, null, 2));
 
     if (!GalaChainResponse.isSuccess(result)) {
       console.error(`Chaincode evaluation error:`, result.Message);
