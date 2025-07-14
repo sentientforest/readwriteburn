@@ -106,12 +106,21 @@ export class FireStarterDto extends SubmitCallDTO {
 }
 
 export interface IFetchFiresDto {
+  entryParent?: string;
   slug?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchFiresDto extends ChainCallDTO {
+  @JSONSchema({ description: "Optional, but required if slug is provided." })
+  @ValidateIf((dto) => !!dto.entryType || !!dto.slug)
+  @IsString()
+  public entryParent?: string;
+
+  @JSONSchema({
+    description: "Optional. `entryParent` must be provided to additionally filter by slug"
+  })
   @IsOptional()
   @IsString()
   public slug?: string;
@@ -126,6 +135,7 @@ export class FetchFiresDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresDto) {
     super();
+    this.entryParent = data?.entryParent;
     this.slug = data?.slug;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;

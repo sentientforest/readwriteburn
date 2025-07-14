@@ -1,4 +1,8 @@
-import { GalaChainContext } from "@gala-chain/chaincode";
+import {
+  GalaChainContext,
+  getObjectsByPartialCompositeKeyWithPagination,
+  takeUntilUndefined
+} from "@gala-chain/chaincode";
 
 import { Fire } from "./api/Fire";
 import { FetchFiresDto, FetchFiresResDto } from "./api/dtos";
@@ -11,18 +15,25 @@ import { FetchFiresDto, FetchFiresResDto } from "./api/dtos";
  * @returns Promise resolving to paginated list of fires
  *
  * @remarks
- * Currently returns empty results as implementation is pending.
- * When implemented, will support:
+ * Supports:
  * - Filtering by fire slug
  * - Pagination via bookmark and limit parameters
- * - Hierarchical fire organization
  *
- * @todo Implement actual fire querying logic
  */
 export async function fetchFires(ctx: GalaChainContext, dto: FetchFiresDto) {
-  // todo: implement
+  const query = takeUntilUndefined(dto.entryParent, dto.slug);
+
+  const { results, metadata } = await getObjectsByPartialCompositeKeyWithPagination(
+    ctx,
+    Fire.INDEX_KEY,
+    query,
+    Fire,
+    dto.bookmark,
+    dto.limit
+  );
+
   return new FetchFiresResDto({
-    results: [],
-    nextPageBookmark: ""
+    results,
+    nextPageBookmark: metadata.bookmark
   });
 }
