@@ -14,11 +14,22 @@ import { getAdminPrivateKey, randomUniqueKey } from "./identities";
 
 export async function createSubmission(req: Request, res: Response, next: NextFunction) {
   try {
+    console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+
     // 1. Parse authorization DTO from client
     const authDto: ContributeSubmissionAuthorizationDto = deserialize(
       ContributeSubmissionAuthorizationDto,
       req.body
     );
+
+    console.log("Deserialized authDto:", JSON.stringify(authDto, null, 2));
+
+    // Check if submission exists
+    if (!authDto.submission) {
+      return res.status(400).json({
+        error: "Missing submission data in authorization DTO"
+      });
+    }
 
     console.log(
       "Submission creation request:",
