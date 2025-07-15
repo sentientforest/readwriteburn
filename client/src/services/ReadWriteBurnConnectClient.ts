@@ -5,7 +5,14 @@ import { SigningType } from "@gala-chain/connect";
 import { GalaChainProviderOptions } from "@gala-chain/connect";
 import { BrowserProvider, Eip1193Provider } from "ethers";
 
-import { CastVoteDto, ContributeSubmissionDto, FireDto, FireStarterDto, SubmissionDto, VoteDto } from "../types/fire";
+import {
+  CastVoteDto,
+  ContributeSubmissionDto,
+  FireDto,
+  FireStarterDto,
+  SubmissionDto,
+  VoteDto
+} from "../types/fire";
 
 // Implement calculatePersonalSignPrefix locally
 function calculatePersonalSignPrefix(payload: object): string {

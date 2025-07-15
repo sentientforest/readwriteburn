@@ -14,33 +14,29 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     const { entryType, fire, submission, bookmark, limit } = req.query;
 
     // Build the DTO for chaincode call
-    const dto = new FetchVotesDto();
-    if (entryType) dto.entryType = entryType as string;
-    if (fire) dto.fire = fire as string;
-    if (submission) dto.submission = submission as string;
-    if (bookmark) dto.bookmark = bookmark as string;
-    if (limit) dto.limit = parseInt(limit as string, 10);
-
-    // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/FetchVotes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(dto)
+    const dto = await createValidDTO(FetchVotesDto, {
+      entryType: entryType as string || undefined,
+      fire: fire as string || undefined,
+      submission: submission as string || undefined,
+      bookmark: bookmark as string || undefined,
+      limit: limit ? parseInt(limit as string, 10) : undefined
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Chaincode error:", errorText);
-      res.status(response.status).json({
+    console.log("Fetching votes with params:", JSON.stringify(dto, null, 2));
+
+    // Use the chaincode utility function
+    const chainResponse = await evaluateChaincode<FetchVotesResDto>("FetchVotes", dto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode fetch votes failed:", chainResponse.error);
+      res.status(400).json({
         error: "Failed to fetch votes from chaincode",
-        details: errorText
+        details: chainResponse.error
       });
       return;
     }
 
-    const result: FetchVotesResDto = await response.json();
+    const result = chainResponse.data;
     
     // Transform the chaincode response to match client expectations
     const transformedResponse = {
@@ -98,27 +94,27 @@ export async function countVotes(req: Request, res: Response): Promise<void> {
     }
 
     // Build the DTO for chaincode call
-    const dto = new CountVotesDto();
-    if (fire) dto.fire = fire;
-    if (submission) dto.submission = submission;
-    dto.votes = votes;
-    dto.uniqueKey = uniqueKey;
-
-    // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/CountVotes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(dto)
+    const dto = await createValidDTO(CountVotesDto, {
+      fire: fire || undefined,
+      submission: submission || undefined,
+      votes: votes,
+      uniqueKey: uniqueKey
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Chaincode error:", errorText);
-      res.status(response.status).json({
+    console.log("Counting votes with params:", JSON.stringify(dto, null, 2));
+
+    // Sign the DTO with admin key since this is a server operation
+    const serverAdminKey = getAdminPrivateKey();
+    const signedDto = dto.signed(serverAdminKey);
+
+    // Use the chaincode utility function
+    const chainResponse = await submitToChaincode("CountVotes", signedDto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode count votes failed:", chainResponse.error);
+      res.status(400).json({
         error: "Failed to count votes on chaincode",
-        details: errorText
+        details: chainResponse.error
       });
       return;
     }

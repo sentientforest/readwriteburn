@@ -57,16 +57,17 @@
 </template>
 
 <script setup lang="ts">
-import { ChainObject, randomUniqueKey } from "@gala-chain/api";
+import { ChainObject } from "@gala-chain/api";
 import { sha256 } from "@noble/hashes/sha256";
 import { bytesToHex } from "@noble/hashes/utils";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, getCurrentInstance, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { useFiresStore } from "../stores/fires";
 import { useUserStore } from "../stores/user";
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
 import { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } from "../types/fire";
+import { randomUniqueKey } from "../utils";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
@@ -75,6 +76,10 @@ const router = useRouter();
 const userStore = useUserStore();
 const subfireSlug = route.params.slug as string;
 const replyToId = route.query.replyTo as string | undefined;
+
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const form = ref<SubmissionCreateRequest>({
   name: "",
@@ -116,11 +121,14 @@ const contentHash = computed(() => {
 });
 
 // Update contributor when wallet address changes
-watch(() => userStore.address, (newAddress) => {
-  if (newAddress) {
-    form.value.contributor = newAddress;
+watch(
+  () => userStore.address,
+  (newAddress) => {
+    if (newAddress) {
+      form.value.contributor = newAddress;
+    }
   }
-});
+);
 
 // Update timestamp when content changes (debounced)
 let timestampTimeout: any = null;
@@ -139,15 +147,15 @@ async function submitForm() {
   console.log("submitForm called", {
     isSubmitting: isSubmitting.value,
     address: userStore.address,
-    hasMetamaskClient: !!userStore.metamaskClient,
+    hasMetamaskClient: !!metamaskClient.value,
     isConnected: userStore.isConnected
   });
-  
-  if (isSubmitting.value || !userStore.address || !userStore.metamaskClient) {
+
+  if (isSubmitting.value || !userStore.address || !metamaskClient.value) {
     console.log("Early return from submitForm", {
       isSubmitting: isSubmitting.value,
       noAddress: !userStore.address,
-      noMetamaskClient: !userStore.metamaskClient
+      noMetamaskClient: !metamaskClient.value
     });
     return;
   }
@@ -177,7 +185,7 @@ async function submitForm() {
     console.log("Signing submission:", submissionDto);
 
     // Sign the submission DTO
-    const signedSubmission = await userStore.metamaskClient!.signSubmission(submissionDto);
+    const signedSubmission = await metamaskClient.value?.signSubmission(submissionDto);
 
     // Create authorization DTO (no fee for now)
     const authDto = new ContributeSubmissionAuthorizationDto({

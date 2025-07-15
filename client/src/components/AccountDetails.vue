@@ -4,29 +4,23 @@
       <h2>GalaChain Account/Wallet Details</h2>
 
       <div>
-        <p class="wallet-address">Connected: {{ walletAddress }}</p>
-        <BalanceDetails :wallet-address="walletAddress" />
-        <BurnGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
-        <TransferGala :wallet-address="walletAddress" :metamask-client="metamaskClient" />
+        <p class="wallet-address">Connected: {{ userStore.address }}</p>
+        <BalanceDetails />
+        <BurnGala />
+        <TransferGala />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { MetamaskConnectClient } from "@gala-chain/connect";
-import { ref } from "vue";
+import { useUserStore } from "../stores/user";
 
 import BalanceDetails from "./BalanceDetails.vue";
 import BurnGala from "./BurnGala.vue";
 import TransferGala from "./TransferGala.vue";
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: MetamaskConnectClient;
-}>();
-
-const walletAddress = ref(props.walletAddress);
+const userStore = useUserStore();
 </script>
 
 <style>
