@@ -155,7 +155,7 @@ const userStore = useUserStore();
 const voteQuantity = ref<number | null>(null);
 const isVoting = ref(false);
 const showReplyForm = ref(false);
-const showReplies = ref(depth < 2); // Auto-expand first 2 levels
+const showReplies = ref(props.depth < 2); // Auto-expand first 2 levels
 
 // Computed properties
 const childSubmissions = computed(() => {

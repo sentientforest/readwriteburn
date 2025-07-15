@@ -95,12 +95,13 @@ export const dbService = {
     const description = fireData.description || "";
     const authorities = fireData.authorities || [];
     const moderators = fireData.moderators || [];
+    const chainKey = fireData.getCompositeKey ? fireData.getCompositeKey() : null;
 
-    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators });
+    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators, chainKey });
 
     const insertSubfire = getDb().prepare(`
-      INSERT OR REPLACE INTO subfires (slug, name, description)
-      VALUES (?, ?, ?)
+      INSERT OR REPLACE INTO subfires (slug, name, description, chain_key)
+      VALUES (?, ?, ?, ?)
     `);
 
     const deleteRoles = getDb().prepare(`
@@ -113,7 +114,7 @@ export const dbService = {
     `);
 
     getDb().transaction(() => {
-      const result = insertSubfire.run(slug, name, description);
+      const result = insertSubfire.run(slug, name, description, chainKey);
       console.log("Subfire insert result:", { changes: result.changes, lastInsertRowid: result.lastInsertRowid });
 
       // Clear existing roles and re-add
@@ -228,6 +229,42 @@ export const dbService = {
     return dbService.getSubfire(slug)!;
   },
 
+  getSubfireByChainKey: (chainKey: string): FireDto | null => {
+    const fire = getDb().prepare(`
+      SELECT * FROM subfires WHERE chain_key = ?
+    `).get(chainKey);
+
+    if (!fire) {
+      return null;
+    }
+
+    const authorities = getDb()
+      .prepare(
+        `
+      SELECT user_id FROM subfire_roles
+      WHERE subfire_id = ? AND role = 'authority'
+    `
+      )
+      .all((fire as any).slug)
+      .map((row: any) => row.user_id);
+
+    const moderators = getDb()
+      .prepare(
+        `
+      SELECT user_id FROM subfire_roles
+      WHERE subfire_id = ? AND role = 'moderator'
+    `
+      )
+      .all((fire as any).slug)
+      .map((row: any) => row.user_id);
+
+    return {
+      ...fire,
+      authorities,
+      moderators
+    } as FireDto;
+  },
+
   deleteSubfire: (slug: string): boolean => {
     const db = getDb();
     const deleteRoles = db.prepare("DELETE FROM subfire_roles WHERE subfire_id = ?");
@@ -258,13 +295,50 @@ export const dbService = {
     const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
     const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
 
+    // Extract fire slug from chaincode key for database foreign key
+    // Fire chain key format: binary composite key with null separators
+    let fireSlug = fire;
+    
+    if (typeof fire === 'string' && fire.includes('RWBF')) {
+      // First, try to find an existing fire in the database that matches
+      const existingFire = dbService.getSubfireByChainKey(fire);
+      if (existingFire) {
+        fireSlug = existingFire.slug;
+      } else {
+        // Parse the binary composite key format: \x00RWBF\x00{entryParent}\x00{fireSlug}\x00
+        // Split by null bytes and find the parts
+        const parts = fire.split('\x00').filter(part => part.length > 0);
+        console.log("Parsing composite key parts:", parts);
+        
+        // Find RWBF index
+        const rwbfIndex = parts.findIndex(part => part === 'RWBF');
+        if (rwbfIndex >= 0 && parts.length > rwbfIndex + 1) {
+          // The fire slug should be the last non-empty part
+          // For format: RWBF, entryParent, fireSlug
+          // If entryParent is empty, it's: RWBF, fireSlug
+          const possibleSlug = parts[parts.length - 1];
+          if (possibleSlug && possibleSlug !== 'RWBF') {
+            fireSlug = possibleSlug;
+          }
+        }
+        
+        console.warn("Could not find fire with chain key in database, parsed slug:", {
+          fire,
+          parts,
+          extractedSlug: fireSlug
+        });
+      }
+    }
+
     console.log("Saving submission to database:", {
       name,
       fire,
+      fireSlug,
       chainKey,
       chainId,
       entryParent
     });
+
 
     // Generate content hash
     const { hash, timestamp } = hashSubmissionContent(name, description, url);
@@ -289,7 +363,7 @@ export const dbService = {
         contributor,
         description,
         url,
-        fire,
+        fireSlug,
         hash,
         timestamp,
         1, // hash_verified (boolean as integer)
