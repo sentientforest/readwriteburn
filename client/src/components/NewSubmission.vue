@@ -45,7 +45,7 @@
       </div>
 
       <div class="form-actions">
-        <button type="submit" :disabled="isSubmitting || !props.walletAddress">
+        <button type="submit" :disabled="isSubmitting || !userStore.address || !userStore.isConnected">
           {{ isSubmitting ? "Submitting..." : "Submit" }}
         </button>
       </div>
@@ -63,20 +63,16 @@ import { bytesToHex } from "@noble/hashes/utils";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import type { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
 import { useFiresStore } from "../stores/fires";
+import { useUserStore } from "../stores/user";
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
 import { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } from "../types/fire";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: ReadWriteBurnConnectClient;
-}>();
-
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
 const subfireSlug = route.params.slug as string;
 const replyToId = route.query.replyTo as string | undefined;
 
@@ -85,7 +81,7 @@ const form = ref<SubmissionCreateRequest>({
   description: "",
   url: "",
   fire: subfireSlug,
-  contributor: props.walletAddress,
+  contributor: userStore.address || "",
   entryParent: replyToId
 });
 
@@ -119,6 +115,13 @@ const contentHash = computed(() => {
   }
 });
 
+// Update contributor when wallet address changes
+watch(() => userStore.address, (newAddress) => {
+  if (newAddress) {
+    form.value.contributor = newAddress;
+  }
+});
+
 // Update timestamp when content changes (debounced)
 let timestampTimeout: any = null;
 watch([() => form.value.name, () => form.value.description, () => form.value.url], () => {
@@ -133,7 +136,21 @@ function formatTimestamp(timestamp: number): string {
 }
 
 async function submitForm() {
-  if (isSubmitting.value || !props.walletAddress || !props.metamaskClient) return;
+  console.log("submitForm called", {
+    isSubmitting: isSubmitting.value,
+    address: userStore.address,
+    hasMetamaskClient: !!userStore.metamaskClient,
+    isConnected: userStore.isConnected
+  });
+  
+  if (isSubmitting.value || !userStore.address || !userStore.metamaskClient) {
+    console.log("Early return from submitForm", {
+      isSubmitting: isSubmitting.value,
+      noAddress: !userStore.address,
+      noMetamaskClient: !userStore.metamaskClient
+    });
+    return;
+  }
 
   isSubmitting.value = true;
   error.value = "";
@@ -141,8 +158,9 @@ async function submitForm() {
 
   try {
     const fireSlug = subfireSlug;
-    const entryParent = replyToId || fireSlug;
+    const entryParent = replyToId || "";
 
+    // Construct fire chain key using proper ChainObject method
     const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [entryParent, fireSlug]);
 
     // Create SubmissionDto
@@ -151,15 +169,15 @@ async function submitForm() {
       description: form.value.description || "",
       url: form.value.url || "",
       fire: fireChainKey,
-      entryParent: fireChainKey, // top level comments use fire key as entryParent; nested comments use submission key
-      contributor: props.walletAddress,
+      entryParent: replyToId || fireChainKey, // use replyToId for nested comments, fire key for top-level
+      contributor: userStore.address,
       uniqueKey: randomUniqueKey()
     });
 
     console.log("Signing submission:", submissionDto);
 
     // Sign the submission DTO
-    const signedSubmission = await props.metamaskClient.signSubmission(submissionDto);
+    const signedSubmission = await userStore.metamaskClient!.signSubmission(submissionDto);
 
     // Create authorization DTO (no fee for now)
     const authDto = new ContributeSubmissionAuthorizationDto({
@@ -188,7 +206,7 @@ async function submitForm() {
       description: "",
       url: "",
       fire: subfireSlug,
-      contributor: props.walletAddress,
+      contributor: userStore.address,
       entryParent: replyToId
     };
 

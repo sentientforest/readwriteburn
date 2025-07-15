@@ -74,12 +74,17 @@ export class FireStarterDto extends ChainCallDTO {
 }
 
 export interface IFetchFiresDto {
+  entryParent?: string;
   slug?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchFiresDto extends ChainCallDTO {
+  @IsOptional()
+  @IsString()
+  public entryParent?: string;
+
   @IsOptional()
   @IsString()
   public slug?: string;
@@ -94,6 +99,7 @@ export class FetchFiresDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresDto = {}) {
     super();
+    this.entryParent = data?.entryParent;
     this.slug = data?.slug;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;
