@@ -175,6 +175,7 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
 
     // Create FetchFiresDto from query parameters
     const fetchDto = new FetchFiresDto({
+      entryParent: req.query.entryParent ? (req.query.entryParent as string) : undefined,
       slug: req.query.slug ? (req.query.slug as string) : undefined,
       bookmark: req.query.bookmark ? (req.query.bookmark as string) : undefined,
       limit: req.query.limit ? parseInt(req.query.limit as string) : undefined
