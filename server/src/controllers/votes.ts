@@ -38,6 +38,13 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
 
     const result = chainResponse.data;
     
+    if (!result) {
+      res.status(500).json({
+        error: "No data returned from chaincode"
+      });
+      return;
+    }
+    
     // Transform the chaincode response to match client expectations
     const transformedResponse = {
       results: result.results.map((voteResult: VoteResult) => ({
@@ -176,7 +183,7 @@ export async function processAllVotes(req: Request, res: Response): Promise<void
   try {
     const { fire, submission } = req.body;
     
-    const { processAllVotes: processVotes } = await import("../services/voteProcessor");
+    const { processAllVotes: processVotes } = await import("../services/voteProcessor.js");
     
     const result = await processVotes(fire, submission);
     
@@ -211,7 +218,7 @@ export async function getVoteStats(req: Request, res: Response): Promise<void> {
   try {
     const { fire, submission } = req.query;
     
-    const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor");
+    const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor.js");
     const stats = await getStatsFromProcessor(fire as string, submission as string);
     
     res.json(stats);
@@ -231,7 +238,7 @@ export async function getVoteStats(req: Request, res: Response): Promise<void> {
  */
 export async function getVoteServiceStatus(req: Request, res: Response): Promise<void> {
   try {
-    const { getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { getVoteCountingStatus } = await import("../services/voteProcessor.js");
     const status = getVoteCountingStatus();
     
     res.json(status);
@@ -261,7 +268,7 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
       return;
     }
     
-    const { setVoteCountingEnabled, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { setVoteCountingEnabled, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     setVoteCountingEnabled(enabled);
     const status = getVoteCountingStatus();
@@ -287,7 +294,7 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
  */
 export async function startVoteService(req: Request, res: Response): Promise<void> {
   try {
-    const { startVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { startVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     startVoteCounting();
     const status = getVoteCountingStatus();
@@ -313,7 +320,7 @@ export async function startVoteService(req: Request, res: Response): Promise<voi
  */
 export async function stopVoteService(req: Request, res: Response): Promise<void> {
   try {
-    const { stopVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { stopVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     stopVoteCounting();
     const status = getVoteCountingStatus();

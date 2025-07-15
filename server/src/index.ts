@@ -88,7 +88,7 @@ app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);
   
   // Start vote counting service if enabled
-  import("./services/voteProcessor").then(({ startVoteCounting }) => {
+  import("./services/voteProcessor.js").then(({ startVoteCounting }) => {
     startVoteCounting();
   }).catch(error => {
     console.error("Failed to start vote counting service:", error);
