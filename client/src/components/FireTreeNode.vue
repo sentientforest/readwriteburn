@@ -64,6 +64,8 @@ import type { FireResponse } from "@/types/api";
 import { ChevronRightIcon, DocumentTextIcon, FireIcon, FolderIcon } from "@heroicons/vue/24/outline";
 import { computed, onMounted, ref } from "vue";
 
+import { Fire } from "../types/fire";
+
 interface Props {
   fire: FireResponse;
   currentFireSlug?: string;
@@ -88,7 +90,10 @@ const expanded = ref(false);
 const isCurrentFire = computed(() => props.fire.slug === props.currentFireSlug);
 
 const childFires = computed(() => {
-  return props.allFires.filter((fire) => fire.entryParent === props.fire.slug);
+  // Child fires have entryParent set to their parent's composite key
+  // For top-level fires, the composite key is [slug, slug]
+  const parentCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [props.fire.slug, props.fire.slug]);
+  return props.allFires.filter((fire) => fire.entryParent === parentCompositeKey);
 });
 
 const fireStats = computed(() => {
@@ -121,12 +126,19 @@ onMounted(() => {
 
 function checkIfInPath(targetSlug: string, parentSlug: string, allFires: FireResponse[]): boolean {
   let current = allFires.find((fire) => fire.slug === targetSlug);
+  const parentCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [parentSlug, parentSlug]);
 
   while (current && current.entryParent) {
-    if (current.entryParent === parentSlug) {
+    // Check if current fire's entryParent matches the parent's composite key
+    if (current.entryParent === parentCompositeKey) {
       return true;
     }
-    current = allFires.find((fire) => fire.slug === current!.entryParent);
+    
+    // Find parent fire by matching its composite key with current's entryParent
+    current = allFires.find((fire) => {
+      const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+      return fireCompositeKey === current!.entryParent;
+    });
   }
 
   return false;

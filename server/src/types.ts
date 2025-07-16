@@ -1,4 +1,5 @@
 import {
+  asValidUserRef,
   ChainCallDTO,
   ChainKey,
   ChainObject,
@@ -110,7 +111,7 @@ export interface IFireDto {
 export class FireDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
-  public entryParent: string;
+  public entryParent?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -135,13 +136,13 @@ export class FireDto extends ChainCallDTO {
   @IsUserRef({ each: true })
   public moderators: UserRef[];
 
-  constructor(data: IFireDto) {
+  constructor(data?: IFireDto) {
     super();
     const slug = data?.slug ?? "none";
     this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
     this.slug = slug;
     this.name = data?.name ?? "";
-    this.starter = data?.starter ?? "";
+    this.starter = asValidUserRef(data?.starter ?? "service|null");
     this.description = data?.description ?? "";
     this.authorities = data?.authorities ?? [];
     this.moderators = data?.moderators ?? [];
@@ -270,27 +271,6 @@ export class ContributeSubmissionAuthorizationDto extends ChainCallDTO {
   public fee?: FeeAuthorizationDto;
 }
 
-export class CastVoteDto extends ChainCallDTO {
-  @ValidateNested()
-  @Type(() => VoteDto)
-  vote: VoteDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => FeeVerificationDto)
-  fee?: FeeVerificationDto;
-}
-
-export class CastVoteAuthorizationDto extends ChainCallDTO {
-  @ValidateNested()
-  @Type(() => VoteDto)
-  public vote: VoteDto;
-
-  @IsOptional()
-  @ValidateNested()
-  @Type(() => FeeAuthorizationDto)
-  public fee?: FeeAuthorizationDto;
-}
 
 export class VoteDto extends ChainCallDTO {
   @IsNotEmpty()
@@ -315,6 +295,28 @@ export class VoteDto extends ChainCallDTO {
     this.quantity = data?.quantity;
     this.uniqueKey = data?.uniqueKey || "";
   }
+}
+
+export class CastVoteDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  vote: VoteDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeVerificationDto)
+  fee?: FeeVerificationDto;
+}
+
+export class CastVoteAuthorizationDto extends ChainCallDTO {
+  @ValidateNested()
+  @Type(() => VoteDto)
+  public vote: VoteDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => FeeAuthorizationDto)
+  public fee?: FeeAuthorizationDto;
 }
 
 // Content verification and moderation types

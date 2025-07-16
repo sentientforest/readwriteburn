@@ -210,9 +210,11 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
       submission.name
     ]);
     // Create VoteDto
+    // For votes, entryParent should be the fire's composite key, not just the slug
+    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [subfireSlug, subfireSlug]);
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.entryParent ?? subfireSlug, // Use fire slug as parent
+      entryParent: submission.entryParent ?? fireCompositeKey, // Use fire's composite key as parent
       entry: submissionChainKey,
       quantity: new BigNumber(submission.userVoteQty),
       uniqueKey: randomUniqueKey()

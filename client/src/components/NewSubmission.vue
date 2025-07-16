@@ -168,7 +168,8 @@ async function submitForm() {
     const fireSlug = subfireSlug;
     
     // Construct fire chain key using proper ChainObject method
-    // For top-level fires, entryParent is the fire's own slug (self-reference to avoid empty string)
+    // For top-level fires, entryParent is the fire's own composite key using [slug, slug]
+    // This matches the pattern from FireDto constructor: Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug])
     const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug, fireSlug]);
     const entryParent = replyToId || fireChainKey;
 

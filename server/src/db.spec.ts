@@ -35,13 +35,13 @@ describe("Database Service", () => {
 
   describe("Subfire Management", () => {
     it("should create a subfire with authorities and moderators", async () => {
-      const subfire: FireDto = await createValidDTO(FireDto, {
+      const subfire = new FireDto({
         slug: "test-subfire-create",
         name: "TestSubfire-Create",
         description: "A test subfire",
         starter: asValidUserRef("client|test-starter"),
-        authorities: ["auth1", "auth2"],
-        moderators: ["mod1", "mod2"]
+        authorities: [asValidUserRef("client|auth1"), asValidUserRef("client|auth2")],
+        moderators: [asValidUserRef("client|mod1"), asValidUserRef("client|mod2")]
       });
 
       const result = dbService.createSubfire(subfire);
@@ -54,13 +54,13 @@ describe("Database Service", () => {
     });
 
     it("should get a subfire by id", async () => {
-      const fire: FireDto = await createValidDTO(FireDto, {
+      const fire = new FireDto({
         slug: "test-subfire-get",
         name: "TestSubfire-Get",
         description: "A test subfire",
         starter: asValidUserRef("client|test-starter"),
-        authorities: ["auth1"],
-        moderators: ["mod1"]
+        authorities: [asValidUserRef("client|auth1")],
+        moderators: [asValidUserRef("client|mod1")]
       });
 
       const created: FireDto = dbService.createSubfire(fire);
@@ -77,24 +77,24 @@ describe("Database Service", () => {
     });
 
     it("should update a subfire", async () => {
-      const fire: FireDto = await createValidDTO(FireDto, {
+      const fire = new FireDto({
         slug: "test-subfire-update",
         name: "TestSubfire-Update",
         description: "Original description",
         starter: asValidUserRef("client|test-starter"),
-        authorities: ["auth1"],
-        moderators: ["mod1"]
+        authorities: [asValidUserRef("client|auth1")],
+        moderators: [asValidUserRef("client|mod1")]
       });
 
       const created = dbService.createSubfire(fire);
 
-      const updated: FireDto = await createValidDTO(FireDto, {
+      const updated = new FireDto({
         slug: "test-subfire-update-new",
         name: "TestSubfire-Update-New",
         description: "Updated description",
         starter: asValidUserRef("client|test-starter-updated"),
-        authorities: ["auth2"],
-        moderators: ["mod2"]
+        authorities: [asValidUserRef("client|auth2")],
+        moderators: [asValidUserRef("client|mod2")]
       });
 
       const result = dbService.updateSubfire(created.slug, updated);
@@ -106,13 +106,13 @@ describe("Database Service", () => {
     });
 
     it("should delete a subfire", async () => {
-      const fire: FireDto = await createValidDTO(FireDto, {
+      const fire = new FireDto({
         slug: "test-subfire-delete",
         name: "TestSubfire-Delete",
         description: "A test subfire",
         starter: asValidUserRef("client|test-starter"),
-        authorities: ["auth1"],
-        moderators: ["mod1"]
+        authorities: [asValidUserRef("client|auth1")],
+        moderators: [asValidUserRef("client|mod1")]
       });
 
       const created: FireDto = dbService.createSubfire(fire);
@@ -139,7 +139,7 @@ describe("Database Service", () => {
     let testCounter = 0;
 
     beforeEach(async () => {
-      const dto = await createValidDTO(FireDto, {
+      const dto = new FireDto({
         slug: `TestSubfire-Submission-${++testCounter}`,
         name: `TestSubfire-Submission-${++testCounter}`,
         description: "Test subfire for submissions",

@@ -184,6 +184,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import FireTreeNode from "./FireTreeNode.vue";
+import { Fire } from "../types/fire";
 
 const route = useRoute();
 const router = useRouter();
@@ -214,16 +215,30 @@ const currentFire = computed(() => {
 
 const parentFire = computed(() => {
   if (!currentFire.value?.entryParent) return null;
-  return allFires.value.find((fire) => fire.slug === currentFire.value!.entryParent) || null;
+  
+  // Find parent fire by matching its composite key with current fire's entryParent
+  return allFires.value.find((fire) => {
+    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+    return fireCompositeKey === currentFire.value!.entryParent;
+  }) || null;
 });
 
 const childFires = computed(() => {
   if (!currentFire.value) return [];
-  return allFires.value.filter((fire) => fire.entryParent === currentFire.value!.slug);
+  
+  // Child fires have entryParent set to their parent's composite key
+  const currentFireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [currentFire.value.slug, currentFire.value.slug]);
+  return allFires.value.filter((fire) => fire.entryParent === currentFireCompositeKey);
 });
 
 const rootFires = computed(() => {
-  return allFires.value.filter((fire) => !fire.entryParent || fire.entryParent === "");
+  // Root fires are those where entryParent is their own composite key (self-referencing)
+  return allFires.value.filter((fire) => {
+    if (!fire.entryParent || fire.entryParent === "") return true; // legacy empty entryParent
+    
+    const selfCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+    return fire.entryParent === selfCompositeKey; // self-referencing top-level fire
+  });
 });
 
 const hierarchyPath = computed(() => {
@@ -236,7 +251,16 @@ const hierarchyPath = computed(() => {
   while (current) {
     path.unshift(current);
     if (!current.entryParent) break;
-    current = allFires.value.find((fire) => fire.slug === current!.entryParent) || null;
+    
+    // Check if this is a self-referencing top-level fire
+    const selfCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [current.slug, current.slug]);
+    if (current.entryParent === selfCompositeKey) break; // reached root
+    
+    // Find parent fire by matching its composite key with current's entryParent
+    current = allFires.value.find((fire) => {
+      const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+      return fireCompositeKey === current!.entryParent;
+    }) || null;
   }
 
   return path;
