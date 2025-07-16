@@ -115,15 +115,15 @@
 </template>
 
 <script setup lang="ts">
-import type { MetamaskConnectClient } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
-import { computed, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 import { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
 import { useUserStore } from "../stores/user";
 import type { SubmissionResponse } from "../types/api";
 import { CastVoteAuthorizationDto, VoteDto } from "../types/fire";
+import { randomUniqueKey } from "../utils";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import FireHierarchy from "./FireHierarchy.vue";
 import ThreadedSubmission from "./ThreadedSubmission.vue";
@@ -135,10 +135,9 @@ interface ExtendedSubmissionResDto extends SubmissionResponse {
 const apiBase = import.meta.env.VITE_PROJECT_API;
 const burnCostVote = ref(new BigNumber(import.meta.env.VITE_BURN_COST_VOTE ?? 1));
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: MetamaskConnectClient;
-}>();
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const route = useRoute();
 const subfireSlug = route.params.slug as string;
@@ -160,11 +159,6 @@ const topLevelSubmissions = computed(() => {
 const totalReplies = computed(() => {
   return submissions.value.filter((sub) => sub.entryParent).length;
 });
-
-// Helper function for generating unique keys
-function randomUniqueKey(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
 
 async function fetchSubmissions() {
   loading.value = true;
@@ -193,7 +187,7 @@ async function fetchSubmissions() {
 }
 
 async function submitVote(submission: ExtendedSubmissionResDto) {
-  if (!submission.userVoteQty || isProcessing.value || !props.walletAddress || !userStore.metamaskClient) return;
+  if (!submission.userVoteQty || isProcessing.value || !userStore.address) return;
 
   isProcessing.value = true;
   submitError.value = "";
@@ -201,8 +195,11 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
 
   try {
     // Create ReadWriteBurn client
-    const rwbClient = new ReadWriteBurnConnectClient(props.metamaskClient.provider, props.metamaskClient.galaChainProviderOptions);
+    const rwbClient = metamaskClient.value;
 
+    if (!rwbClient) {
+      throw new Error(`No client software connected`);
+    }
     // For voting, we need the submission's chain key as the entry
     // Since we don't have direct access to submission chain keys in the list view,
     // we'll use a placeholder pattern that the server can resolve

@@ -295,8 +295,6 @@ async function connectWallet() {
 }
 
 onMounted(async () => {
-  // Initialize MetaMask support check
-  await userStore.initializeMetamask();
 
   // Set up keyboard navigation for mobile menu
   const mobileMenuElement = document.getElementById(mobileMenuId);

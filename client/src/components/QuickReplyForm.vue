@@ -100,7 +100,7 @@ import {
   PaperAirplaneIcon,
   ShieldCheckIcon
 } from "@heroicons/vue/24/outline";
-import { computed, ref, watch } from "vue";
+import { computed, getCurrentInstance, ref, watch } from "vue";
 
 interface Props {
   parentSubmissionId: string;
@@ -155,7 +155,7 @@ async function updateLiveHash() {
 }
 
 async function handleSubmit() {
-  if (!userStore.isAuthenticated || !isFormValid.value) {
+  if (!userStore.isAuthenticated || !isFormValid.value || !userStore.metamaskClient) {
     error.value = "Please fill in all required fields and connect your wallet";
     return;
   }
@@ -164,16 +164,48 @@ async function handleSubmit() {
   error.value = "";
 
   try {
-    const submissionData = {
-      name: formData.value.name.trim(),
-      fire: props.fireSlug,
-      description: formData.value.description.trim(),
-      url: formData.value.url.trim() || undefined,
-      entryParent: props.parentSubmissionId, // This makes it a reply
-      contributor: userStore.address
-    };
+    // Import the required types
+    const { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } = await import("../types/fire");
+    const { randomUniqueKey } = await import("../utils");
 
-    await submissionsStore.createSubmission(submissionData);
+    // Construct fire chain key using proper ChainObject method
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
+
+    // Create SubmissionDto
+    const submissionDto = new SubmissionDto({
+      name: formData.value.name.trim(),
+      description: formData.value.description.trim() || "",
+      url: formData.value.url.trim() || "",
+      fire: fireChainKey,
+      entryParent: props.parentSubmissionId, // This makes it a reply to the submission
+      contributor: userStore.address,
+      uniqueKey: randomUniqueKey()
+    });
+
+    console.log("Signing reply submission:", submissionDto);
+
+    // Sign the submission DTO
+    const signedSubmission = await userStore.metamaskClient.signSubmission(submissionDto);
+
+    // Create authorization DTO (no fee for now)
+    const authDto = new ContributeSubmissionAuthorizationDto({
+      submission: signedSubmission
+    });
+
+    console.log("Sending reply authorization:", authDto);
+
+    const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/api/submissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(authDto)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to create reply");
+    }
 
     // Reset form
     formData.value = {

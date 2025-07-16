@@ -170,6 +170,7 @@ export const useUserStore = defineStore("user", () => {
     // Getters
     isAuthenticated,
     shortAddress,
+    metamaskClient,
     // Actions
     connectWallet,
     checkRegistration,

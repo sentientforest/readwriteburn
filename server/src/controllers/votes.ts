@@ -14,33 +14,36 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     const { entryType, fire, submission, bookmark, limit } = req.query;
 
     // Build the DTO for chaincode call
-    const dto = new FetchVotesDto();
-    if (entryType) dto.entryType = entryType as string;
-    if (fire) dto.fire = fire as string;
-    if (submission) dto.submission = submission as string;
-    if (bookmark) dto.bookmark = bookmark as string;
-    if (limit) dto.limit = parseInt(limit as string, 10);
-
-    // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/FetchVotes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(dto)
+    const dto = await createValidDTO(FetchVotesDto, {
+      entryType: entryType as string || undefined,
+      fire: fire as string || undefined,
+      submission: submission as string || undefined,
+      bookmark: bookmark as string || undefined,
+      limit: limit ? parseInt(limit as string, 10) : undefined
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Chaincode error:", errorText);
-      res.status(response.status).json({
+    console.log("Fetching votes with params:", JSON.stringify(dto, null, 2));
+
+    // Use the chaincode utility function
+    const chainResponse = await evaluateChaincode<FetchVotesResDto>("FetchVotes", dto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode fetch votes failed:", chainResponse.error);
+      res.status(400).json({
         error: "Failed to fetch votes from chaincode",
-        details: errorText
+        details: chainResponse.error
       });
       return;
     }
 
-    const result: FetchVotesResDto = await response.json();
+    const result = chainResponse.data;
+    
+    if (!result) {
+      res.status(500).json({
+        error: "No data returned from chaincode"
+      });
+      return;
+    }
     
     // Transform the chaincode response to match client expectations
     const transformedResponse = {
@@ -98,27 +101,27 @@ export async function countVotes(req: Request, res: Response): Promise<void> {
     }
 
     // Build the DTO for chaincode call
-    const dto = new CountVotesDto();
-    if (fire) dto.fire = fire;
-    if (submission) dto.submission = submission;
-    dto.votes = votes;
-    dto.uniqueKey = uniqueKey;
-
-    // Make proxy call to chaincode
-    const response = await fetch("http://localhost:4000/api/product/ReadWriteBurn/CountVotes", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(dto)
+    const dto = await createValidDTO(CountVotesDto, {
+      fire: fire || undefined,
+      submission: submission || undefined,
+      votes: votes,
+      uniqueKey: uniqueKey
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Chaincode error:", errorText);
-      res.status(response.status).json({
+    console.log("Counting votes with params:", JSON.stringify(dto, null, 2));
+
+    // Sign the DTO with admin key since this is a server operation
+    const serverAdminKey = getAdminPrivateKey();
+    const signedDto = dto.signed(serverAdminKey);
+
+    // Use the chaincode utility function
+    const chainResponse = await submitToChaincode("CountVotes", signedDto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode count votes failed:", chainResponse.error);
+      res.status(400).json({
         error: "Failed to count votes on chaincode",
-        details: errorText
+        details: chainResponse.error
       });
       return;
     }
@@ -180,7 +183,7 @@ export async function processAllVotes(req: Request, res: Response): Promise<void
   try {
     const { fire, submission } = req.body;
     
-    const { processAllVotes: processVotes } = await import("../services/voteProcessor");
+    const { processAllVotes: processVotes } = await import("../services/voteProcessor.js");
     
     const result = await processVotes(fire, submission);
     
@@ -215,7 +218,7 @@ export async function getVoteStats(req: Request, res: Response): Promise<void> {
   try {
     const { fire, submission } = req.query;
     
-    const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor");
+    const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor.js");
     const stats = await getStatsFromProcessor(fire as string, submission as string);
     
     res.json(stats);
@@ -235,7 +238,7 @@ export async function getVoteStats(req: Request, res: Response): Promise<void> {
  */
 export async function getVoteServiceStatus(req: Request, res: Response): Promise<void> {
   try {
-    const { getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { getVoteCountingStatus } = await import("../services/voteProcessor.js");
     const status = getVoteCountingStatus();
     
     res.json(status);
@@ -265,7 +268,7 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
       return;
     }
     
-    const { setVoteCountingEnabled, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { setVoteCountingEnabled, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     setVoteCountingEnabled(enabled);
     const status = getVoteCountingStatus();
@@ -291,7 +294,7 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
  */
 export async function startVoteService(req: Request, res: Response): Promise<void> {
   try {
-    const { startVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { startVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     startVoteCounting();
     const status = getVoteCountingStatus();
@@ -317,7 +320,7 @@ export async function startVoteService(req: Request, res: Response): Promise<voi
  */
 export async function stopVoteService(req: Request, res: Response): Promise<void> {
   try {
-    const { stopVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor");
+    const { stopVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
     
     stopVoteCounting();
     const status = getVoteCountingStatus();

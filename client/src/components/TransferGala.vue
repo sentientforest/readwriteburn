@@ -34,13 +34,14 @@
 </template>
 
 <script setup lang="ts">
-import type { MetamaskConnectClient } from "@gala-chain/connect";
-import { computed, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
+import { useUserStore } from "../stores/user";
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: MetamaskConnectClient;
-}>();
+const userStore = useUserStore();
+
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const recipientAddress = ref("");
 const transferAmount = ref<number | null>(null);
@@ -54,12 +55,12 @@ const isValidTransfer = computed(() => {
     (recipientAddress.value.startsWith("client|") || recipientAddress.value.startsWith("eth|")) &&
     transferAmount.value !== null &&
     transferAmount.value > 0 &&
-    recipientAddress.value.toLowerCase() !== props.walletAddress.toLowerCase()
+    recipientAddress.value.toLowerCase() !== userStore.address?.toLowerCase()
   );
 });
 
 async function transferTokens() {
-  if (!isValidTransfer.value || !props.walletAddress) return;
+  if (!isValidTransfer.value || !userStore.address || !metamaskClient.value) return;
 
   error.value = "";
   success.value = "";
@@ -67,7 +68,7 @@ async function transferTokens() {
 
   try {
     const transferTokensDto = {
-      from: props.walletAddress,
+      from: userStore.address,
       to: recipientAddress.value,
       quantity: transferAmount.value?.toString(),
       tokenInstance: {
@@ -80,7 +81,7 @@ async function transferTokens() {
       uniqueKey: `january-2025-event-${import.meta.env.VITE_PROJECT_ID}-${Date.now()}`
     };
 
-    const signedTransferDto = await props.metamaskClient.sign("TransferTokens", transferTokensDto);
+    const signedTransferDto = await metamaskClient.value.sign("TransferTokens", transferTokensDto);
 
     const response = await fetch(
       `${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/TransferToken`,

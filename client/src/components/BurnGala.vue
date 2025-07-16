@@ -27,13 +27,14 @@
 </template>
 
 <script setup lang="ts">
-import type { MetamaskConnectClient } from "@gala-chain/connect";
-import { computed, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
+import { useUserStore } from "../stores/user";
 
-const props = defineProps<{
-  walletAddress: string;
-  metamaskClient: MetamaskConnectClient;
-}>();
+const userStore = useUserStore();
+
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const burnAmount = ref<number | null>(null);
 const isProcessing = ref(false);
@@ -45,7 +46,7 @@ const isValidAmount = computed(() => {
 });
 
 async function burnTokens() {
-  if (!isValidAmount.value || !props.walletAddress) return;
+  if (!isValidAmount.value || !userStore.address || !metamaskClient.value) return;
 
   error.value = "";
   success.value = "";
@@ -53,7 +54,7 @@ async function burnTokens() {
 
   try {
     const burnTokensDto = {
-      owner: props.walletAddress,
+      owner: userStore.address,
       tokenInstances: [
         {
           quantity: burnAmount.value?.toString(),
@@ -69,7 +70,7 @@ async function burnTokens() {
       uniqueKey: `january-2025-event-${import.meta.env.VITE_PROJECT_ID}-${Date.now()}`
     };
 
-    const signedBurnDto = await props.metamaskClient.sign("BurnTokens", burnTokensDto);
+    const signedBurnDto = await metamaskClient.value.sign("BurnTokens", burnTokensDto);
 
     const response = await fetch(
       `${import.meta.env.VITE_PROJECT_API}/api/product/GalaChainToken/BurnTokens`,

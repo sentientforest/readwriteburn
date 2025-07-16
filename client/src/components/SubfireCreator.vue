@@ -222,7 +222,7 @@ import {
   InformationCircleIcon
 } from "@heroicons/vue/24/outline";
 import BigNumber from "bignumber.js";
-import { computed, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import { randomUniqueKey } from "../utils";
@@ -231,6 +231,10 @@ const route = useRoute();
 const router = useRouter();
 const firesStore = useFiresStore();
 const userStore = useUserStore();
+
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 // Get parent fire slug from route
 const parentFireSlug = route.params.slug as string;
@@ -280,7 +284,7 @@ function formatFee(amount: BigNumber): string {
 }
 
 async function handleSubmit() {
-  if (!userStore.isAuthenticated || !userStore.metamaskClient) {
+  if (!userStore.isAuthenticated || !metamaskClient.value) {
     error.value = "Please connect your wallet first";
     return;
   }
@@ -302,7 +306,7 @@ async function handleSubmit() {
     };
 
     // Create the subfire using fires store
-    const result = await firesStore.createFire(subfireDto, userStore.metamaskClient);
+    const result = await firesStore.createFire(subfireDto, metamaskClient.value);
 
     console.log("Subfire created successfully:", result);
 

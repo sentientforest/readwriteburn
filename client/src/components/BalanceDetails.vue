@@ -11,16 +11,15 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
+import { useUserStore } from "../stores/user";
 
-const props = defineProps<{
-  walletAddress: string;
-}>();
+const userStore = useUserStore();
 
 const availableBalance = ref(0);
 const lockedBalance = ref(0);
 
 async function fetchBalance() {
-  if (!props.walletAddress) return;
+  if (!userStore.address) return;
 
   try {
     const response = await fetch(
@@ -29,7 +28,7 @@ async function fetchBalance() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          owner: props.walletAddress,
+          owner: userStore.address,
           collection: "GALA",
           category: "Unit",
           type: "none",
@@ -59,7 +58,7 @@ function formatBalance(balance: number): string {
 
 const refreshBalance = () => fetchBalance();
 
-watch(() => props.walletAddress, fetchBalance);
+watch(() => userStore.address, fetchBalance);
 onMounted(fetchBalance);
 </script>
 
