@@ -250,7 +250,7 @@ async function handleSubmit() {
     // Create FireDto with all required fields using proper DTO class
     // For top-level fires, entryParent should reference the fire's own ID to avoid empty string issues
     // Since we can't have a perfect circular reference during creation, we'll use the slug as a self-reference
-    const entryParent = formData.value.entryParent || formData.value.slug;
+    const entryParent = formData.value.entryParent || undefined;
     
     const fireDto = new FireDto({
       entryParent: entryParent,
