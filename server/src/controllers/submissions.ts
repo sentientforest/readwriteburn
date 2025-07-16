@@ -118,14 +118,33 @@ export async function readSubmission(req: Request, res: Response, next: NextFunc
 
 export async function upvoteSubmission(req: Request, res: Response, next: NextFunction) {
   try {
+    console.log("Raw vote request body:", JSON.stringify(req.body, null, 2));
+
     // 1. Parse authorization DTO from client
     const authDto: CastVoteAuthorizationDto = deserialize(CastVoteAuthorizationDto, req.body);
+
+    console.log("Deserialized authDto:", JSON.stringify(authDto, null, 2));
+
+    // Check if vote exists and has required fields
+    if (!authDto.vote) {
+      return res.status(400).json({
+        error: "Missing vote data in authorization DTO"
+      });
+    }
+
+    if (!authDto.vote.entryType) {
+      return res.status(400).json({
+        error: "VoteDto missing entryType field",
+        receivedVote: JSON.stringify(authDto.vote, null, 2)
+      });
+    }
 
     console.log(
       "Vote casting request:",
       JSON.stringify(
         {
           entry: authDto.vote.entry,
+          entryType: authDto.vote.entryType,
           entryParent: authDto.vote.entryParent,
           quantity: authDto.vote.quantity.toString(),
           hasFee: !!authDto.fee
@@ -146,6 +165,7 @@ export async function upvoteSubmission(req: Request, res: Response, next: NextFu
 
     // 4. Submit to chaincode
     console.log("Submitting vote to chaincode...");
+    console.log("Vote DTO being submitted:", JSON.stringify(signedDto, null, 2));
     const chainResponse = await submitToChaincode("CastVote", signedDto);
 
     if (!chainResponse.success) {

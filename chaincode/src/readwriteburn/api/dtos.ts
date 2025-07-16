@@ -41,7 +41,7 @@ export interface IFireDto {
 }
 
 export class FireDto extends ChainCallDTO {
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
   public entryParent: string;
 
@@ -70,8 +70,9 @@ export class FireDto extends ChainCallDTO {
 
   constructor(data: IFireDto) {
     super();
-    this.entryParent = data?.entryParent ?? "";
-    this.slug = data?.slug ?? "";
+    const slug = data?.slug ?? "none";
+    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
+    this.slug = slug;
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
     this.description = data?.description ?? "";

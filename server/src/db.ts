@@ -93,15 +93,16 @@ export const dbService = {
     const slug = fireData.slug;
     const name = fireData.name;
     const description = fireData.description || "";
+    const entryParent = fireData.entryParent || "";
     const authorities = fireData.authorities || [];
     const moderators = fireData.moderators || [];
     const chainKey = fireData.getCompositeKey ? fireData.getCompositeKey() : null;
 
-    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators, chainKey });
+    console.log("Creating subfire in database:", { slug, name, description, entryParent, authorities, moderators, chainKey });
 
     const insertSubfire = getDb().prepare(`
-      INSERT OR REPLACE INTO subfires (slug, name, description, chain_key)
-      VALUES (?, ?, ?, ?)
+      INSERT OR REPLACE INTO subfires (slug, name, description, entry_parent, chain_key)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     const deleteRoles = getDb().prepare(`
@@ -114,7 +115,7 @@ export const dbService = {
     `);
 
     getDb().transaction(() => {
-      const result = insertSubfire.run(slug, name, description, chainKey);
+      const result = insertSubfire.run(slug, name, description, entryParent, chainKey);
       console.log("Subfire insert result:", { changes: result.changes, lastInsertRowid: result.lastInsertRowid });
 
       // Clear existing roles and re-add

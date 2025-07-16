@@ -90,6 +90,27 @@ const migrations: Migration[] = [
         -- Note: We don't remove columns in SQLite for safety
       `);
     }
+  },
+  {
+    version: 3,
+    description: "Add entryParent column to fires table for hierarchical organization",
+    up: (db: Database.Database) => {
+      db.exec(`
+        -- Add entryParent field to subfires table for hierarchical fire organization
+        ALTER TABLE subfires ADD COLUMN entry_parent TEXT;
+
+        -- Create index for hierarchical lookups
+        CREATE INDEX IF NOT EXISTS idx_subfires_entry_parent ON subfires(entry_parent);
+      `);
+    },
+    down: (db: Database.Database) => {
+      db.exec(`
+        -- Remove index
+        DROP INDEX IF EXISTS idx_subfires_entry_parent;
+        
+        -- Note: We don't remove the column in SQLite for safety
+      `);
+    }
   }
 ];
 

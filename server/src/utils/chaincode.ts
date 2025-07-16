@@ -19,7 +19,7 @@ export async function submitToChaincode<T>(
   method: string,
   dto: any,
   contract = "ReadWriteBurn",
-  channel = "product"
+  channel = process.env.PRODUCT_CHANNEL ?? "product"
 ): Promise<ChainResponse<T>> {
   const apiBase = process.env.CHAIN_API;
 
@@ -90,7 +90,7 @@ export async function evaluateChaincode<T>(
   method: string,
   dto: any,
   contract = "ReadWriteBurn",
-  channel = "product"
+  channel = process.env.PRODUCT_CHANNEL ?? "product"
 ): Promise<ChainResponse<T>> {
   const apiBase = process.env.CHAIN_API;
 

@@ -225,6 +225,7 @@ import BigNumber from "bignumber.js";
 import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+import { Fire } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const route = useRoute();
@@ -294,8 +295,11 @@ async function handleSubmit() {
 
   try {
     // Create subfire DTO
+    // For subfires, entryParent should be the parent fire's composite key
+    // The parent fire's composite key uses [parentSlug, parentSlug] pattern for top-level fires
+    const parentFireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [parentFireSlug, parentFireSlug]);
     const subfireDto = {
-      entryParent: parentFireSlug, // This is the key for hierarchy
+      entryParent: parentFireCompositeKey, // Use parent fire's composite key for hierarchy
       slug: formData.value.slug,
       name: formData.value.name,
       starter: asValidUserRef(userStore.address),
