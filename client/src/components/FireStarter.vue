@@ -144,7 +144,7 @@ import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { useUserStore } from "../stores";
-import { FireDto, FireStarterAuthorizationDto, FireStarterDto, IFireStarterDto } from "../types/fire";
+import { Fire, FireDto, FireStarterAuthorizationDto, FireStarterDto, IFireStarterDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const router = useRouter();
@@ -248,8 +248,12 @@ async function handleSubmit() {
     console.log("Creating fire with wallet address:", userStore.address);
 
     // Create FireDto with all required fields using proper DTO class
+    // For top-level fires, entryParent should reference the fire's own ID to avoid empty string issues
+    // Since we can't have a perfect circular reference during creation, we'll use the slug as a self-reference
+    const entryParent = formData.value.entryParent || formData.value.slug;
+    
     const fireDto = new FireDto({
-      entryParent: formData.value.entryParent || "",
+      entryParent: entryParent,
       slug: formData.value.slug,
       name: formData.value.name,
       starter: asValidUserRef(userStore.address),

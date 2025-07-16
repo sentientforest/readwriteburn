@@ -166,10 +166,11 @@ async function submitForm() {
 
   try {
     const fireSlug = subfireSlug;
-    const entryParent = replyToId || "";
-
+    
     // Construct fire chain key using proper ChainObject method
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [entryParent, fireSlug]);
+    // For top-level fires, entryParent is the fire's own slug (self-reference to avoid empty string)
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug, fireSlug]);
+    const entryParent = replyToId || fireChainKey;
 
     // Create SubmissionDto
     const submissionDto = new SubmissionDto({
