@@ -48,7 +48,6 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 app.get("/api/identities/new-random-user", registerRandomEthUser);
 app.post("/api/identities/register", registerEthUser);
 app.post("/identities/CreateHeadlessWallet", registerEthUser);
-app.post("/api/:channel/:contract/:method", proxy);
 
 // Subfire routes
 app.post("/api/fires", fireStarter);
@@ -83,6 +82,9 @@ app.get("/api/votes/service/status", getVoteServiceStatus);
 app.post("/api/votes/service/toggle", toggleVoteService);
 app.post("/api/votes/service/start", startVoteService);
 app.post("/api/votes/service/stop", stopVoteService);
+
+// Generic proxy route (must be last to avoid conflicts)
+app.post("/api/:channel/:contract/:method", proxy);
 
 app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);

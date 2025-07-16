@@ -129,8 +129,11 @@
 import { useUserStore } from "@/stores";
 import type { SubmissionResponse } from "@/types/api";
 import { ChevronRightIcon } from "@heroicons/vue/24/outline";
+import BigNumber from "bignumber.js";
 import { computed, ref } from "vue";
 
+import { CastVoteAuthorizationDto, Fire, Submission, VoteDto } from "../types/fire";
+import { randomUniqueKey } from "../utils";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import QuickReplyForm from "./QuickReplyForm.vue";
 
@@ -172,23 +175,53 @@ function toggleReplies() {
 }
 
 async function submitVote() {
-  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated) return;
+  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated || !userStore.metamaskClient)
+    return;
 
   isVoting.value = true;
   try {
+    // Construct fire chain key
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
+    const entryParent = props.submission.entryParent ?? fireChainKey;
+    const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      fireChainKey,
+      entryParent,
+      props.submission.id,
+      props.submission.name
+    ]);
+    // Create VoteDto
+    const voteDto = new VoteDto({
+      entryType: Submission.INDEX_KEY, // Voting on a submission
+      entryParent: entryParent, // The fire this submission belongs to
+      entry: submissionChainKey, // The submission being voted on
+      quantity: new BigNumber(voteQuantity.value), // Use the raw vote amount
+      uniqueKey: randomUniqueKey()
+    });
+
+    console.log("Signing vote:", voteDto);
+
+    // Sign the vote DTO
+    const signedVote = await userStore.metamaskClient.signVote(voteDto);
+
+    // Create authorization DTO (no fee for now)
+    const authDto = new CastVoteAuthorizationDto({
+      vote: signedVote
+    });
+
+    console.log("Sending vote authorization:", authDto);
+
     const apiBase = import.meta.env.VITE_PROJECT_API;
     const response = await fetch(`${apiBase}/api/submissions/${props.submission.id}/vote`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        amount: voteQuantity.value
-      })
+      body: JSON.stringify(authDto)
     });
 
     if (!response.ok) {
-      throw new Error("Failed to submit vote");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to submit vote");
     }
 
     voteQuantity.value = null;

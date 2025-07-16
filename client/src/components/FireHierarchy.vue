@@ -230,7 +230,7 @@ const hierarchyPath = computed(() => {
   if (!currentFire.value) return [];
 
   const path: FireResponse[] = [];
-  let current = currentFire.value;
+  let current: FireResponse | null = currentFire.value;
 
   // Build path from current fire up to root
   while (current) {

@@ -211,13 +211,11 @@ export class VoteDto extends ChainCallDTO {
 
   constructor(data?: any) {
     super();
-    if (data) {
-      this.entryType = data.entryType;
-      this.entryParent = data.entryParent;
-      this.entry = data.entry;
-      this.quantity = data.quantity;
-      this.uniqueKey = data.uniqueKey;
-    }
+    this.entryType = data?.entryType || "";
+    this.entryParent = data?.entryParent || "";
+    this.entry = data?.entry || "";
+    this.quantity = data?.quantity;
+    this.uniqueKey = data?.uniqueKey || "";
   }
 }
 

@@ -66,7 +66,7 @@
 
               <span class="vote-submit">
                 <button
-                  :disabled="!submission.userVoteQty || isProcessing || !props.walletAddress"
+                  :disabled="!submission.userVoteQty || isProcessing || !userStore.address"
                   @click="submitVote(submission)"
                 >
                   {{ isProcessing ? "Processing..." : "Burn & Vote" }}
@@ -122,7 +122,7 @@ import { useRoute } from "vue-router";
 import { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
 import { useUserStore } from "../stores/user";
 import type { SubmissionResponse } from "../types/api";
-import { CastVoteAuthorizationDto, VoteDto } from "../types/fire";
+import { CastVoteAuthorizationDto, Fire, Submission, VoteDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import FireHierarchy from "./FireHierarchy.vue";
@@ -200,17 +200,20 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
     if (!rwbClient) {
       throw new Error(`No client software connected`);
     }
-    // For voting, we need the submission's chain key as the entry
-    // Since we don't have direct access to submission chain keys in the list view,
-    // we'll use a placeholder pattern that the server can resolve
-    // This is a simplification - in a production app, you might store chain keys in the DB
-    const submissionEntry = `RWB_SUBMISSION|${submission.id}`;
 
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", subfireSlug]);
+    const entryParent = submission.entryParent ?? fireChainKey;
+    const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      fireChainKey,
+      entryParent,
+      submission.id,
+      submission.name
+    ]);
     // Create VoteDto
     const voteDto = new VoteDto({
-      entryType: "RWB_SUBMISSION",
-      entryParent: subfireSlug, // Use fire slug as parent
-      entry: submissionEntry,
+      entryType: Submission.INDEX_KEY,
+      entryParent: submission.entryParent ?? subfireSlug, // Use fire slug as parent
+      entry: submissionChainKey,
       quantity: new BigNumber(submission.userVoteQty),
       uniqueKey: randomUniqueKey()
     });

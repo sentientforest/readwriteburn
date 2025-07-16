@@ -356,3 +356,78 @@ export class Fire extends ChainObject {
     this.description = description;
   }
 }
+
+export class Submission extends ChainObject {
+  /** Index key for chain object type identification */
+  @Exclude()
+  static INDEX_KEY = "RWBS";
+
+  /** Composite key of the fire this submission belongs to */
+  @ChainKey({ position: 0 })
+  @IsNotEmpty()
+  @IsString()
+  fire: string;
+
+  /** Parent entry for hierarchical organization (fire key for top-level, submission key for replies) */
+  @ChainKey({ position: 1 })
+  @IsNotEmpty()
+  @IsString()
+  entryParent: string;
+
+  /** Unique identifier for this submission (typically inverse timestamp) */
+  @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  /** Display title of the submission */
+  @ChainKey({ position: 3 })
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  /** Optional identifier of the user who contributed this submission */
+  @IsOptional()
+  @IsString()
+  contributor?: string;
+
+  /** Optional description or body text of the submission */
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  /** Optional URL if this submission links to external content */
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  /**
+   * Create a new Submission instance
+   *
+   * @param fire - Composite key of the fire this submission belongs to
+   * @param entryParent - Parent entry key for hierarchical organization
+   * @param id - Unique identifier for this submission
+   * @param name - Display title of the submission
+   * @param contributor - Optional user identifier of the contributor
+   * @param description - Optional description or body text
+   * @param url - Optional URL for external content
+   */
+  constructor(
+    fire: string,
+    entryParent: string,
+    id: string,
+    name: string,
+    contributor?: string | undefined,
+    description?: string | undefined,
+    url?: string | undefined
+  ) {
+    super();
+    this.fire = fire;
+    this.entryParent = entryParent;
+    this.id = id;
+    this.name = name;
+    this.contributor = contributor;
+    this.description = description;
+    this.url = url;
+  }
+}
