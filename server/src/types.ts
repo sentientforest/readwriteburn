@@ -1,14 +1,18 @@
 import {
   ChainCallDTO,
+  ChainKey,
+  ChainObject,
   FeeAuthorization,
   FeeAuthorizationDto,
   FeeVerificationDto,
+  IsUserAlias,
   IsUserRef,
   SubmitCallDTO,
+  UserAlias,
   UserRef
 } from "@gala-chain/api";
-import { Type } from "class-transformer";
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
+import { Exclude, Type } from "class-transformer";
+import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export interface AssociativeId {
   id: string;
@@ -28,7 +32,86 @@ export interface TokenInstanceKey {
   instance: string;
 }
 
+/**
+ * Fire represents a community topic or discussion thread
+ *
+ * Fires are the core organizational unit of the ReadWriteBurn platform,
+ * serving as containers for related submissions and discussions.
+ * Each fire has a unique slug identifier and can have multiple authorities
+ * and moderators for content governance.
+ *
+ * @extends ChainObject
+ */
+export class Fire extends ChainObject {
+  /** Index key for chain object type identification */
+  @Exclude()
+  static INDEX_KEY = "RWBF";
+
+  /** Parent fire identifier for hierarchical organization */
+  @ChainKey({ position: 0 })
+  @IsString()
+  public entryParent: string;
+
+  /** Unique slug identifier for the fire */
+  @ChainKey({ position: 1 })
+  @IsString()
+  public slug: string;
+
+  /** Display name of the fire */
+  @IsNotEmpty()
+  @IsString()
+  public name: string;
+
+  /** Optional description of the fire's purpose and rules */
+  @IsOptional()
+  @IsString()
+  public description?: string;
+
+  /** User alias of the fire creator */
+  @IsUserAlias()
+  public starter: UserAlias;
+
+  /**
+   * Create a new Fire instance
+   *
+   * @param entryParent - Parent fire identifier (empty string for top-level fires)
+   * @param slug - Unique slug identifier
+   * @param name - Display name
+   * @param starter - User reference of the creator
+   * @param description - Optional description
+   */
+  constructor(
+    entryParent: string,
+    slug: string,
+    name: string,
+    starter: UserAlias,
+    description: string | undefined
+  ) {
+    super();
+    this.entryParent = entryParent ?? "";
+    this.slug = slug;
+    this.name = name;
+    this.starter = starter;
+    this.description = description;
+  }
+}
+
+export interface IFireDto {
+  entryParent?: string | undefined;
+  slug: string;
+  name: string;
+  starter: UserRef;
+  description?: string;
+  authorities?: UserRef[];
+  moderators?: UserRef[];
+  uniqueKey?: string;
+}
+
 export class FireDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  public entryParent: string;
+
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -44,11 +127,26 @@ export class FireDto extends ChainCallDTO {
   @IsString()
   public description?: string;
 
-  @IsString({ each: true })
-  public authorities: string[];
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
+  public authorities: UserRef[];
 
-  @IsString({ each: true })
-  public moderators: string[];
+  @ArrayMinSize(0)
+  @IsUserRef({ each: true })
+  public moderators: UserRef[];
+
+  constructor(data: IFireDto) {
+    super();
+    const slug = data?.slug ?? "none";
+    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
+    this.slug = slug;
+    this.name = data?.name ?? "";
+    this.starter = data?.starter ?? "";
+    this.description = data?.description ?? "";
+    this.authorities = data?.authorities ?? [];
+    this.moderators = data?.moderators ?? [];
+    this.uniqueKey = data?.uniqueKey ?? "";
+  }
 }
 
 export class FireStarterAuthorizationDto extends ChainCallDTO {
