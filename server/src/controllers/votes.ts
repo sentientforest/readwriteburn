@@ -15,7 +15,7 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
 
     // Build the DTO for chaincode call
     const dto = await createValidDTO(FetchVotesDto, {
-      entryType: entryType as string || undefined,
+      entryType: (entryType as string) || "RWBS", // Default to Submission.INDEX_KEY
       fire: fire as string || undefined,
       submission: submission as string || undefined,
       bookmark: bookmark as string || undefined,
