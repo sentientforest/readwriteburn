@@ -97,6 +97,12 @@ export class Fire extends ChainObject {
   }
 }
 
+export class Submission extends ChainObject {
+  /** Index key for chain object type identification */
+  @Exclude()
+  static INDEX_KEY = "RWBS";
+}
+
 export interface IFireDto {
   entryParent?: string | undefined;
   slug: string;
@@ -289,7 +295,9 @@ export class VoteDto extends ChainCallDTO {
 
   constructor(data?: any) {
     super();
-    this.entryType = data?.entryType || "";
+    // entryType should always be the INDEX_KEY of the class being voted on
+    // For now, default to Submission.INDEX_KEY as that's the most common case
+    this.entryType = data?.entryType || Submission.INDEX_KEY;
     this.entryParent = data?.entryParent || "";
     this.entry = data?.entry || "";
     this.quantity = data?.quantity;
@@ -370,9 +378,8 @@ export interface ModerationLogDto {
 
 // Vote-related DTOs for chaincode integration
 export class FetchVotesDto extends ChainCallDTO {
-  @IsOptional()
   @IsString()
-  public entryType?: string;
+  public entryType: string;
 
   @IsOptional()
   @IsString()

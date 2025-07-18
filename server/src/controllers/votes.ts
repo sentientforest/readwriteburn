@@ -13,9 +13,23 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
   try {
     const { entryType, fire, submission, bookmark, limit } = req.query;
 
+    // Map user-friendly entryType values to INDEX_KEY values
+    let mappedEntryType = "RWBS"; // Default to Submission.INDEX_KEY
+    if (entryType) {
+      const entryTypeStr = entryType as string;
+      if (entryTypeStr === "fire") {
+        mappedEntryType = "RWBF"; // Fire.INDEX_KEY
+      } else if (entryTypeStr === "submission") {
+        mappedEntryType = "RWBS"; // Submission.INDEX_KEY
+      } else if (entryTypeStr === "RWBF" || entryTypeStr === "RWBS") {
+        // Allow direct INDEX_KEY values
+        mappedEntryType = entryTypeStr;
+      }
+    }
+
     // Build the DTO for chaincode call
     const dto = await createValidDTO(FetchVotesDto, {
-      entryType: entryType as string || undefined,
+      entryType: mappedEntryType,
       fire: fire as string || undefined,
       submission: submission as string || undefined,
       bookmark: bookmark as string || undefined,

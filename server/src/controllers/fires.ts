@@ -13,7 +13,15 @@ import { NextFunction, Request, Response } from "express";
 import assert from "node:assert";
 
 import { dbService } from "../db";
-import { FetchFiresDto, FetchFiresResDto, FireDto, FireStarterAuthorizationDto, FireStarterDto } from "../types";
+import { 
+  CastVoteAuthorizationDto, 
+  CastVoteDto, 
+  FetchFiresDto, 
+  FetchFiresResDto, 
+  FireDto, 
+  FireStarterAuthorizationDto, 
+  FireStarterDto 
+} from "../types";
 import { evaluateChaincode, submitToChaincode } from "../utils/chaincode";
 import { getAdminPrivateKey, randomUniqueKey } from "./identities";
 
@@ -243,6 +251,96 @@ export async function deleteFire(req: Request, res: Response, next: NextFunction
     }
     res.json({ success: true });
   } catch (error) {
+    next(error);
+  }
+}
+
+export async function voteOnFire(req: Request, res: Response, next: NextFunction) {
+  try {
+    console.log("Raw fire vote request body:", JSON.stringify(req.body, null, 2));
+
+    // 1. Parse authorization DTO from client
+    const authDto: CastVoteAuthorizationDto = deserialize(CastVoteAuthorizationDto, req.body);
+
+    console.log("Deserialized fire vote authDto:", JSON.stringify(authDto, null, 2));
+
+    // Check if vote exists and has required fields
+    if (!authDto.vote) {
+      return res.status(400).json({
+        error: "Missing vote data in authorization DTO"
+      });
+    }
+
+    if (!authDto.vote.entryType) {
+      return res.status(400).json({
+        error: "VoteDto missing entryType field",
+        receivedVote: JSON.stringify(authDto.vote, null, 2)
+      });
+    }
+
+    // Verify this is a fire vote (entryType should be "RWBF")
+    if (authDto.vote.entryType !== "RWBF") {
+      return res.status(400).json({
+        error: `Invalid entryType for fire vote. Expected "RWBF", got "${authDto.vote.entryType}"`
+      });
+    }
+
+    console.log(
+      "Fire vote casting request:",
+      JSON.stringify(
+        {
+          fireSlug: req.params.slug,
+          entry: authDto.vote.entry,
+          entryType: authDto.vote.entryType,
+          entryParent: authDto.vote.entryParent,
+          quantity: authDto.vote.quantity.toString(),
+          hasFee: !!authDto.fee
+        },
+        null,
+        2
+      )
+    );
+
+    // 2. Create server-signed CastVoteDto
+    const serverDto = await createValidDTO(CastVoteDto, {
+      vote: authDto.vote, // client-signed vote
+      uniqueKey: `fire-vote-${randomUniqueKey()}`
+    });
+
+    // 3. Sign with server key
+    const signedDto = serverDto.signed(getAdminPrivateKey());
+
+    // 4. Submit to chaincode
+    console.log("Submitting fire vote to chaincode...");
+    console.log("Fire Vote DTO being submitted:", JSON.stringify(signedDto, null, 2));
+    const chainResponse = await submitToChaincode("CastVote", signedDto);
+
+    if (!chainResponse.success) {
+      console.error("Chaincode fire vote submission failed:", chainResponse.error);
+      return res.status(500).json({
+        error: `Fire vote casting failed: ${chainResponse.error}`
+      });
+    }
+
+    console.log("Chaincode fire vote submission successful");
+
+    // 5. Update local database if we have fire metadata
+    const fireSlug = req.params.slug;
+    const fire = dbService.getSubfire(fireSlug);
+    if (fire) {
+      // Optional: Record fire vote in a separate table or update fire vote count
+      console.log("Fire vote recorded for fire:", fireSlug);
+    }
+
+    console.log("Fire vote cast successfully:", {
+      fireSlug: fireSlug,
+      entry: authDto.vote.entry,
+      quantity: authDto.vote.quantity.toString()
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Fire vote casting error:", error);
     next(error);
   }
 }
