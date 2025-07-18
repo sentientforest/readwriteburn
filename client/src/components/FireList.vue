@@ -79,7 +79,7 @@
               <div class="vote-form flex flex-col items-center gap-2">
                 <div class="flex items-center gap-1">
                   <input
-                    v-model="fire.userVoteQty"
+                    v-model="voteQuantities[fire.slug]"
                     type="number"
                     :min="0"
                     step="1"
@@ -91,7 +91,7 @@
                   <span class="text-xs text-gray-500">GALA</span>
                 </div>
                 <button
-                  :disabled="!fire.userVoteQty || isProcessing || !userStore.address"
+                  :disabled="!voteQuantities[fire.slug] || isProcessing || !userStore.address"
                   @click.stop="submitVoteForFire(fire)"
                   class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
@@ -164,10 +164,13 @@ const isProcessing = ref(false);
 const submitError = ref("");
 const success = ref("");
 
+// Reactive state for vote quantities
+const voteQuantities = ref<Record<string, number | null>>({});
+
 // Computed properties from store
 const fires = computed(() => firesStore.fires.map(fire => ({
   ...fire,
-  userVoteQty: null
+  userVoteQty: voteQuantities.value[fire.slug] || null
 })) as ExtendedFireResponse[]);
 const loading = computed(() => firesStore.loading);
 const loadError = computed(() => !!firesStore.error);
@@ -177,7 +180,8 @@ function selectFire(fire: ExtendedFireResponse) {
 }
 
 async function submitVoteForFire(fire: ExtendedFireResponse) {
-  if (!fire.userVoteQty || isProcessing.value || !userStore.address) return;
+  const voteQty = voteQuantities.value[fire.slug];
+  if (!voteQty || isProcessing.value || !userStore.address) return;
 
   isProcessing.value = true;
   submitError.value = "";
@@ -199,7 +203,7 @@ async function submitVoteForFire(fire: ExtendedFireResponse) {
       entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
       entryParent: fireCompositeKey, // Fire references itself as parent for top-level fires
       entry: fireCompositeKey, // The fire we're voting on
-      quantity: new BigNumber(fire.userVoteQty),
+      quantity: new BigNumber(voteQty),
       uniqueKey: randomUniqueKey()
     });
 
@@ -230,7 +234,8 @@ async function submitVoteForFire(fire: ExtendedFireResponse) {
     }
 
     success.value = "Fire vote submitted successfully!";
-    fire.userVoteQty = null;
+    // Clear the vote quantity for this fire
+    delete voteQuantities.value[fire.slug];
     await firesStore.fetchFires(); // Refresh the list
     
     // Clear success message after 3 seconds
