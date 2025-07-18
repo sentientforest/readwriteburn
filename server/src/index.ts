@@ -10,7 +10,7 @@ import {
   moderateSubmission,
   verifySubmissionContent
 } from "./controllers/content";
-import { deleteFire, fireStarter, listFires, readFire, updateFire } from "./controllers/fires";
+import { deleteFire, fireStarter, listFires, readFire, updateFire, voteOnFire } from "./controllers/fires";
 import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
 import {
@@ -55,6 +55,7 @@ app.get("/api/fires", listFires);
 app.get("/api/fires/:slug", readFire);
 app.put("/api/fires/:slug", updateFire);
 app.delete("/api/fires/:slug", deleteFire);
+app.post("/api/fires/:slug/vote", voteOnFire);
 
 // Submission routes
 app.get("/api/submissions", listSubmissions);

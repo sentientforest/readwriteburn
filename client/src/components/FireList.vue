@@ -3,6 +3,14 @@
     <div class="mb-6">
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Fires</h2>
       <p class="text-gray-600 text-sm sm:text-base">Discover communities and join the conversation</p>
+      
+      <!-- Error and Success Messages -->
+      <div v-if="submitError" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <p class="text-red-700 text-sm">{{ submitError }}</p>
+      </div>
+      <div v-if="success" class="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+        <p class="text-green-700 text-sm">{{ success }}</p>
+      </div>
     </div>
 
     <div v-if="loading" class="text-center py-8">
@@ -63,6 +71,36 @@
           @click="selectFire(fire)"
         >
           <div class="flex items-start justify-between">
+            <!-- Vote Section -->
+            <div class="flex flex-col items-center mr-4 min-w-[100px]">
+              <div class="vote-count text-xl font-bold text-gray-900 mb-2">
+                {{ fire.votes ?? 0 }}
+              </div>
+              <div class="vote-form flex flex-col items-center gap-2">
+                <div class="flex items-center gap-1">
+                  <input
+                    v-model="fire.userVoteQty"
+                    type="number"
+                    :min="0"
+                    step="1"
+                    placeholder="🔥"
+                    :disabled="isProcessing"
+                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                    @click.stop
+                  />
+                  <span class="text-xs text-gray-500">GALA</span>
+                </div>
+                <button
+                  :disabled="!fire.userVoteQty || isProcessing || !userStore.address"
+                  @click.stop="submitVoteForFire(fire)"
+                  class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  {{ isProcessing ? "..." : "Vote" }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Content Section -->
             <div class="flex-1 min-w-0">
               <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-2 truncate">
                 {{ fire.name }}
@@ -71,6 +109,8 @@
                 {{ fire.description }}
               </p>
             </div>
+            
+            <!-- Navigate Arrow -->
             <svg
               class="h-5 w-5 text-gray-400 ml-3 flex-shrink-0"
               fill="none"
@@ -96,19 +136,118 @@
 
 <script setup lang="ts">
 import { useFiresStore } from "@/stores";
-import { computed, onMounted } from "vue";
+import { useUserStore } from "@/stores/user";
+import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import BigNumber from "bignumber.js";
+import { CastVoteAuthorizationDto, Fire, VoteDto } from "@/types/fire";
+import { randomUniqueKey } from "@/utils";
+
+interface ExtendedFireResponse {
+  slug: string;
+  name: string;
+  description?: string;
+  votes?: number;
+  userVoteQty?: number | null;
+}
 
 const firesStore = useFiresStore();
+const userStore = useUserStore();
 const router = useRouter();
 
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
+
+const apiBase = import.meta.env.VITE_PROJECT_API;
+const isProcessing = ref(false);
+const submitError = ref("");
+const success = ref("");
+
 // Computed properties from store
-const fires = computed(() => firesStore.fires);
+const fires = computed(() => firesStore.fires.map(fire => ({
+  ...fire,
+  userVoteQty: null
+})) as ExtendedFireResponse[]);
 const loading = computed(() => firesStore.loading);
 const loadError = computed(() => !!firesStore.error);
 
-function selectFire(fire: any) {
+function selectFire(fire: ExtendedFireResponse) {
   router.push(`/f/${fire.slug}`);
+}
+
+async function submitVoteForFire(fire: ExtendedFireResponse) {
+  if (!fire.userVoteQty || isProcessing.value || !userStore.address) return;
+
+  isProcessing.value = true;
+  submitError.value = "";
+  success.value = "";
+
+  try {
+    // Create ReadWriteBurn client
+    const rwbClient = metamaskClient.value;
+
+    if (!rwbClient) {
+      throw new Error(`No client software connected`);
+    }
+
+    // Create Fire composite key - for voting on fires, the entry is the fire's composite key
+    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+    
+    // Create VoteDto for Fire voting
+    const voteDto = new VoteDto({
+      entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
+      entryParent: fireCompositeKey, // Fire references itself as parent for top-level fires
+      entry: fireCompositeKey, // The fire we're voting on
+      quantity: new BigNumber(fire.userVoteQty),
+      uniqueKey: randomUniqueKey()
+    });
+
+    console.log("Signing fire vote:", voteDto);
+
+    // Sign the VoteDto
+    const signedVote = await rwbClient.signVote(voteDto);
+
+    // Create authorization DTO for server
+    const authDto = new CastVoteAuthorizationDto({
+      vote: signedVote
+    });
+
+    console.log("Sending fire vote authorization to server:", authDto);
+
+    // Send to server - we'll need a new endpoint for fire votes
+    const response = await fetch(`${apiBase}/api/fires/${fire.slug}/vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(authDto)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to submit fire vote");
+    }
+
+    success.value = "Fire vote submitted successfully!";
+    fire.userVoteQty = null;
+    await firesStore.fetchFires(); // Refresh the list
+    
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      success.value = "";
+    }, 3000);
+  } catch (error) {
+    console.error("Error submitting fire vote:", error);
+    submitError.value = error instanceof Error ? error.message : "Failed to submit fire vote. Please try again.";
+    
+    // Clear error message after 5 seconds
+    setTimeout(() => {
+      submitError.value = "";
+    }, 5000);
+  } finally {
+    isProcessing.value = false;
+  }
 }
 
 onMounted(async () => {
