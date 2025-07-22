@@ -34,12 +34,15 @@ export interface TokenInstanceKey {
 }
 
 /**
- * Fire represents a community topic or discussion thread
+ * Fire represents a top-level community topic or discussion thread
  *
  * Fires are the core organizational unit of the ReadWriteBurn platform,
  * serving as containers for related submissions and discussions.
  * Each fire has a unique slug identifier and can have multiple authorities
  * and moderators for content governance.
+ * 
+ * Note: Fires are always top-level - no hierarchical organization.
+ * Use Submissions for threaded discussions within a Fire.
  *
  * @extends ChainObject
  */
@@ -48,13 +51,8 @@ export class Fire extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBF";
 
-  /** Parent fire identifier for hierarchical organization */
+  /** Unique slug identifier for the fire (now the primary key) */
   @ChainKey({ position: 0 })
-  @IsString()
-  public entryParent: string;
-
-  /** Unique slug identifier for the fire */
-  @ChainKey({ position: 1 })
   @IsString()
   public slug: string;
 
@@ -75,21 +73,18 @@ export class Fire extends ChainObject {
   /**
    * Create a new Fire instance
    *
-   * @param entryParent - Parent fire identifier (empty string for top-level fires)
    * @param slug - Unique slug identifier
    * @param name - Display name
    * @param starter - User reference of the creator
    * @param description - Optional description
    */
   constructor(
-    entryParent: string,
     slug: string,
     name: string,
     starter: UserAlias,
     description: string | undefined
   ) {
     super();
-    this.entryParent = entryParent ?? "";
     this.slug = slug;
     this.name = name;
     this.starter = starter;
@@ -101,10 +96,87 @@ export class Submission extends ChainObject {
   /** Index key for chain object type identification */
   @Exclude()
   static INDEX_KEY = "RWBS";
+
+  /** Fire slug this submission belongs to */
+  @ChainKey({ position: 0 })
+  @IsNotEmpty()
+  @IsString()
+  fire: string;
+
+  /** Parent entry identifier (fire slug for top-level, submission key for replies) */
+  @ChainKey({ position: 1 })
+  @IsNotEmpty()
+  @IsString()
+  entryParent: string;
+
+  /** Type of the parent entry (Fire.INDEX_KEY or Submission.INDEX_KEY) */
+  @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
+  /** Unique identifier for this submission (typically inverse timestamp) */
+  @ChainKey({ position: 3 })
+  @IsNotEmpty()
+  @IsString()
+  id: string;
+
+  /** Display title of the submission */
+  @ChainKey({ position: 4 })
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  /** Optional identifier of the user who contributed this submission */
+  @IsOptional()
+  @IsString()
+  contributor?: string;
+
+  /** Optional description or body text of the submission */
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  /** Optional URL if this submission links to external content */
+  @IsOptional()
+  @IsString()
+  url?: string;
+
+  /**
+   * Create a new Submission instance
+   *
+   * @param fire - Fire slug this submission belongs to
+   * @param entryParent - Parent entry identifier (fire slug or submission key)
+   * @param parentEntryType - Type of parent (Fire.INDEX_KEY or Submission.INDEX_KEY)
+   * @param id - Unique identifier for this submission
+   * @param name - Display title of the submission
+   * @param contributor - Optional user identifier of the contributor
+   * @param description - Optional description or body text
+   * @param url - Optional URL for external content
+   */
+  constructor(
+    fire: string,
+    entryParent: string,
+    parentEntryType: string,
+    id: string,
+    name: string,
+    contributor?: string | undefined,
+    description?: string | undefined,
+    url?: string | undefined
+  ) {
+    super();
+    this.fire = fire;
+    this.entryParent = entryParent;
+    this.parentEntryType = parentEntryType;
+    this.id = id;
+    this.name = name;
+    this.contributor = contributor;
+    this.description = description;
+    this.url = url;
+  }
 }
 
 export interface IFireDto {
-  entryParent?: string | undefined;
   slug: string;
   name: string;
   starter: UserRef;
@@ -115,10 +187,6 @@ export interface IFireDto {
 }
 
 export class FireDto extends ChainCallDTO {
-  @IsNotEmpty()
-  @IsString()
-  public entryParent?: string;
-
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -144,9 +212,7 @@ export class FireDto extends ChainCallDTO {
 
   constructor(data?: IFireDto) {
     super();
-    const slug = data?.slug ?? "none";
-    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
-    this.slug = slug;
+    this.slug = data?.slug ?? "none";
     this.name = data?.name ?? "";
     this.starter = asValidUserRef(data?.starter ?? "service|null");
     this.description = data?.description ?? "";
@@ -179,17 +245,12 @@ export class FireStarterDto extends ChainCallDTO {
 }
 
 export interface IFetchFiresDto {
-  entryParent?: string;
   slug?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchFiresDto extends ChainCallDTO {
-  @IsOptional()
-  @IsString()
-  public entryParent?: string;
-
   @IsOptional()
   @IsString()
   public slug?: string;
@@ -204,7 +265,6 @@ export class FetchFiresDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresDto = {}) {
     super();
-    this.entryParent = data?.entryParent;
     this.slug = data?.slug;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;

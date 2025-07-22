@@ -201,20 +201,19 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
       throw new Error(`No client software connected`);
     }
 
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", subfireSlug]);
-    const entryParent = submission.entryParent ?? fireChainKey;
+    // Create submission composite key with the new structure including parentEntryType
     const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
-      fireChainKey,
-      entryParent,
+      subfireSlug, // fire slug
+      submission.entryParent ?? subfireSlug, // parent entry (fire slug for top-level)
+      Fire.INDEX_KEY, // parentEntryType for top-level submissions
       submission.id,
       submission.name
     ]);
-    // Create VoteDto
-    // For votes, entryParent should be the fire's composite key, not just the slug
-    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [subfireSlug, subfireSlug]);
+    
+    // Create VoteDto for submission voting
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.entryParent ?? fireCompositeKey, // Use fire's composite key as parent
+      entryParent: submission.entryParent ?? subfireSlug, // Fire slug for top-level submissions
       entry: submissionChainKey,
       quantity: new BigNumber(submission.userVoteQty),
       uniqueKey: randomUniqueKey()

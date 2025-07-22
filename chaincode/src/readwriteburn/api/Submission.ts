@@ -24,20 +24,26 @@ export class Submission extends ChainObject {
   @IsString()
   fire: string;
 
-  /** Parent entry for hierarchical organization (fire key for top-level, submission key for replies) */
+  /** Parent entry identifier (fire slug for top-level, submission key for replies) */
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
   entryParent: string;
 
-  /** Unique identifier for this submission (typically inverse timestamp) */
+  /** Type of the parent entry (Fire.INDEX_KEY or Submission.INDEX_KEY) */
   @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
+  /** Unique identifier for this submission (typically inverse timestamp) */
+  @ChainKey({ position: 3 })
   @IsNotEmpty()
   @IsString()
   id: string;
 
   /** Display title of the submission */
-  @ChainKey({ position: 3 })
+  @ChainKey({ position: 4 })
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -60,8 +66,9 @@ export class Submission extends ChainObject {
   /**
    * Create a new Submission instance
    *
-   * @param fire - Composite key of the fire this submission belongs to
-   * @param entryParent - Parent entry key for hierarchical organization
+   * @param fire - Fire slug this submission belongs to
+   * @param entryParent - Parent entry identifier (fire slug or submission key)
+   * @param parentEntryType - Type of parent (Fire.INDEX_KEY or Submission.INDEX_KEY)
    * @param id - Unique identifier for this submission
    * @param name - Display title of the submission
    * @param contributor - Optional user identifier of the contributor
@@ -71,6 +78,7 @@ export class Submission extends ChainObject {
   constructor(
     fire: string,
     entryParent: string,
+    parentEntryType: string,
     id: string,
     name: string,
     contributor?: string | undefined,
@@ -80,6 +88,7 @@ export class Submission extends ChainObject {
     super();
     this.fire = fire;
     this.entryParent = entryParent;
+    this.parentEntryType = parentEntryType;
     this.id = id;
     this.name = name;
     this.contributor = contributor;

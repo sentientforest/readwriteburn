@@ -34,30 +34,6 @@
         ></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="parentFire">Parent Fire (optional)</label>
-        <select
-          id="parentFire"
-          v-model="formData.selectedParentFire"
-          :disabled="isSubmitting || availableFires.length === 0"
-          class="parent-fire-select"
-        >
-          <option value="">None (Create top-level fire)</option>
-          <option
-            v-for="fire in availableFires"
-            :key="fire.slug"
-            :value="fire.slug"
-          >
-            {{ fire.name }} ({{ fire.slug }})
-          </option>
-        </select>
-        <small class="help-text">
-          {{ availableFires.length === 0 
-            ? 'No existing fires found. This will be a top-level fire.' 
-            : 'Select a parent fire to create a nested fire, or choose "None" for a top-level fire.'
-          }}
-        </small>
-      </div>
 
       <div class="form-section">
         <h3>Additional Authorities (optional)</h3>
@@ -159,11 +135,10 @@ import {
 import { SigningType } from "@gala-chain/connect";
 import BigNumber from "bignumber.js";
 import { ValidationError } from "class-validator";
-import { computed, getCurrentInstance, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
 import { useRouter } from "vue-router";
 
 import { useUserStore } from "../stores";
-import type { FireResponse } from "../types/api";
 import { Fire, FireDto, FireStarterAuthorizationDto, FireStarterDto, IFireStarterDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
@@ -178,14 +153,9 @@ const formData = ref({
   name: "",
   slug: "",
   description: "",
-  selectedParentFire: "", // This will hold the selected parent fire slug
   authorities: [] as string[],
   moderators: [] as string[]
 });
-
-// State for available fires
-const availableFires = ref<FireResponse[]>([]);
-const firesLoading = ref(false);
 
 interface IEstimatedFee {
   feeCode: string;
@@ -226,34 +196,6 @@ function formatFee(amount: BigNumber): string {
   return amount.dividedBy(new BigNumber(10).pow(8)).toFixed(2);
 }
 
-function getSelectedParentFireName(): string {
-  if (!formData.value.selectedParentFire) return "";
-  const parentFire = availableFires.value.find(f => f.slug === formData.value.selectedParentFire);
-  return parentFire ? `${parentFire.name} (${parentFire.slug})` : formData.value.selectedParentFire;
-}
-
-// Fetch available fires for parent selection
-async function fetchAvailableFires() {
-  if (firesLoading.value) return;
-  
-  firesLoading.value = true;
-  try {
-    const response = await fetch(`${apiBase}/api/fires`);
-    if (response.ok) {
-      const data = await response.json();
-      availableFires.value = data.results || [];
-      console.log("Loaded available fires:", availableFires.value.length);
-    } else {
-      console.warn("Failed to fetch fires:", response.status);
-      availableFires.value = [];
-    }
-  } catch (error) {
-    console.error("Error fetching available fires:", error);
-    availableFires.value = [];
-  } finally {
-    firesLoading.value = false;
-  }
-}
 
 function cancelFireCreation() {
   showFeeConfirmation.value = false;
@@ -300,28 +242,8 @@ async function handleSubmit() {
 
     console.log("Creating fire with wallet address:", userStore.address);
 
-    // Create FireDto with all required fields using proper DTO class
-    // Determine entryParent based on selected parent fire
-    let entryParent: string | undefined;
-    
-    if (formData.value.selectedParentFire) {
-      // User selected a parent fire - construct its composite key
-      const parentFire = availableFires.value.find(f => f.slug === formData.value.selectedParentFire);
-      if (parentFire) {
-        // Parent fire's composite key is constructed with its own slug as entryParent (self-reference pattern)
-        entryParent = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [parentFire.slug, parentFire.slug]);
-        console.log("Using parent fire composite key:", entryParent);
-      } else {
-        console.warn("Selected parent fire not found:", formData.value.selectedParentFire);
-        entryParent = undefined; // Fall back to top-level
-      }
-    } else {
-      // No parent selected - this will be a top-level fire (constructor will handle self-reference)
-      entryParent = undefined;
-    }
-    
+    // Create FireDto - all fires are now top-level (no hierarchy)
     const fireDto = new FireDto({
-      entryParent: entryParent,
       slug: formData.value.slug,
       name: formData.value.name,
       starter: asValidUserRef(userStore.address),
@@ -512,10 +434,6 @@ function parseFeeEstimation(dryRunResult: GalaChainResponse<DryRunResultDto>): A
   return fees;
 }
 
-// Fetch available fires when component mounts
-onMounted(() => {
-  fetchAvailableFires();
-});
 </script>
 
 <style scoped>
@@ -563,11 +481,6 @@ select {
   font-size: 1rem;
 }
 
-.parent-fire-select:disabled {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-}
 
 textarea {
   resize: vertical;

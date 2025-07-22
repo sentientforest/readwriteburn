@@ -195,13 +195,13 @@ async function submitVoteForFire(fire: ExtendedFireResponse) {
       throw new Error(`No client software connected`);
     }
 
-    // Create Fire composite key - for voting on fires, the entry is the fire's composite key
-    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);
+    // Create Fire composite key - simplified structure with just slug
+    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug]);
     
     // Create VoteDto for Fire voting
     const voteDto = new VoteDto({
       entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
-      entryParent: fireCompositeKey, // Fire references itself as parent for top-level fires
+      entryParent: fire.slug, // Fire slug as parent (simplified hierarchy)
       entry: fireCompositeKey, // The fire we're voting on
       quantity: new BigNumber(voteQty),
       uniqueKey: randomUniqueKey()
