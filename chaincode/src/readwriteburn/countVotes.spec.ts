@@ -10,6 +10,7 @@ import { fixture, randomUser } from "@gala-chain/test";
 import BigNumber from "bignumber.js";
 
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
+import { Fire } from "./api/Fire";
 import { Submission } from "./api/Submission";
 import { Vote } from "./api/Vote";
 import { VoteCount } from "./api/VoteCount";
@@ -30,6 +31,7 @@ describe("countVotes chaincode call", () => {
   const submission = new Submission(
     "test-fire-key",
     "test-fire-key",
+    Fire.INDEX_KEY,
     "001",
     "Test Submission",
     user1Alias,

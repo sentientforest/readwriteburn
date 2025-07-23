@@ -14,6 +14,7 @@ import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
+import { Fire } from "./api/Fire";
 import { Submission } from "./api/Submission";
 import { Vote } from "./api/Vote";
 import { CastVoteDto, VoteDto } from "./api/dtos";
@@ -28,6 +29,7 @@ describe("castVote chaincode call", () => {
   const submission = new Submission(
     "test-fire-key",
     "test-fire-key",
+    Fire.INDEX_KEY,
     "001",
     "Test Submission",
     userAlias,

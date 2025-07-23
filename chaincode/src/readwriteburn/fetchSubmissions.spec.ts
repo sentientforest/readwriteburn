@@ -12,16 +12,18 @@ import BigNumber from "bignumber.js";
 import { plainToInstance } from "class-transformer";
 
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
+import { Fire } from "./api/Fire";
 import { Submission } from "./api/Submission";
 import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./api/dtos";
 
 describe("fetchSubmissions chaincode call", () => {
   const fireChainKey = "test|fire";
 
-  const submission = new Submission(fireChainKey, fireChainKey, "001", "name");
+  const submission = new Submission(fireChainKey, fireChainKey, Fire.INDEX_KEY, "001", "name");
   const comment = new Submission(
     fireChainKey,
     submission.getCompositeKey(),
+    Submission.INDEX_KEY,
     "002",
     "submission b"
   );
