@@ -66,7 +66,7 @@ export async function castVote(ctx: GalaChainContext, dto: CastVoteDto): Promise
 
   const vote = new Vote(
     entryType,
-    existingEntry.entryParent,
+    existingEntry.entryParent ?? entry,
     entry,
     voteId,
     asValidUserAlias(voter.alias),

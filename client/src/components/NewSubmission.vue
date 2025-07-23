@@ -81,11 +81,13 @@ const replyToId = route.query.replyTo as string | undefined;
 const instance = getCurrentInstance();
 const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
+const fireKey = ChainObject.getCompositeKeyFromParts(Fire.INDEX_KEY, [subfireSlug]);
+
 const form = ref<SubmissionCreateRequest>({
   name: "",
   description: "",
   url: "",
-  fire: subfireSlug,
+  fire: fireKey,
   contributor: userStore.address || "",
   entryParent: replyToId
 });

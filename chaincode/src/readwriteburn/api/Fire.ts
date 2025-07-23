@@ -17,13 +17,8 @@ export class Fire extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBF";
 
-  /** Parent fire identifier for hierarchical organization */
-  @ChainKey({ position: 0 })
-  @IsString()
-  public entryParent: string;
-
   /** Unique slug identifier for the fire */
-  @ChainKey({ position: 1 })
+  @ChainKey({ position: 0 })
   @IsString()
   public slug: string;
 
@@ -51,14 +46,12 @@ export class Fire extends ChainObject {
    * @param description - Optional description
    */
   constructor(
-    entryParent: string,
     slug: string,
     name: string,
     starter: UserAlias,
     description: string | undefined
   ) {
     super();
-    this.entryParent = entryParent ?? "";
     this.slug = slug;
     this.name = name;
     this.starter = starter;

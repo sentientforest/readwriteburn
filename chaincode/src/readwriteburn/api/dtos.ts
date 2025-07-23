@@ -43,10 +43,6 @@ export interface IFireDto {
 export class FireDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
-  public entryParent: string;
-
-  @IsNotEmpty()
-  @IsString()
   public slug: string;
 
   @IsNotEmpty()
@@ -71,8 +67,6 @@ export class FireDto extends ChainCallDTO {
   constructor(data: IFireDto) {
     super();
     const slug = data?.slug ?? "none";
-    this.entryParent =
-      data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
     this.slug = slug;
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
@@ -108,20 +102,14 @@ export class FireStarterDto extends SubmitCallDTO {
 }
 
 export interface IFetchFiresDto {
-  entryParent?: string;
   slug?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchFiresDto extends ChainCallDTO {
-  @JSONSchema({ description: "Optional, but required if slug is provided." })
-  @ValidateIf((dto) => !!dto.entryType || !!dto.slug)
-  @IsString()
-  public entryParent?: string;
-
   @JSONSchema({
-    description: "Optional. `entryParent` must be provided to additionally filter by slug"
+    description: "Optional. "
   })
   @IsOptional()
   @IsString()
@@ -137,7 +125,6 @@ export class FetchFiresDto extends ChainCallDTO {
 
   constructor(data: IFetchFiresDto) {
     super();
-    this.entryParent = data?.entryParent;
     this.slug = data?.slug;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;

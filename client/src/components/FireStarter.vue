@@ -380,7 +380,7 @@ async function confirmFireCreation() {
       console.log("About to call signFireStarter method...");
       console.log(`DTO: ${fireStarterDto.serialize()}`);
       signedFire = await metamaskClient?.value?.signFire(fireStarterParams.fire, SigningType.SIGN_TYPED_DATA);
-      console.log("signFireStarter method completed successfully");
+      console.log("signFireStarter method completed successfully: ", JSON.stringify(signedFire));
       dto = await createValidDTO(FireStarterAuthorizationDto, {
         fire: signedFire as FireDto
       });
