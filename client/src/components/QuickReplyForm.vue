@@ -168,16 +168,15 @@ async function handleSubmit() {
     const { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } = await import("../types/fire");
     const { randomUniqueKey } = await import("../utils");
 
-    // Construct fire chain key using proper ChainObject method
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
-
-    // Create SubmissionDto
+    // Create SubmissionDto with new flat structure
+    // This is a reply to a submission, so parent is submission ID and type is Submission.INDEX_KEY
     const submissionDto = new SubmissionDto({
       name: formData.value.name.trim(),
       description: formData.value.description.trim() || "",
       url: formData.value.url.trim() || "",
-      fire: fireChainKey,
-      entryParent: props.parentSubmissionId, // This makes it a reply to the submission
+      fire: props.fireSlug, // Just the fire slug, not composite key
+      entryParent: props.parentSubmissionId, // Parent submission ID
+      parentEntryType: "RWBS", // Submission.INDEX_KEY since this is a reply to a submission
       contributor: userStore.address,
       uniqueKey: randomUniqueKey()
     });

@@ -201,11 +201,17 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
       throw new Error(`No client software connected`);
     }
 
-    // Create submission composite key with the new structure including parentEntryType
+    // Create submission composite key with the new structure
+    // Need to determine parentEntryType: if entryParent is null, it's a top-level submission (Fire parent)
+    // If entryParent exists, it's a reply to another submission (Submission parent)
+    const isTopLevel = !submission.entryParent;
+    const parentEntryType = isTopLevel ? Fire.INDEX_KEY : Submission.INDEX_KEY;
+    const actualParent = submission.entryParent ?? subfireSlug; // Fire slug for top-level, submission ID for replies
+    
     const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
       subfireSlug, // fire slug
-      submission.entryParent ?? subfireSlug, // parent entry (fire slug for top-level)
-      Fire.INDEX_KEY, // parentEntryType for top-level submissions
+      actualParent, // parent entry (fire slug for top-level, submission ID for replies)
+      parentEntryType, // Fire.INDEX_KEY for top-level, Submission.INDEX_KEY for replies
       submission.id,
       submission.name
     ]);
@@ -213,7 +219,7 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
     // Create VoteDto for submission voting
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.entryParent ?? subfireSlug, // Fire slug for top-level submissions
+      entryParent: actualParent, // Use the same parent logic as composite key
       entry: submissionChainKey,
       quantity: new BigNumber(submission.userVoteQty),
       uniqueKey: randomUniqueKey()

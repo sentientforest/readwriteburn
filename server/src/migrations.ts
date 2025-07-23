@@ -111,6 +111,37 @@ const migrations: Migration[] = [
         -- Note: We don't remove the column in SQLite for safety
       `);
     }
+  },
+  {
+    version: 4,
+    description: "Simplify architecture: flatten Fire hierarchy and add parentEntryType to Submissions",
+    up: (db: Database.Database) => {
+      db.exec(`
+        -- Add parentEntryType column to submissions for new flat architecture
+        ALTER TABLE submissions ADD COLUMN parent_entry_type TEXT DEFAULT 'RWBF';
+
+        -- Update existing data: all existing submissions are top-level (Fire parents)
+        UPDATE submissions SET parent_entry_type = 'RWBF' WHERE parent_entry_type IS NULL;
+
+        -- For any existing submissions with entry_parent (replies), set to Submission parent type
+        UPDATE submissions SET parent_entry_type = 'RWBS' WHERE entry_parent IS NOT NULL;
+
+        -- Set all fires to have NULL entry_parent (flatten fire hierarchy)
+        UPDATE subfires SET entry_parent = NULL;
+
+        -- Create index for new column
+        CREATE INDEX IF NOT EXISTS idx_submissions_parent_entry_type ON submissions(parent_entry_type);
+      `);
+    },
+    down: (db: Database.Database) => {
+      db.exec(`
+        -- Remove index
+        DROP INDEX IF EXISTS idx_submissions_parent_entry_type;
+        
+        -- Note: We don't remove the column in SQLite for safety
+        -- The parent_entry_type column will remain but won't be used
+      `);
+    }
   }
 ];
 

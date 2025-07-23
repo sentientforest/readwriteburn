@@ -93,16 +93,15 @@ export const dbService = {
     const slug = fireData.slug;
     const name = fireData.name;
     const description = fireData.description || "";
-    const entryParent = fireData.entryParent || "";
     const authorities = fireData.authorities || [];
     const moderators = fireData.moderators || [];
     const chainKey = fireData.getCompositeKey ? fireData.getCompositeKey() : null;
 
-    console.log("Creating subfire in database:", { slug, name, description, entryParent, authorities, moderators, chainKey });
+    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators, chainKey });
 
     const insertSubfire = getDb().prepare(`
-      INSERT OR REPLACE INTO subfires (slug, name, description, entry_parent, chain_key)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT OR REPLACE INTO subfires (slug, name, description, chain_key)
+      VALUES (?, ?, ?, ?)
     `);
 
     const deleteRoles = getDb().prepare(`
@@ -115,7 +114,7 @@ export const dbService = {
     `);
 
     getDb().transaction(() => {
-      const result = insertSubfire.run(slug, name, description, entryParent, chainKey);
+      const result = insertSubfire.run(slug, name, description, chainKey);
       console.log("Subfire insert result:", { changes: result.changes, lastInsertRowid: result.lastInsertRowid });
 
       // Clear existing roles and re-add
@@ -293,6 +292,7 @@ export const dbService = {
     const url = submissionData.url || "";
     const fire = submissionData.fire;
     const entryParent = submissionData.entryParent || fire;
+    const parentEntryType = submissionData.parentEntryType || "RWBF"; // Default to Fire parent
     const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
     const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
 
@@ -337,7 +337,8 @@ export const dbService = {
       fireSlug,
       chainKey,
       chainId,
-      entryParent
+      entryParent,
+      parentEntryType
     });
 
 
@@ -348,9 +349,9 @@ export const dbService = {
       INSERT OR REPLACE INTO submissions (
         name, contributor, description, url, subfire_id, 
         content_hash, content_timestamp, hash_verified, moderation_status,
-        chain_key, chain_id, entry_parent
+        chain_key, chain_id, entry_parent, parent_entry_type
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertVotes = getDb().prepare(`
@@ -371,7 +372,8 @@ export const dbService = {
         "active", // moderation_status
         chainKey,
         chainId,
-        entryParent
+        entryParent,
+        parentEntryType
       );
       const newId = result.lastInsertRowid as number;
       insertVotes.run(newId);
