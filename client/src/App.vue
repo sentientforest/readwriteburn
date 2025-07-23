@@ -286,8 +286,16 @@ async function connectWallet() {
 
     // If connected but not registered, attempt registration
     if (userStore.isConnected && !userStore.isRegistered) {
+      console.log("User connected but not registered, attempting registration...");
       announce("Registering user...", "polite");
-      await userStore.registerUser();
+      const registrationResult = await userStore.registerUser();
+      console.log("Registration result:", registrationResult);
+      if (registrationResult) {
+        announce("User registered successfully", "polite");
+      } else {
+        announce("User registration failed", "assertive");
+        console.error("Registration failed, error:", userStore.error);
+      }
     }
   } finally {
     isConnecting.value = false;
