@@ -4,6 +4,7 @@ import { fixture, randomUser, transactionSuccess } from "@gala-chain/test";
 import BigNumber from "bignumber.js";
 
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
+import { Fire } from "./api/Fire";
 import { Submission } from "./api/Submission";
 import { Vote } from "./api/Vote";
 import { FetchVotesDto, FetchVotesResDto, VoteResult } from "./api/dtos";
@@ -20,6 +21,7 @@ describe("fetchVotes chaincode call", () => {
   const submission1 = new Submission(
     fireKey,
     fireKey,
+    Fire.INDEX_KEY,
     "001",
     "Submission 1",
     user1Alias,
@@ -28,6 +30,7 @@ describe("fetchVotes chaincode call", () => {
   const submission2 = new Submission(
     fireKey,
     fireKey,
+    Fire.INDEX_KEY,
     "002",
     "Submission 2",
     user2Alias,

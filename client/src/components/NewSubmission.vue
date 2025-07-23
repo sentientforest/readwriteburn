@@ -167,19 +167,21 @@ async function submitForm() {
   try {
     const fireSlug = subfireSlug;
     
-    // Construct fire chain key using proper ChainObject method
-    // For top-level fires, entryParent is the fire's own composite key using [slug, slug]
-    // This matches the pattern from FireDto constructor: Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug])
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug, fireSlug]);
-    const entryParent = replyToId || fireChainKey;
+    // Determine parent and parent type for new flat structure
+    // If replying to a submission, parent is the submission slug and type is Submission.INDEX_KEY
+    // If top-level submission, parent is the fire slug and type is Fire.INDEX_KEY
+    const isReply = !!replyToId;
+    const entryParent = isReply ? replyToId : fireSlug; // Parent slug (not composite key)
+    const parentEntryType = isReply ? "RWBS" : "RWBF"; // Submission.INDEX_KEY or Fire.INDEX_KEY
 
-    // Create SubmissionDto
+    // Create SubmissionDto with new structure
     const submissionDto = new SubmissionDto({
       name: form.value.name,
       description: form.value.description || "",
       url: form.value.url || "",
-      fire: fireChainKey,
-      entryParent: replyToId || fireChainKey, // use replyToId for nested comments, fire key for top-level
+      fire: fireSlug, // Just the fire slug, not composite key
+      entryParent: entryParent, // Parent slug
+      parentEntryType: parentEntryType, // Type of parent (Fire or Submission)
       contributor: userStore.address,
       uniqueKey: randomUniqueKey()
     });

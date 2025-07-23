@@ -30,8 +30,9 @@ import { ContributeSubmissionDto } from "./api/dtos";
  * const submission = await contributeSubmission(ctx, {
  *   submission: {
  *     name: "Interesting Article",
- *     fire: "fire-key",
- *     entryParent: "fire-key", // Same as fire for top-level submissions
+ *     fire: "fire-slug",
+ *     entryParent: "fire-slug", // Fire slug for top-level submissions
+ *     parentEntryType: "RWBF", // Fire.INDEX_KEY for top-level submissions
  *     description: "A detailed analysis of...",
  *     url: "https://example.com/article",
  *     uniqueKey: "unique-submission-key"
@@ -45,7 +46,7 @@ export async function contributeSubmission(
   ctx: GalaChainContext,
   dto: ContributeSubmissionDto
 ): Promise<Submission> {
-  const { name, fire, entryParent, contributor, description, url } = dto.submission;
+  const { name, fire, entryParent, parentEntryType, contributor, description, url } = dto.submission;
 
   const fireExists = await objectExists(ctx, fire);
 
@@ -57,6 +58,7 @@ export async function contributeSubmission(
   const submission = new Submission(
     fire,
     entryParent,
+    parentEntryType,
     submissionId,
     name,
     contributor,

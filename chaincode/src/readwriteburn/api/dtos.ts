@@ -71,7 +71,8 @@ export class FireDto extends ChainCallDTO {
   constructor(data: IFireDto) {
     super();
     const slug = data?.slug ?? "none";
-    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
+    this.entryParent =
+      data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
     this.slug = slug;
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
@@ -204,6 +205,7 @@ export interface ISubmissionDto {
   name: string;
   fire: string;
   entryParent: string;
+  parentEntryType: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -222,6 +224,10 @@ export class SubmissionDto extends ChainCallDTO {
   @IsString()
   entryParent: string;
 
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
   @IsOptional()
   @IsString()
   contributor?: string;
@@ -239,6 +245,7 @@ export class SubmissionDto extends ChainCallDTO {
     this.name = data?.name;
     this.fire = data?.fire;
     this.entryParent = data?.entryParent;
+    this.parentEntryType = data?.parentEntryType;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
@@ -249,6 +256,7 @@ export class SubmissionDto extends ChainCallDTO {
 export interface SubmissionResDto {
   id: number;
   entryParent: string;
+  parentEntryType: string;
   name: string;
   contributor: string;
   description: string;

@@ -119,7 +119,9 @@ describe("Database Service", () => {
       // Create and then delete a submission to test cascade
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
         name: "Test Submission",
-        fire: created.slug
+        fire: created.slug,
+        entryParent: created.slug,
+        parentEntryType: "RWBF"
       });
 
       const savedSubmission = dbService.saveSubmission(submission);
@@ -157,7 +159,9 @@ describe("Database Service", () => {
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
-        fire: `${testSubfireId}`
+        fire: `${testSubfireId}`,
+        entryParent: `${testSubfireId}`,
+        parentEntryType: "RWBF"
       });
 
       const result = dbService.saveSubmission(submission);
@@ -176,7 +180,9 @@ describe("Database Service", () => {
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
-        fire: `${testSubfireId}`
+        fire: `${testSubfireId}`,
+        entryParent: `${testSubfireId}`,
+        parentEntryType: "RWBF"
       });
 
       const created = dbService.saveSubmission(submission);
@@ -193,7 +199,9 @@ describe("Database Service", () => {
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
-        fire: `${testSubfireId}`
+        fire: `${testSubfireId}`,
+        entryParent: `${testSubfireId}`,
+        parentEntryType: "RWBF"
       });
 
       const created = dbService.saveSubmission(submission);
@@ -207,12 +215,16 @@ describe("Database Service", () => {
     it("should get submissions by subfire", async () => {
       const submission1: SubmissionDto = await createValidDTO(SubmissionDto, {
         name: "Test Submission 1",
-        fire: `${testSubfireId}`
+        fire: `${testSubfireId}`,
+        entryParent: `${testSubfireId}`,
+        parentEntryType: "RWBF"
       });
 
       const submission2: SubmissionDto = await createValidDTO(SubmissionDto, {
         name: "Test Submission 2",
-        fire: `${testSubfireId}`
+        fire: `${testSubfireId}`,
+        entryParent: `${testSubfireId}`,
+        parentEntryType: "RWBF"
       });
 
       dbService.saveSubmission(submission1);

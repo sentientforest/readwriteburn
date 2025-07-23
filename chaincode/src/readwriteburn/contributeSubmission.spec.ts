@@ -32,6 +32,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Test Submission",
       fire: fireKey,
       entryParent: fireKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       contributor: userRef,
       description: "Test submission description",
       url: "https://example.com/article",
@@ -83,6 +84,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Test Submission",
       fire: "non-existent-fire",
       entryParent: "non-existent-fire",
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       contributor: userRef,
       description: "Test submission description",
       uniqueKey: randomUniqueKey()
@@ -131,6 +133,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Comment on parent",
       fire: fireKey,
       entryParent: parentSubmission.getCompositeKey(),
+      parentEntryType: Submission.INDEX_KEY, // Reply to submission, parent is a Submission
       contributor: userRef,
       description: "This is a comment",
       uniqueKey: randomUniqueKey()
@@ -175,6 +178,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Minimal Submission",
       fire: fireKey,
       entryParent: fireKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       uniqueKey: randomUniqueKey()
     }).signed(user.privateKey);
 
@@ -218,6 +222,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "",
       fire: fireKey,
       entryParent: fireKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       uniqueKey: randomUniqueKey()
     });
 
@@ -233,6 +238,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Test Submission",
       fire: "",
       entryParent: fireKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       uniqueKey: randomUniqueKey()
     });
 
@@ -250,6 +256,7 @@ describe("contributeSubmission chaincode call", () => {
       name: "Long Description Submission",
       fire: fireKey,
       entryParent: fireKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       contributor: userRef,
       description: longDescription,
       uniqueKey: randomUniqueKey()

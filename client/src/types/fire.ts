@@ -35,7 +35,6 @@ export interface TokenInstanceKey {
 }
 
 export interface IFireDto {
-  entryParent?: string | undefined;
   slug: string;
   name: string;
   starter: UserRef;
@@ -46,10 +45,6 @@ export interface IFireDto {
 }
 
 export class FireDto extends ChainCallDTO {
-  @IsNotEmpty()
-  @IsString()
-  public entryParent: string;
-
   @IsNotEmpty()
   @IsString()
   public slug: string;
@@ -75,9 +70,7 @@ export class FireDto extends ChainCallDTO {
 
   constructor(data: IFireDto) {
     super();
-    const slug = data?.slug ?? "none";
-    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
-    this.slug = slug;
+    this.slug = data?.slug ?? "none";
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
     this.description = data?.description ?? "";
@@ -128,6 +121,7 @@ export interface ISubmissionDto {
   name: string;
   fire: string;
   entryParent: string;
+  parentEntryType: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -146,6 +140,10 @@ export class SubmissionDto extends ChainCallDTO {
   @IsString()
   entryParent: string;
 
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
   @IsOptional()
   @IsString()
   contributor?: string;
@@ -163,6 +161,7 @@ export class SubmissionDto extends ChainCallDTO {
     this.name = data?.name;
     this.fire = data?.fire;
     this.entryParent = data?.entryParent || "";
+    this.parentEntryType = data?.parentEntryType;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
@@ -173,6 +172,8 @@ export class SubmissionDto extends ChainCallDTO {
 export interface SubmissionResDto {
   id: number;
   name: string;
+  entryParent: string;
+  parentEntryType: string;
   contributor: string;
   description: string;
   url: string;
@@ -309,13 +310,8 @@ export class Fire extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBF";
 
-  /** Parent fire identifier for hierarchical organization */
+  /** Unique slug identifier for the fire (now the primary key) */
   @ChainKey({ position: 0 })
-  @IsString()
-  public entryParent: string;
-
-  /** Unique slug identifier for the fire */
-  @ChainKey({ position: 1 })
   @IsString()
   public slug: string;
 
@@ -336,21 +332,18 @@ export class Fire extends ChainObject {
   /**
    * Create a new Fire instance
    *
-   * @param entryParent - Parent fire identifier (empty string for top-level fires)
    * @param slug - Unique slug identifier
    * @param name - Display name
    * @param starter - User reference of the creator
    * @param description - Optional description
    */
   constructor(
-    entryParent: string,
     slug: string,
     name: string,
     starter: UserAlias,
     description: string | undefined
   ) {
     super();
-    this.entryParent = entryParent ?? "";
     this.slug = slug;
     this.name = name;
     this.starter = starter;
@@ -363,26 +356,32 @@ export class Submission extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBS";
 
-  /** Composite key of the fire this submission belongs to */
+  /** Fire slug this submission belongs to */
   @ChainKey({ position: 0 })
   @IsNotEmpty()
   @IsString()
   fire: string;
 
-  /** Parent entry for hierarchical organization (fire key for top-level, submission key for replies) */
+  /** Parent entry identifier (fire slug for top-level, submission key for replies) */
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
   entryParent: string;
 
-  /** Unique identifier for this submission (typically inverse timestamp) */
+  /** Type of the parent entry (Fire.INDEX_KEY or Submission.INDEX_KEY) */
   @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
+  /** Unique identifier for this submission (typically inverse timestamp) */
+  @ChainKey({ position: 3 })
   @IsNotEmpty()
   @IsString()
   id: string;
 
   /** Display title of the submission */
-  @ChainKey({ position: 3 })
+  @ChainKey({ position: 4 })
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -405,8 +404,9 @@ export class Submission extends ChainObject {
   /**
    * Create a new Submission instance
    *
-   * @param fire - Composite key of the fire this submission belongs to
-   * @param entryParent - Parent entry key for hierarchical organization
+   * @param fire - Fire slug this submission belongs to
+   * @param entryParent - Parent entry identifier (fire slug or submission key)
+   * @param parentEntryType - Type of parent (Fire.INDEX_KEY or Submission.INDEX_KEY)
    * @param id - Unique identifier for this submission
    * @param name - Display title of the submission
    * @param contributor - Optional user identifier of the contributor
@@ -416,6 +416,7 @@ export class Submission extends ChainObject {
   constructor(
     fire: string,
     entryParent: string,
+    parentEntryType: string,
     id: string,
     name: string,
     contributor?: string | undefined,
@@ -425,6 +426,7 @@ export class Submission extends ChainObject {
     super();
     this.fire = fire;
     this.entryParent = entryParent;
+    this.parentEntryType = parentEntryType;
     this.id = id;
     this.name = name;
     this.contributor = contributor;
