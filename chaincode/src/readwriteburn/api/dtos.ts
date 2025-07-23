@@ -71,7 +71,8 @@ export class FireDto extends ChainCallDTO {
   constructor(data: IFireDto) {
     super();
     const slug = data?.slug ?? "none";
-    this.entryParent = data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
+    this.entryParent =
+      data?.entryParent ?? Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [slug, slug]);
     this.slug = slug;
     this.name = data?.name ?? "";
     this.starter = data?.starter ?? "";
