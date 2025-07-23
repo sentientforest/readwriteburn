@@ -121,6 +121,7 @@ export interface ISubmissionDto {
   name: string;
   fire: string;
   entryParent: string;
+  parentEntryType: string;
   contributor?: string;
   description?: string;
   url?: string;
@@ -139,6 +140,10 @@ export class SubmissionDto extends ChainCallDTO {
   @IsString()
   entryParent: string;
 
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
   @IsOptional()
   @IsString()
   contributor?: string;
@@ -156,6 +161,7 @@ export class SubmissionDto extends ChainCallDTO {
     this.name = data?.name;
     this.fire = data?.fire;
     this.entryParent = data?.entryParent || "";
+    this.parentEntryType = data?.parentEntryType;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
@@ -166,6 +172,8 @@ export class SubmissionDto extends ChainCallDTO {
 export interface SubmissionResDto {
   id: number;
   name: string;
+  entryParent: string;
+  parentEntryType: string;
   contributor: string;
   description: string;
   url: string;

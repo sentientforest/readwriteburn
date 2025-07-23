@@ -245,6 +245,7 @@ describe("readwriteburn DTOs", () => {
       name: "test submission",
       fire: "test fire key",
       entryParent: "parent submission",
+      parentEntryType: Submission.INDEX_KEY, // Reply to submission, parent is a Submission
       contributor: "test contributor",
       uniqueKey: "test unique key"
     });
@@ -287,8 +288,8 @@ describe("readwriteburn DTOs", () => {
   test("FetchSubmissionsResDto", async () => {
     // Given
     const results = [
-      new Submission("a", "fireChainKey", "001", "name"),
-      new Submission("b", "submission-a-chain-key", "002", "submission b")
+      new Submission("a", "fireChainKey", Fire.INDEX_KEY, "001", "name"),
+      new Submission("b", "submission-a-chain-key", Submission.INDEX_KEY, "002", "submission b")
     ];
     const dto = new FetchSubmissionsResDto({ results, nextPageBookmark: "page2" });
 

@@ -151,6 +151,7 @@ describe("Read Write Burn Contract", () => {
       name: `test submission ${randomUniqueKey()}`,
       fire: fireChainKey,
       entryParent: fireChainKey,
+      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       contributor: "contributor",
       url: "url",
       description: "",
@@ -270,6 +271,7 @@ describe("Read Write Burn Contract", () => {
       name: `test comment ${randomUniqueKey()}`,
       fire: fireChainKey,
       entryParent: submissionChainKey,
+      parentEntryType: Submission.INDEX_KEY, // Comment on submission, parent is a Submission
       contributor: "contributor",
       url: "url",
       description: "",

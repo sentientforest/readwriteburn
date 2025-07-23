@@ -293,16 +293,39 @@ export class FetchFiresResDto extends ChainCallDTO {
 }
 
 export class SubmissionDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
   name: string;
+
+  @IsNotEmpty()
+  @IsString()
   fire: string;
+
+  @IsString()
+  entryParent: string;
+
+  @IsNotEmpty()
+  @IsString()
+  parentEntryType: string;
+
+  @IsOptional()
+  @IsString()
   contributor?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
   url?: string;
 }
 
 export interface SubmissionResDto {
   id: number;
   name: string;
+  entryParent: string;
+  parentEntryType: string;
   contributor: string;
   description: string;
   url: string;
