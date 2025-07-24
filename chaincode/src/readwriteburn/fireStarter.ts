@@ -52,7 +52,7 @@ export async function fireStarter(
   if (!dto.fire) {
     throw new ValidationFailedError(`DTO missing fire property: ${dto.serialize()}`);
   }
-  const { entryParent, slug, name, starter, description } = dto.fire;
+  const { slug, name, starter, description } = dto.fire;
   const authorities = dto.fire.authorities;
   const moderators = dto.fire.moderators;
 
@@ -62,7 +62,7 @@ export async function fireStarter(
     await ensureIsAuthenticatedBy(ctx, dto.fire, starterAlias);
   }
 
-  const fire = new Fire(entryParent, slug, name, starterAlias, description);
+  const fire = new Fire(slug, name, starterAlias, description);
 
   const fireKey = fire.getCompositeKey();
 

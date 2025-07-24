@@ -1,12 +1,13 @@
-import { ConflictError, ValidationFailedError } from "@gala-chain/api";
+import { ChainObject, ConflictError, ValidationFailedError } from "@gala-chain/api";
 import {
   GalaChainContext,
   inverseTime,
   objectExists,
   putChainObject
 } from "@gala-chain/chaincode";
+import { plainToInstance } from "class-transformer";
 
-import { Submission } from "./api/Submission";
+import { Fire, Submission, SubmissionByFire, SubmissionByParentEntry } from "./api";
 import { ContributeSubmissionDto } from "./api/dtos";
 
 /**
@@ -25,56 +26,79 @@ import { ContributeSubmissionDto } from "./api/dtos";
  * @throws {ValidationFailedError} When the target fire does not exist
  * @throws {ConflictError} When a submission with the same composite key already exists
  *
- * @example
- * ```typescript
- * const submission = await contributeSubmission(ctx, {
- *   submission: {
- *     name: "Interesting Article",
- *     fire: "fire-slug",
- *     entryParent: "fire-slug", // Fire slug for top-level submissions
- *     parentEntryType: "RWBF", // Fire.INDEX_KEY for top-level submissions
- *     description: "A detailed analysis of...",
- *     url: "https://example.com/article",
- *     uniqueKey: "unique-submission-key"
- *   },
- *   fee: feeVerificationDto,
- *   uniqueKey: "unique-tx-key"
- * });
- * ```
  */
 export async function contributeSubmission(
   ctx: GalaChainContext,
   dto: ContributeSubmissionDto
 ): Promise<Submission> {
-  const { name, fire, entryParent, parentEntryType, contributor, description, url } = dto.submission;
+  const { slug, uniqueKey, fire, name, contributor, description, url } = dto.submission;
 
-  const fireExists = await objectExists(ctx, fire);
+  const fireKey = ChainObject.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire]);
 
-  if (!fireExists)
-    throw new ValidationFailedError(`Fire with key ${fire} does not exist.`);
+  const fireExists = await objectExists(ctx, fireKey);
 
-  const submissionId = inverseTime(ctx);
+  if (!fireExists) {
+    throw new ValidationFailedError(`Fire with key ${fireKey} does not exist.`);
+  }
 
-  const submission = new Submission(
-    fire,
-    entryParent,
-    parentEntryType,
-    submissionId,
-    name,
-    contributor,
-    description,
-    url
-  );
+  const entryType = Submission.INDEX_KEY;
+  let entryParentType: string;
+  let entryParent = dto.submission.entryParent;
+  let parentKey: string | undefined;
+  if (entryParent !== undefined) {
+    const parentSubmissionExists = await objectExists(ctx, entryParent);
+    
+    if (!parentSubmissionExists) {
+      throw new ValidationFailedError(`Parent submission identified by key: ${entryParent} does not exist`);
+    }
 
-  const conflict = await objectExists(ctx, submission.getCompositeKey());
+    if (!entryParent.slice(0, 6).includes(Submission.INDEX_KEY)) {
+      throw new ValidationFailedError(
+        `contributeSubmission called with entryParent that does not match ` +
+        `Submission INDEX_KEY (${Submission.INDEX_KEY}): ${entryParent}`
+      );
+    }
+
+    entryParentType = Submission.INDEX_KEY;
+    parentKey = entryParent;
+  } else {
+    entryParent = fireKey;
+    entryParentType = Fire.INDEX_KEY;
+  }
+
+  const recency = inverseTime(ctx);
+
+  const submission: Submission = new Submission({
+    slug, uniqueKey, entryParent, entryParentType, entryType, name, contributor, description, url
+  });
+
+  const submissionKey = submission.getCompositeKey();
+
+  const conflict = await objectExists(ctx, submissionKey);
 
   if (conflict) {
     throw new ConflictError(
-      `Submission with key ${submission.getCompositeKey()} already exists.`
+      `Submission with key ${submissionKey} already exists.`
     );
   }
 
   await putChainObject(ctx, submission);
+
+  // Top-level submissions are indexed by Fire/Category 
+  // Sub-level submissions / comments are indexed by parent 
+  if (parentKey !== undefined) {
+    const submissionByParentEntry = plainToInstance(SubmissionByParentEntry, {
+      parentKey, recency, submissionKey
+    });
+
+    await putChainObject(ctx, submissionByParentEntry);
+  } else {
+    const submissionByFire = plainToInstance(SubmissionByFire, {
+      fire, recency, submissionKey
+    });
+
+    await putChainObject(ctx, submissionByFire);
+  }
 
   return submission;
 }

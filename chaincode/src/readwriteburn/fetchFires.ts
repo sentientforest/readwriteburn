@@ -21,7 +21,7 @@ import { FetchFiresDto, FetchFiresResDto } from "./api/dtos";
  *
  */
 export async function fetchFires(ctx: GalaChainContext, dto: FetchFiresDto) {
-  const query = takeUntilUndefined(dto.entryParent, dto.slug);
+  const query = takeUntilUndefined(dto.slug);
 
   const { results, metadata } = await getObjectsByPartialCompositeKeyWithPagination(
     ctx,

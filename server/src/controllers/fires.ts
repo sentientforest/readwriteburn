@@ -99,8 +99,9 @@ export async function fireStarterFee(fire: FireDto): Promise<BigNumber> {
 
 export async function fireStarter(req: Request, res: Response, next: NextFunction) {
   try {
-    const dto: FireStarterDto = deserialize(FireStarterDto, req.body);
-    const { fire, fee } = dto;
+    // Client sends FireStarterAuthorizationDto with signed FireDto
+    const authDto: FireStarterAuthorizationDto = deserialize(FireStarterAuthorizationDto, req.body);
+    const { fire, fee } = authDto;
 
     console.log(
       "Fire creation request:",

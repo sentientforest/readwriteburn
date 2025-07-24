@@ -39,7 +39,6 @@ const FIRE_STARTER_EIP712_TYPES_BASE = {
     { name: "prefix", type: "string" }
   ],
   fire: [
-    { name: "entryParent", type: "string" },
     { name: "slug", type: "string" },
     { name: "name", type: "string" },
     { name: "starter", type: "string" },
@@ -72,14 +71,14 @@ const FIRE_STARTER_EIP712_TYPES_WITH_FEE = {
 
 const FIRE_EIP712_TYPES = {
   Fire: [
-    { name: "entryParent", type: "string" },
     { name: "slug", type: "string" },
     { name: "name", type: "string" },
     { name: "starter", type: "string" },
     { name: "description", type: "string" },
     { name: "authorities", type: "string[]" },
     { name: "moderators", type: "string[]" },
-    { name: "uniqueKey", type: "string" }
+    { name: "uniqueKey", type: "string" },
+    { name: "prefix", type: "string" }
   ]
 };
 
@@ -125,14 +124,14 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
 
         // Prepare the message with proper structure
         const message: any = {
-          entryParent: fireDto.entryParent || "",
           slug: fireDto.slug,
           name: fireDto.name,
           starter: fireDto.starter,
           description: fireDto.description || "",
           authorities: fireDto.authorities || [],
           moderators: fireDto.moderators || [],
-          uniqueKey: fireDto.uniqueKey
+          uniqueKey: fireDto.uniqueKey,
+          prefix: prefix
         };
 
         const signature = await signer.signTypedData(domain, types, message);
@@ -185,10 +184,12 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
             { name: "name", type: "string" },
             { name: "fire", type: "string" },
             { name: "entryParent", type: "string" },
+            { name: "parentEntryType", type: "string" },
             { name: "contributor", type: "string" },
             { name: "description", type: "string" },
             { name: "url", type: "string" },
-            { name: "uniqueKey", type: "string" }
+            { name: "uniqueKey", type: "string" },
+            { name: "prefix", type: "string" }
           ]
         };
 
@@ -197,10 +198,12 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
           name: submissionDto.name,
           fire: submissionDto.fire,
           entryParent: submissionDto.entryParent || "",
+          parentEntryType: submissionDto.parentEntryType || "RWBF",
           contributor: submissionDto.contributor || "",
           description: submissionDto.description || "",
           url: submissionDto.url || "",
-          uniqueKey: submissionDto.uniqueKey
+          uniqueKey: submissionDto.uniqueKey,
+          prefix: prefix
         };
 
         const signature = await signer.signTypedData(domain, types, message);
@@ -347,6 +350,7 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
             { name: "name", type: "string" },
             { name: "fire", type: "string" },
             { name: "entryParent", type: "string" },
+            { name: "parentEntryType", type: "string" },
             { name: "contributor", type: "string" },
             { name: "description", type: "string" },
             { name: "url", type: "string" },
@@ -381,6 +385,7 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
             name: contributeSubmissionDto.submission.name,
             fire: contributeSubmissionDto.submission.fire,
             entryParent: contributeSubmissionDto.submission.entryParent || "",
+            parentEntryType: contributeSubmissionDto.submission.parentEntryType || "RWBF",
             contributor: contributeSubmissionDto.submission.contributor || "",
             description: contributeSubmissionDto.submission.description || "",
             url: contributeSubmissionDto.submission.url || "",

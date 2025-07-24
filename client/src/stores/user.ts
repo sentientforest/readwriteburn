@@ -57,10 +57,12 @@ export const useUserStore = defineStore("user", () => {
       // Try to get public key for GalaChain operations
       console.log("Attempting to get public key...");
       const keyResult = await metamaskClient.value.getPublicKey();
+      console.log("Public key result:", keyResult);
       if (keyResult && keyResult.publicKey) {
         publicKey.value = keyResult.publicKey;
-        console.log("Public key retrieved successfully");
+        console.log("Public key retrieved successfully:", publicKey.value);
       } else {
+        console.error("Failed to retrieve public key, keyResult:", keyResult);
         throw new Error("Failed to retrieve public key from MetaMask");
       }
 
@@ -98,6 +100,7 @@ export const useUserStore = defineStore("user", () => {
     if (!address.value) return false;
 
     try {
+      console.log("Checking registration for address:", address.value);
       const response = await fetch(
         `${import.meta.env.VITE_PROJECT_API}/api/product/PublicKeyContract/GetPublicKey`,
         {
@@ -107,21 +110,34 @@ export const useUserStore = defineStore("user", () => {
         }
       );
 
+      console.log("Registration check response:", response.status, response.ok);
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.log("Registration check error body:", errorBody);
+      }
+
       isRegistered.value = response.ok;
       return response.ok;
-    } catch {
+    } catch (err) {
+      console.error("Registration check failed:", err);
       isRegistered.value = false;
       return false;
     }
   }
 
   async function registerUser() {
-    if (!metamaskClient.value || !publicKey.value) return false;
+    console.log("Attempting user registration...", { hasMetamaskClient: !!metamaskClient.value, hasPublicKey: !!publicKey.value, publicKey: publicKey.value });
+    
+    if (!metamaskClient.value || !publicKey.value) {
+      console.log("Registration skipped - missing requirements");
+      return false;
+    }
 
     loading.value = true;
     error.value = null;
 
     try {
+      console.log("Sending registration request with public key:", publicKey.value);
       const response = await fetch(`${import.meta.env.VITE_PROJECT_API}/identities/CreateHeadlessWallet`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,13 +145,17 @@ export const useUserStore = defineStore("user", () => {
       });
 
       if (response.ok) {
+        console.log("Registration successful");
         isRegistered.value = true;
         return true;
       } else {
-        error.value = "Failed to register user";
+        const errorBody = await response.text();
+        console.log("Registration failed:", response.status, errorBody);
+        error.value = `Failed to register user: ${response.status}`;
         return false;
       }
     } catch (err) {
+      console.error("Registration error:", err);
       error.value = err instanceof Error ? err.message : "Registration failed";
       return false;
     } finally {

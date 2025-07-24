@@ -24,7 +24,7 @@ class IEntry extends ChainObject {
 
   /** Parent entry key for hierarchical organization */
   @IsString()
-  entryParent: string;
+  entryParent?: string;
 }
 
 /**
