@@ -1,7 +1,18 @@
 import { ChainKey, ChainObject } from "@gala-chain/api";
-import BigNumber from "bignumber.js";
 import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+
+export interface ISubmission {
+  slug: string;
+  uniqueKey: string;
+  entryParent: string;
+  entryParentType: string;
+  entryType: string;
+  name: string;
+  contributor?: string;
+  description?: string;
+  url?: string;
+}
 
 /**
  * Submission represents user-contributed content within a fire
@@ -22,28 +33,24 @@ export class Submission extends ChainObject {
   @ChainKey({ position: 0 })
   @IsNotEmpty()
   @IsString()
-  fire: string;
+  slug: string; // todo: limit to alphanumeric, lower case, dashes, no spaces, URL friendly
 
   /** Parent entry identifier (fire slug for top-level, submission key for replies) */
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
+  uniqueKey: string;
+
+  @IsString()
   entryParent: string;
 
-  /** Type of the parent entry (Fire.INDEX_KEY or Submission.INDEX_KEY) */
-  @ChainKey({ position: 2 })
-  @IsNotEmpty()
   @IsString()
-  parentEntryType: string;
+  entryParentType: string;
 
-  /** Unique identifier for this submission (typically inverse timestamp) */
-  @ChainKey({ position: 3 })
-  @IsNotEmpty()
   @IsString()
-  id: string;
+  entryType: string;
 
   /** Display title of the submission */
-  @ChainKey({ position: 4 })
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -66,33 +73,59 @@ export class Submission extends ChainObject {
   /**
    * Create a new Submission instance
    *
-   * @param fire - Fire slug this submission belongs to
-   * @param entryParent - Parent entry identifier (fire slug or submission key)
-   * @param parentEntryType - Type of parent (Fire.INDEX_KEY or Submission.INDEX_KEY)
-   * @param id - Unique identifier for this submission
-   * @param name - Display title of the submission
-   * @param contributor - Optional user identifier of the contributor
-   * @param description - Optional description or body text
-   * @param url - Optional URL for external content
    */
-  constructor(
-    fire: string,
-    entryParent: string,
-    parentEntryType: string,
-    id: string,
-    name: string,
-    contributor?: string | undefined,
-    description?: string | undefined,
-    url?: string | undefined
-  ) {
+  constructor(data: ISubmission) {
     super();
-    this.fire = fire;
-    this.entryParent = entryParent;
-    this.parentEntryType = parentEntryType;
-    this.id = id;
-    this.name = name;
-    this.contributor = contributor;
-    this.description = description;
-    this.url = url;
+    this.slug = data?.slug ?? "none";
+    this.entryParent = data?.entryParent ?? "none";
+    this.entryParentType = data?.entryParentType ?? "none";
+    this.name = data?.name ?? "none";
+    this.contributor = data?.contributor;
+    this.description = data?.description;
+    this.url = data?.url;
   }
 }
+
+export class SubmissionByFire extends ChainObject {
+  @Exclude()
+  static INDEX_KEY = "RWBSBY";
+
+  /** Unique slug that identifies a Fire */
+  @ChainKey({ position: 0 })
+  @IsNotEmpty()
+  @IsString()
+  public fire: string;
+
+  /** Inverse timestamp sorts lexigraphically by most recent first */
+  @ChainKey({ position: 1 })
+  @IsNotEmpty()
+  @IsString()
+  public recency: string;
+
+  @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  public submissionKey: string;
+}
+
+export class SubmissionByParentEntry extends ChainObject {
+  @Exclude()
+  static INDEX_KEY = "RWBSBPE";
+
+  @ChainKey({ position: 0 })
+  @IsNotEmpty()
+  @IsString()
+  public parentKey: string;
+
+    /** Inverse timestamp sorts lexigraphically by most recent first */
+  @ChainKey({ position: 1 })
+  @IsNotEmpty()
+  @IsString()
+  public recency: string;
+
+  @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  public submissionKey: string;
+}
+

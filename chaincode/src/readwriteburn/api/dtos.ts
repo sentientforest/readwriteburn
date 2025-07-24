@@ -189,31 +189,37 @@ export class FetchFiresResDto extends ChainCallDTO {
 }
 
 export interface ISubmissionDto {
-  name: string;
+  slug: string;
+  uniqueKey: string;
+  entryParent?: string;
   fire: string;
-  entryParent: string;
-  parentEntryType: string;
+  name: string;
   contributor?: string;
   description?: string;
   url?: string;
-  uniqueKey?: string;
+
 }
 
-export class SubmissionDto extends ChainCallDTO {
+export class SubmissionDto extends SubmitCallDTO {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  slug: string;
+
+  @IsNotEmpty()
+  @IsString()
+  uniqueKey: string;
+
+  @IsOptional()
+  @IsString()
+  entryParent?: string;
 
   @IsNotEmpty()
   @IsString()
   fire: string;
 
-  @IsString()
-  entryParent: string;
-
   @IsNotEmpty()
   @IsString()
-  parentEntryType: string;
+  name: string;
 
   @IsOptional()
   @IsString()
@@ -229,14 +235,14 @@ export class SubmissionDto extends ChainCallDTO {
 
   constructor(data: ISubmissionDto) {
     super();
-    this.name = data?.name;
-    this.fire = data?.fire;
+    this.slug = data?.slug ?? "none";
+    this.uniqueKey = data?.uniqueKey ?? "none";
     this.entryParent = data?.entryParent;
-    this.parentEntryType = data?.parentEntryType;
+    this.name = data?.name ?? "none";
+    this.fire = data?.fire ?? "";
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
-    this.uniqueKey = data?.uniqueKey;
   }
 }
 
