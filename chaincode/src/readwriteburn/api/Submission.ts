@@ -3,9 +3,10 @@ import { Exclude } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export interface ISubmission {
+  recency: string;
   slug: string;
   uniqueKey: string;
-  entryParent: string;
+  entryParentKey: string;
   entryParentType: string;
   entryType: string;
   name: string;
@@ -29,46 +30,55 @@ export class Submission extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBS";
 
-  /** Composite key of the fire this submission belongs to */
+  /** Inverse timestamp sorts lexigraphically by most recent first */
   @ChainKey({ position: 0 })
   @IsNotEmpty()
   @IsString()
-  slug: string; // todo: limit to alphanumeric, lower case, dashes, no spaces, URL friendly
+  public recency: string;
 
-  /** Parent entry identifier (fire slug for top-level, submission key for replies) */
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
-  uniqueKey: string;
+  public slug: string; // todo: limit to alphanumeric, lower case, dashes, no spaces, URL friendly
+
+  /** Parent entry identifier (fire slug for top-level, submission key for replies) */
+  @ChainKey({ position: 2 })
+  @IsNotEmpty()
+  @IsString()
+  public uniqueKey: string;
 
   @IsString()
-  entryParent: string;
+  public fireKey: string;
+
+  @IsOptional()
+  @IsString()
+  public entryParentKey?: string;
 
   @IsString()
-  entryParentType: string;
+  public entryParentType: string;
 
   @IsString()
-  entryType: string;
+  public entryType: string;
 
   /** Display title of the submission */
   @IsNotEmpty()
   @IsString()
-  name: string;
+  public name: string;
 
   /** Optional identifier of the user who contributed this submission */
   @IsOptional()
   @IsString()
-  contributor?: string;
+  public contributor?: string;
 
   /** Optional description or body text of the submission */
   @IsOptional()
   @IsString()
-  description?: string;
+  public description?: string;
 
   /** Optional URL if this submission links to external content */
   @IsOptional()
   @IsString()
-  url?: string;
+  public url?: string;
 
   /**
    * Create a new Submission instance
@@ -76,8 +86,9 @@ export class Submission extends ChainObject {
    */
   constructor(data: ISubmission) {
     super();
+    this.recency = data?.recency ?? "999";
     this.slug = data?.slug ?? "none";
-    this.entryParent = data?.entryParent ?? "none";
+    this.entryParentKey = data?.entryParentKey ?? "none";
     this.entryParentType = data?.entryParentType ?? "none";
     this.name = data?.name ?? "none";
     this.contributor = data?.contributor;
@@ -90,11 +101,11 @@ export class SubmissionByFire extends ChainObject {
   @Exclude()
   static INDEX_KEY = "RWBSBY";
 
-  /** Unique slug that identifies a Fire */
+  /** Chain key that identifies a Fire */
   @ChainKey({ position: 0 })
   @IsNotEmpty()
   @IsString()
-  public fire: string;
+  public fireKey: string;
 
   /** Inverse timestamp sorts lexigraphically by most recent first */
   @ChainKey({ position: 1 })
@@ -117,7 +128,7 @@ export class SubmissionByParentEntry extends ChainObject {
   @IsString()
   public parentKey: string;
 
-    /** Inverse timestamp sorts lexigraphically by most recent first */
+  /** Inverse timestamp sorts lexigraphically by most recent first */
   @ChainKey({ position: 1 })
   @IsNotEmpty()
   @IsString()
@@ -128,4 +139,3 @@ export class SubmissionByParentEntry extends ChainObject {
   @IsString()
   public submissionKey: string;
 }
-

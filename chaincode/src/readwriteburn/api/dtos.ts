@@ -23,7 +23,7 @@ import {
 import { JSONSchema } from "class-validator-jsonschema";
 
 import { Fire, FireAuthority, FireModerator, FireStarter } from "./Fire";
-import { Submission } from "./Submission";
+import { ISubmission, Submission } from "./Submission";
 import { Vote } from "./Vote";
 import { VoteCount } from "./VoteCount";
 import { VoteRanking } from "./VoteRanking";
@@ -191,13 +191,12 @@ export class FetchFiresResDto extends ChainCallDTO {
 export interface ISubmissionDto {
   slug: string;
   uniqueKey: string;
-  entryParent?: string;
+  entryParentKey?: string;
   fire: string;
   name: string;
   contributor?: string;
   description?: string;
   url?: string;
-
 }
 
 export class SubmissionDto extends SubmitCallDTO {
@@ -211,7 +210,7 @@ export class SubmissionDto extends SubmitCallDTO {
 
   @IsOptional()
   @IsString()
-  entryParent?: string;
+  entryParentKey?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -237,7 +236,7 @@ export class SubmissionDto extends SubmitCallDTO {
     super();
     this.slug = data?.slug ?? "none";
     this.uniqueKey = data?.uniqueKey ?? "none";
-    this.entryParent = data?.entryParent;
+    this.entryParentKey = data?.entryParentKey;
     this.name = data?.name ?? "none";
     this.fire = data?.fire ?? "";
     this.contributor = data?.contributor;
@@ -248,7 +247,7 @@ export class SubmissionDto extends SubmitCallDTO {
 
 export interface SubmissionResDto {
   id: number;
-  entryParent: string;
+  entryParent?: string;
   parentEntryType: string;
   name: string;
   contributor: string;
@@ -282,20 +281,20 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
 }
 
 export interface IFetchSubmissionsDto {
-  fire?: string;
-  entryParent?: string;
+  fireKey?: string;
+  entryParentKey?: string;
   bookmark?: string;
   limit?: number;
 }
 
 export class FetchSubmissionsDto extends ChainCallDTO {
   @IsOptional()
-  @IsNotEmpty()
-  public fire?: string;
+  @IsString()
+  public fireKey?: string;
 
   @IsOptional()
-  @IsNotEmpty()
-  public entryParent?: string;
+  @IsString()
+  public entryParentKey?: string;
 
   @IsOptional()
   @IsString()
@@ -307,15 +306,95 @@ export class FetchSubmissionsDto extends ChainCallDTO {
 
   constructor(data: IFetchSubmissionsDto) {
     super();
-    this.fire = data?.fire;
-    this.entryParent = data?.entryParent;
+    this.fireKey = data?.fireKey;
+    this.entryParentKey = data?.entryParentKey;
     this.bookmark = data?.bookmark;
     this.limit = data?.limit;
   }
 }
 
+export interface ISubmissionWithChildren {
+  slug: string;
+  uniqueKey: string;
+  entryParentKey?: string;
+  entryParentType: string;
+  name: string;
+  contributor?: string;
+  description?: string;
+  url?: string;
+  fireKey: string;
+  recency: string;
+  submissionKey: string;
+  parentKey?: string;
+  children?: ISubmissionWithChildren[];
+  childrenNextPageBookmark?: string;
+}
+
+export class SubmissionWithChildren extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  public slug: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public uniqueKey: string;
+
+  @IsOptional()
+  @IsString()
+  public entryParentKey?: string;
+
+  @IsString()
+  public entryParentType: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public name: string;
+
+  @IsOptional()
+  @IsString()
+  public contributor?: string;
+
+  @IsOptional()
+  @IsString()
+  public description?: string;
+
+  @IsOptional()
+  @IsString()
+  public url?: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public fireKey: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public recency: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public submissionKey: string;
+
+  @IsNotEmpty()
+  @IsString()
+  public parentKey?: string;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => SubmissionWithChildren)
+  public children?: ISubmissionWithChildren[];
+
+  @IsOptional()
+  @IsString()
+  childrenNextPageBookmark?: string;
+
+  constructor(data: ISubmissionWithChildren) {
+    super();
+    this.slug = data?.slug;
+  }
+}
+
 export interface IFetchSubmissionsResDto {
-  results: Submission[];
+  results: SubmissionWithChildren[];
   nextPageBookmark?: string | undefined;
 }
 
@@ -323,7 +402,7 @@ export class FetchSubmissionsResDto extends ChainCallDTO {
   @JSONSchema({ description: "List of results." })
   @ValidateNested({ each: true })
   @Type(() => Submission)
-  results: Submission[];
+  results: SubmissionWithChildren[];
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
@@ -363,11 +442,11 @@ export class VoteDto extends SubmitCallDTO {
 
   constructor(data: IVoteDto) {
     super();
-    this.entryType = data?.entryType;
-    this.entryParent = data?.entryParent;
-    this.entry = data?.entry;
-    this.quantity = data?.quantity;
-    this.uniqueKey = data?.uniqueKey;
+    this.entryType = data?.entryType ?? "none";
+    this.entryParent = data?.entryParent ?? "";
+    this.entry = data?.entry ?? "none";
+    this.quantity = data?.quantity ?? new BigNumber(0);
+    this.uniqueKey = data?.uniqueKey ?? "none";
   }
 }
 

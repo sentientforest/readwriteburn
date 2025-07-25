@@ -43,33 +43,44 @@ export async function contributeSubmission(
 
   const entryType = Submission.INDEX_KEY;
   let entryParentType: string;
-  let entryParent = dto.submission.entryParent;
+  let entryParentKey = dto.submission.entryParentKey;
   let parentKey: string | undefined;
-  if (entryParent !== undefined) {
-    const parentSubmissionExists = await objectExists(ctx, entryParent);
-    
+  if (entryParentKey !== undefined) {
+    const parentSubmissionExists = await objectExists(ctx, entryParentKey);
+
     if (!parentSubmissionExists) {
-      throw new ValidationFailedError(`Parent submission identified by key: ${entryParent} does not exist`);
+      throw new ValidationFailedError(
+        `Parent submission identified by key: ${entryParentKey} does not exist`
+      );
     }
 
-    if (!entryParent.slice(0, 6).includes(Submission.INDEX_KEY)) {
+    if (!entryParentKey.slice(0, 6).includes(Submission.INDEX_KEY)) {
       throw new ValidationFailedError(
         `contributeSubmission called with entryParent that does not match ` +
-        `Submission INDEX_KEY (${Submission.INDEX_KEY}): ${entryParent}`
+          `Submission INDEX_KEY (${Submission.INDEX_KEY}): ${entryParentKey}`
       );
     }
 
     entryParentType = Submission.INDEX_KEY;
-    parentKey = entryParent;
+    parentKey = entryParentKey;
   } else {
-    entryParent = fireKey;
+    entryParentKey = fireKey;
     entryParentType = Fire.INDEX_KEY;
   }
 
   const recency = inverseTime(ctx);
 
   const submission: Submission = new Submission({
-    slug, uniqueKey, entryParent, entryParentType, entryType, name, contributor, description, url
+    recency,
+    slug,
+    uniqueKey,
+    entryParentKey,
+    entryParentType,
+    entryType,
+    name,
+    contributor,
+    description,
+    url
   });
 
   const submissionKey = submission.getCompositeKey();
@@ -77,24 +88,26 @@ export async function contributeSubmission(
   const conflict = await objectExists(ctx, submissionKey);
 
   if (conflict) {
-    throw new ConflictError(
-      `Submission with key ${submissionKey} already exists.`
-    );
+    throw new ConflictError(`Submission with key ${submissionKey} already exists.`);
   }
 
   await putChainObject(ctx, submission);
 
-  // Top-level submissions are indexed by Fire/Category 
-  // Sub-level submissions / comments are indexed by parent 
+  // Top-level submissions are indexed by Fire/Category
+  // Sub-level submissions / comments are indexed by parent
   if (parentKey !== undefined) {
     const submissionByParentEntry = plainToInstance(SubmissionByParentEntry, {
-      parentKey, recency, submissionKey
+      parentKey,
+      recency,
+      submissionKey
     });
 
     await putChainObject(ctx, submissionByParentEntry);
   } else {
     const submissionByFire = plainToInstance(SubmissionByFire, {
-      fire, recency, submissionKey
+      fire,
+      recency,
+      submissionKey
     });
 
     await putChainObject(ctx, submissionByFire);
