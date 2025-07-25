@@ -188,7 +188,13 @@ describe("Read Write Burn Contract", () => {
 
     const { fire, entryParent, id, name } = submissionResult;
 
-    submissionChainKey = new Submission(fire, entryParent, Fire.INDEX_KEY, id, name).getCompositeKey();
+    submissionChainKey = new Submission(
+      fire,
+      entryParent,
+      Fire.INDEX_KEY,
+      id,
+      name
+    ).getCompositeKey();
   });
 
   test("CastVote", async () => {
@@ -308,7 +314,13 @@ describe("Read Write Burn Contract", () => {
 
     const { fire, entryParent, id, name } = submissionResult;
 
-    commentChainKey = new Submission(fire, entryParent, Submission.INDEX_KEY, id, name).getCompositeKey();
+    commentChainKey = new Submission(
+      fire,
+      entryParent,
+      Submission.INDEX_KEY,
+      id,
+      name
+    ).getCompositeKey();
   });
 
   test("Upvote a comment", async () => {

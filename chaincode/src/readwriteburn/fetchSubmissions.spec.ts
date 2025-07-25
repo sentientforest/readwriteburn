@@ -19,7 +19,13 @@ import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./api/dtos";
 describe("fetchSubmissions chaincode call", () => {
   const fireChainKey = "test|fire";
 
-  const submission = new Submission(fireChainKey, fireChainKey, Fire.INDEX_KEY, "001", "name");
+  const submission = new Submission(
+    fireChainKey,
+    fireChainKey,
+    Fire.INDEX_KEY,
+    "001",
+    "name"
+  );
   const comment = new Submission(
     fireChainKey,
     submission.getCompositeKey(),

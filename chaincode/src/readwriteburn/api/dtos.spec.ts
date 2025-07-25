@@ -289,7 +289,13 @@ describe("readwriteburn DTOs", () => {
     // Given
     const results = [
       new Submission("a", "fireChainKey", Fire.INDEX_KEY, "001", "name"),
-      new Submission("b", "submission-a-chain-key", Submission.INDEX_KEY, "002", "submission b")
+      new Submission(
+        "b",
+        "submission-a-chain-key",
+        Submission.INDEX_KEY,
+        "002",
+        "submission b"
+      )
     ];
     const dto = new FetchSubmissionsResDto({ results, nextPageBookmark: "page2" });
 
