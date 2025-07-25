@@ -1,52 +1,42 @@
+import { ChainError } from "@gala-chain/api";
 import {
   GalaChainContext,
+  getObjectsByKeys,
   getObjectsByPartialCompositeKeyWithPagination,
   takeUntilUndefined
 } from "@gala-chain/chaincode";
 
-import { Submission } from "./api/Submission";
-import { FetchSubmissionsDto, FetchSubmissionsResDto } from "./api/dtos";
+import { Submission, SubmissionByFire, SubmissionByParentEntry } from "./api/Submission";
+import {
+  FetchSubmissionsDto,
+  FetchSubmissionsResDto,
+  ISubmissionWithChildren,
+  SubmissionWithChildren
+} from "./api/dtos";
 
-/**
- * Retrieve submissions from fires with pagination support
- *
- * This function queries submission data by:
- * 1. Building a partial composite key query from fire and/or entryParent filters
- * 2. Executing paginated queries against the chain state
- * 3. Returning results with bookmark for continued pagination
- *
- * @param ctx - The GalaChain transaction context
- * @param dto - Query parameters including optional filters, bookmark, and limit
- * @returns Promise resolving to paginated list of submissions
- *
- * @remarks
- * Supports flexible querying:
- * - Filter by fire only: Returns all submissions in that fire
- * - Filter by fire + entryParent: Returns submissions/comments under that parent
- * - No filters: Returns all submissions (use with caution due to volume)
- *
- * @example
- * ```typescript
- * // Get all top-level submissions in a fire
- * const result = await fetchSubmissions(ctx, {
- *   fire: "fire-key",
- *   entryParent: "fire-key", // Same as fire for top-level
- *   limit: 20
- * });
- *
- * // Get comments on a specific submission
- * const comments = await fetchSubmissions(ctx, {
- *   fire: "fire-key",
- *   entryParent: "submission-key",
- *   limit: 50
- * });
- * ```
- */
 export async function fetchSubmissions(
   ctx: GalaChainContext,
   dto: FetchSubmissionsDto
 ): Promise<FetchSubmissionsResDto> {
-  const query = takeUntilUndefined(dto.fire, dto.entryParent);
+  const { fireKey, entryParentKey, bookmark, limit } = dto;
+
+  const query = [];
+
+  if (entryParentKey !== undefined) {
+    return fetchSubmissionsByParentEntry(ctx, {
+      parentKey: entryParentKey,
+      bookmark,
+      limit
+    });
+  }
+
+  if (fireKey !== undefined) {
+    return fetchSubmissionsByFire(ctx, {
+      fireKey,
+      bookmark,
+      limit
+    });
+  }
 
   const { results, metadata } = await getObjectsByPartialCompositeKeyWithPagination(
     ctx,
@@ -57,8 +47,196 @@ export async function fetchSubmissions(
     dto.limit
   );
 
+  const submissions = results.map((s) => {
+    return new SubmissionWithChildren({
+      ...s,
+      submissionKey: s.getCompositeKey()
+    });
+  });
+
   return new FetchSubmissionsResDto({
-    results,
+    results: submissions,
     nextPageBookmark: metadata.bookmark
   });
+}
+
+export interface IFetchSubmissionsByFire {
+  fireKey: string;
+  bookmark?: string;
+  limit?: number;
+  maxDepth?: number;
+}
+
+export async function fetchSubmissionsByFire(
+  ctx: GalaChainContext,
+  data: IFetchSubmissionsByFire
+): Promise<FetchSubmissionsResDto> {
+  const { fireKey, bookmark, limit, maxDepth } = data;
+
+  const query = [fireKey];
+
+  const byFireQuery = await getObjectsByPartialCompositeKeyWithPagination(
+    ctx,
+    SubmissionByFire.INDEX_KEY,
+    query,
+    SubmissionByFire,
+    bookmark,
+    limit
+  );
+
+  const submissionsByFire = byFireQuery.results;
+  const nextPageBookmark = byFireQuery.metadata.bookmark;
+
+  const submissionKeys = submissionsByFire.map((bf) => {
+    return bf.submissionKey;
+  });
+
+  const submissions = await getObjectsByKeys(ctx, Submission, submissionKeys);
+
+  const results: SubmissionWithChildren[] = await Promise.all(
+    submissions.map((s) => {
+      return populateDescendantsForSubmission(ctx, { entry: s, limit, maxDepth });
+    })
+  );
+
+  return new FetchSubmissionsResDto({ results, nextPageBookmark });
+}
+
+export interface IFetchSubmissionsByParentEntry {
+  parentKey: string;
+  bookmark?: string;
+  limit?: number;
+}
+
+export async function fetchSubmissionsByParentEntry(
+  ctx: GalaChainContext,
+  data: IFetchSubmissionsByParentEntry
+): Promise<FetchSubmissionsResDto> {
+  const { parentKey, bookmark, limit } = data;
+
+  const query = [parentKey];
+
+  const byParentQuery = await getObjectsByPartialCompositeKeyWithPagination(
+    ctx,
+    SubmissionByParentEntry.INDEX_KEY,
+    query,
+    SubmissionByParentEntry,
+    bookmark,
+    limit
+  );
+
+  const submissionsByParent = byParentQuery.results;
+  const submissionsByParentNextPageBookmark = byParentQuery.metadata.bookmark;
+
+  const submissionKeys = submissionsByParent.map((bp) => {
+    return bp.submissionKey;
+  });
+
+  const childSubmissions = await getObjectsByKeys(ctx, Submission, submissionKeys);
+
+  const children: SubmissionWithChildren[] = [];
+
+  for (const c of childSubmissions) {
+    const result = new SubmissionWithChildren({
+      ...c,
+      parentKey: parentKey,
+      submissionKey: c.getCompositeKey()
+    });
+
+    children.push(result);
+  }
+
+  const response = new FetchSubmissionsResDto({
+    results: children,
+    nextPageBookmark: submissionsByParentNextPageBookmark
+  });
+
+  return response;
+}
+
+export interface IPopulateSubmissionWithChildren {
+  entry: SubmissionWithChildren;
+  limit?: number;
+  depth?: number;
+  maxDepth?: number;
+}
+
+export async function populateSubmissionWithChildren(
+  ctx: GalaChainContext,
+  data: IPopulateSubmissionWithChildren
+): Promise<SubmissionWithChildren> {
+  const { entry, limit, depth, maxDepth } = data;
+
+  const currentDepth = depth ? depth + 1 : 1;
+
+  if (currentDepth >= (maxDepth ?? 10)) {
+    return entry;
+  }
+
+  const childrenQuery = await fetchSubmissionsByParentEntry(ctx, {
+    parentKey: entry.submissionKey,
+    limit: limit
+  }).catch((e) => {
+    ctx.logger.debug(
+      `Failed to fetchSubmissionsByParentEntry in populateSubmissionWithChildren attempt ` +
+        `for submissionKey: ${entry.submissionKey} -- ${e}`
+    );
+    throw ChainError.from(e);
+  });
+
+  entry.childrenNextPageBookmark = childrenQuery.nextPageBookmark;
+
+  if (childrenQuery.results.length < 1) {
+    entry.children = [];
+    return entry;
+  }
+
+  const populateChildrenQueries = childrenQuery.results.map((child) => {
+    return populateSubmissionWithChildren(ctx, {
+      entry: child,
+      limit: limit,
+      depth: currentDepth,
+      maxDepth: maxDepth
+    });
+  });
+
+  const populated = await Promise.all(populateChildrenQueries).catch((e) => {
+    // todo: define more specific error
+    ctx.logger.debug(
+      `Failed to execute all populateChildrenQueries for submissionKey: ${entry.submissionKey} -- ${e}`
+    );
+
+    throw ChainError.from(e);
+  });
+
+  entry.children = populated;
+
+  return entry;
+}
+
+export interface IPopulateDescendantsForSubmission {
+  entry: Submission;
+  limit?: number;
+  maxDepth?: number;
+}
+
+export async function populateDescendantsForSubmission(
+  ctx: GalaChainContext,
+  data: IPopulateDescendantsForSubmission
+): Promise<SubmissionWithChildren> {
+  const { entry, limit, maxDepth } = data;
+
+  const response = new SubmissionWithChildren({
+    ...entry,
+    submissionKey: entry.getCompositeKey(),
+    children: []
+  });
+
+  await populateSubmissionWithChildren(ctx, {
+    entry: response,
+    limit,
+    maxDepth
+  });
+
+  return response;
 }
