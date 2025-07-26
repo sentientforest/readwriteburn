@@ -6,6 +6,7 @@ export interface ISubmission {
   recency: string;
   slug: string;
   uniqueKey: string;
+  fireKey: string;
   entryParentKey: string;
   entryParentType: string;
   entryType: string;
@@ -88,7 +89,9 @@ export class Submission extends ChainObject {
     super();
     this.recency = data?.recency ?? "999";
     this.slug = data?.slug ?? "none";
-    this.entryParentKey = data?.entryParentKey ?? "none";
+    this.uniqueKey = data?.uniqueKey ?? "none";
+    this.fireKey = data?.fireKey ?? "none";
+    this.entryParentKey = data?.entryParentKey;
     this.entryParentType = data?.entryParentType ?? "none";
     this.name = data?.name ?? "none";
     this.contributor = data?.contributor;

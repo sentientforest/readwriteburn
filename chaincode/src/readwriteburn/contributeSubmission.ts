@@ -74,6 +74,7 @@ export async function contributeSubmission(
     recency,
     slug,
     uniqueKey,
+    fireKey,
     entryParentKey,
     entryParentType,
     entryType,
