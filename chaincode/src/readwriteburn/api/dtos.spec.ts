@@ -26,6 +26,7 @@ import {
   FireStarterDto,
   IFireResDto,
   SubmissionDto,
+  SubmissionWithChildren,
   VoteDto,
   VoteResult
 } from "./dtos";
@@ -242,12 +243,14 @@ describe("readwriteburn DTOs", () => {
 
   test("SubmissionDto", async () => {
     const dto = new SubmissionDto({
+      slug: "test-submission",
+      uniqueKey: "test-unique-key",
+      entryParentKey: "parent-key",
+      fire: "test-fire-key",
       name: "test submission",
-      fire: "test fire key",
-      entryParent: "parent submission",
-      parentEntryType: Submission.INDEX_KEY, // Reply to submission, parent is a Submission
       contributor: "test contributor",
-      uniqueKey: "test unique key"
+      description: "Test description",
+      url: "https://example.com"
     });
 
     const validationResult = await dto.validate();
@@ -258,8 +261,8 @@ describe("readwriteburn DTOs", () => {
   test("FetchSubmissionsDto", async () => {
     // Given
     const dto = new FetchSubmissionsDto({
-      fire: "test fire key",
-      entryParent: "test fire key"
+      fireKey: "test-fire-key",
+      entryParentKey: "test-parent-key"
     });
 
     // When
@@ -272,9 +275,9 @@ describe("readwriteburn DTOs", () => {
   test("FetchSubmissionsDto with class-transformer", async () => {
     // Given
     const dto = plainToInstance(FetchSubmissionsDto, {
-      fire: "test fire key",
-      entryParent: "test fire key",
-      bookmark: "page 2 string key",
+      fireKey: "test-fire-key",
+      entryParentKey: "test-parent-key",
+      bookmark: "page-2-string-key",
       limit: 1
     });
 
@@ -287,16 +290,35 @@ describe("readwriteburn DTOs", () => {
 
   test("FetchSubmissionsResDto", async () => {
     // Given
-    const results = [
-      new Submission("a", "fireChainKey", Fire.INDEX_KEY, "001", "name"),
-      new Submission(
-        "b",
-        "submission-a-chain-key",
-        Submission.INDEX_KEY,
-        "002",
-        "submission b"
-      )
-    ];
+    const submissionWithChildren1 = new SubmissionWithChildren({
+      slug: "submission-1",
+      uniqueKey: "001",
+      entryParentKey: "test-fire-key",
+      entryParentType: Fire.INDEX_KEY,
+      name: "First Submission",
+      contributor: "test-user-1",
+      description: "Description for first submission",
+      fireKey: "test-fire-key",
+      recency: "999999999999",
+      submissionKey: "submission-1-key",
+      parentKey: "test-fire-key"
+    });
+
+    const submissionWithChildren2 = new SubmissionWithChildren({
+      slug: "submission-2",
+      uniqueKey: "002",
+      entryParentKey: "submission-1-key",
+      entryParentType: Submission.INDEX_KEY,
+      name: "Second Submission",
+      contributor: "test-user-2",
+      description: "Description for second submission",
+      fireKey: "test-fire-key",
+      recency: "999999999998",
+      submissionKey: "submission-2-key",
+      parentKey: "submission-1-key"
+    });
+
+    const results = [submissionWithChildren1, submissionWithChildren2];
     const dto = new FetchSubmissionsResDto({ results, nextPageBookmark: "page2" });
 
     // When
@@ -304,6 +326,84 @@ describe("readwriteburn DTOs", () => {
 
     // Then
     expect(validationResult).toEqual([]);
+  });
+
+  test("SubmissionWithChildren", async () => {
+    // Given
+    const childSubmission = new SubmissionWithChildren({
+      slug: "child-submission",
+      uniqueKey: "child-001",
+      entryParentKey: "parent-submission-key",
+      entryParentType: Submission.INDEX_KEY,
+      name: "Child Submission",
+      contributor: "test-user",
+      description: "A child submission",
+      fireKey: "test-fire-key",
+      recency: "999999999999",
+      submissionKey: "child-submission-key",
+      parentKey: "parent-submission-key"
+    });
+
+    const parentSubmission = new SubmissionWithChildren({
+      slug: "parent-submission",
+      uniqueKey: "parent-001",
+      entryParentKey: "test-fire-key",
+      entryParentType: Fire.INDEX_KEY,
+      name: "Parent Submission",
+      contributor: "test-user",
+      description: "A parent submission",
+      fireKey: "test-fire-key",
+      recency: "999999999998",
+      submissionKey: "parent-submission-key",
+      parentKey: "test-fire-key",
+      children: [childSubmission],
+      childrenNextPageBookmark: ""
+    });
+
+    // When
+    const validationResult = await parentSubmission.validate();
+
+    // Then
+    expect(validationResult).toEqual([]);
+    expect(parentSubmission.children).toHaveLength(1);
+    expect(parentSubmission.children![0].name).toEqual("Child Submission");
+  });
+
+  test("ContributeSubmissionDto", async () => {
+    // Given
+    const submissionDto = new SubmissionDto({
+      slug: "contribute-test",
+      uniqueKey: "contrib-001",
+      entryParentKey: "fire-key",
+      fire: "test-fire-key",
+      name: "Contribution Test",
+      contributor: userRef,
+      description: "Test contribution"
+    });
+
+    const fee = plainToInstance(FeeVerificationDto, {
+      authorization: "",
+      authority: asValidUserRef(user.identityKey),
+      created: Date.now(),
+      txId: "test txid",
+      quantity: new BigNumber("1"),
+      feeAuthorizationKey: "test key",
+      uniqueKey: randomUniqueKey()
+    }).signed(admin.privateKey);
+
+    const dto = new ContributeSubmissionDto({
+      submission: submissionDto,
+      fee: fee,
+      uniqueKey: randomUniqueKey()
+    });
+
+    // When
+    const validationResult = await dto.validate();
+
+    // Then
+    expect(validationResult).toEqual([]);
+    expect(dto.submission.name).toEqual("Contribution Test");
+    expect(dto.fee).toBeDefined();
   });
 
   test("FetchVotesResDto", async () => {
