@@ -51,9 +51,8 @@ export class Submission extends ChainObject {
   @IsString()
   public fireKey: string;
 
-  @IsOptional()
   @IsString()
-  public entryParentKey?: string;
+  public entryParentKey: string;
 
   @IsString()
   public entryParentType: string;
