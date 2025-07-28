@@ -374,6 +374,7 @@ export class SubmissionWithChildren extends ChainCallDTO {
   @IsString()
   public submissionKey: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   public parentKey?: string;
@@ -390,6 +391,33 @@ export class SubmissionWithChildren extends ChainCallDTO {
   constructor(data: ISubmissionWithChildren) {
     super();
     this.slug = data?.slug;
+    this.uniqueKey = data?.uniqueKey;
+    if (data?.entryParentKey !== undefined) {
+      this.entryParentKey = data?.entryParentKey;
+    }
+    this.entryParentType = data?.entryParentType;
+    this.name = data?.name;
+    if (data?.contributor !== undefined) {
+      this.contributor = data?.contributor;
+    }
+    if (data?.description !== undefined) {
+      this.description = data?.description;
+    }
+    if (data?.url !== undefined) {
+      this.url = data?.url;
+    }
+    this.fireKey = data?.fireKey;
+    this.recency = data?.recency;
+    this.submissionKey = data?.submissionKey;
+    if (data?.parentKey !== undefined) {
+      this.parentKey = data?.parentKey;
+    }
+    if (data?.children !== undefined) {
+      this.children = data?.children;
+    }
+    if (data?.childrenNextPageBookmark !== undefined) {
+      this.childrenNextPageBookmark = data?.childrenNextPageBookmark;
+    }
   }
 }
 
