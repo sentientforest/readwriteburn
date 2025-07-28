@@ -51,9 +51,8 @@ export class Submission extends ChainObject {
   @IsString()
   public fireKey: string;
 
-  @IsOptional()
   @IsString()
-  public entryParentKey?: string;
+  public entryParentKey: string;
 
   @IsString()
   public entryParentType: string;
@@ -93,6 +92,7 @@ export class Submission extends ChainObject {
     this.fireKey = data?.fireKey ?? "none";
     this.entryParentKey = data?.entryParentKey;
     this.entryParentType = data?.entryParentType ?? "none";
+    this.entryType = data?.entryType ?? "none";
     this.name = data?.name ?? "none";
     this.contributor = data?.contributor;
     this.description = data?.description;

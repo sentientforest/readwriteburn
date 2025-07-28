@@ -18,24 +18,31 @@ describe("fetchVotes chaincode call", () => {
 
   // Create test fire and submissions
   const fireKey = "test-fire-key";
-  const submission1 = new Submission(
+  const submission1 = new Submission({
+    recency: "001",
+    slug: "submission-1",
+    uniqueKey: "001",
     fireKey,
+    entryParentKey: fireKey,
+    entryParentType: Fire.INDEX_KEY,
+    entryType: Submission.INDEX_KEY,
+    name: "Submission 1",
+    contributor: user1Alias,
+    description: "First Submission"
+  });
+   
+  const submission2 = new Submission({
+    recency: "002",
+    slug: "submission-2",
+    uniqueKey: "002",
     fireKey,
-    Fire.INDEX_KEY,
-    "001",
-    "Submission 1",
-    user1Alias,
-    "First submission"
-  );
-  const submission2 = new Submission(
-    fireKey,
-    fireKey,
-    Fire.INDEX_KEY,
-    "002",
-    "Submission 2",
-    user2Alias,
-    "Second submission"
-  );
+    entryParentKey: fireKey,
+    entryParentType: Fire.INDEX_KEY,
+    entryType: Submission.INDEX_KEY,
+    name: "Submission 2",
+    contributor: user2Alias,
+    description: "Second submission"
+  });
 
   // Create test votes
   const vote1 = new Vote(

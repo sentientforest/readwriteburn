@@ -26,22 +26,25 @@ describe("castVote chaincode call", () => {
   const userRef = asValidUserRef(user.identityKey);
 
   // Create test submission
-  const submission = new Submission(
-    "test-fire-key",
-    "test-fire-key",
-    Fire.INDEX_KEY,
-    "001",
-    "Test Submission",
-    userAlias,
-    "Test submission description",
-    "https://example.com"
-  );
+  const submission = new Submission({
+    recency: "999999999999",
+    slug: "test-submission",
+    uniqueKey: "001",
+    fireKey: "test-fire-key",
+    entryParentKey: "test-fire-key",
+    entryParentType: Fire.INDEX_KEY,
+    entryType: Submission.INDEX_KEY,
+    name: "Test Submission",
+    contributor: userAlias,
+    description: "Test submission description",
+    url: "https://example.com"
+  });
 
   test("successful vote casting", async () => {
     // Given
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.fire,
+      entryParent: submission.fireKey,
       entry: submission.getCompositeKey(),
       quantity: new BigNumber("100"),
       uniqueKey: `test-vote-1-${randomUniqueKey()}`
@@ -84,7 +87,7 @@ describe("castVote chaincode call", () => {
     // Given
     const voteDto = new VoteDto({
       entryType: "INVALID",
-      entryParent: submission.fire,
+      entryParent: submission.fireKey,
       entry: submission.getCompositeKey(),
       quantity: new BigNumber("100"),
       uniqueKey: `test-vote-2-${randomUniqueKey()}`
@@ -162,7 +165,7 @@ describe("castVote chaincode call", () => {
     // Given - Zero is considered valid by @BigNumberIsPositive()
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.fire,
+      entryParent: submission.fireKey,
       entry: submission.getCompositeKey(),
       quantity: new BigNumber("0"),
       uniqueKey: `test-vote-4-${randomUniqueKey()}`
@@ -179,7 +182,7 @@ describe("castVote chaincode call", () => {
 
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.fire,
+      entryParent: submission.fireKey,
       entry: submission.getCompositeKey(),
       quantity: new BigNumber("100"),
       uniqueKey: sharedUniqueKey // Same unique key to test duplicates
@@ -229,7 +232,7 @@ describe("castVote chaincode call", () => {
     // Given
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: submission.fire,
+      entryParent: submission.fireKey,
       entry: submission.getCompositeKey(),
       quantity: new BigNumber("-100"),
       uniqueKey: `test-vote-6-${randomUniqueKey()}`

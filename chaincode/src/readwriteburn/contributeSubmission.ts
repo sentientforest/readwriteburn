@@ -106,7 +106,7 @@ export async function contributeSubmission(
     await putChainObject(ctx, submissionByParentEntry);
   } else {
     const submissionByFire = plainToInstance(SubmissionByFire, {
-      fire,
+      fireKey,
       recency,
       submissionKey
     });

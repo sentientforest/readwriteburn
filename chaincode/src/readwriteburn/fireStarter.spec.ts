@@ -53,7 +53,6 @@ describe("fireStarter chaincode call", () => {
     const starter = asValidUserAlias(user.identityKey);
 
     const expectedMetadata = new Fire(
-      fire.entryParent,
       fire.slug,
       fire.name,
       starter,

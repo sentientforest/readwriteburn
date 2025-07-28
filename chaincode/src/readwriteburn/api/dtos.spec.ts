@@ -158,7 +158,6 @@ describe("readwriteburn DTOs", () => {
     const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
-      "",
       "test-fire",
       "Test Fire",
       starter,
@@ -191,7 +190,6 @@ describe("readwriteburn DTOs", () => {
     const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
-      "",
       "test-fire",
       "Test Fire",
       starter,
@@ -224,7 +222,6 @@ describe("readwriteburn DTOs", () => {
     const starter = asValidUserAlias("client|abc");
 
     const fire = new Fire(
-      "",
       "test-fire",
       "Test Fire",
       starter,

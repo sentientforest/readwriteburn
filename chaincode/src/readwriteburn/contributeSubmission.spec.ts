@@ -23,16 +23,16 @@ describe("contributeSubmission chaincode call", () => {
   const userAlias = asValidUserAlias(user.identityKey);
   const userRef = asValidUserRef(user.identityKey);
   // Create test fire
-  const fire = new Fire("", "test-fire", "Test Fire", userAlias, "Test fire description");
+  const fire = new Fire("test-fire", "Test Fire", userAlias, "Test fire description");
+  const fireSlug = "test-fire";
   const fireKey = fire.getCompositeKey();
 
   test("successful submission creation", async () => {
     // Given
     const submissionDto = new SubmissionDto({
+      slug: "test-submission",
       name: "Test Submission",
-      fire: fireKey,
-      entryParent: fireKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
+      fire: fireSlug,
       contributor: userRef,
       description: "Test submission description",
       url: "https://example.com/article",
@@ -70,21 +70,20 @@ describe("contributeSubmission chaincode call", () => {
 
     const submission = result.Data as Submission;
     expect(submission.name).toBe("Test Submission");
-    expect(submission.fire).toBe(fireKey);
-    expect(submission.entryParent).toBe(fireKey);
+    expect(submission.fireKey).toBe(fireKey);
+    expect(submission.entryParentKey).toBe(fireKey);
     expect(submission.contributor).toBe(userAlias);
     expect(submission.description).toBe("Test submission description");
     expect(submission.url).toBe("https://example.com/article");
-    expect(submission.id).toBeDefined();
+    expect(submission.uniqueKey).toBeDefined();
   });
 
   test("submission to non-existent fire", async () => {
     // Given
     const submissionDto = new SubmissionDto({
+      slug: "test-submission",
       name: "Test Submission",
       fire: "non-existent-fire",
-      entryParent: "non-existent-fire",
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       contributor: userRef,
       description: "Test submission description",
       uniqueKey: randomUniqueKey()
@@ -120,20 +119,24 @@ describe("contributeSubmission chaincode call", () => {
 
   test("nested submission (comment)", async () => {
     // Given - Create parent submission first
-    const parentSubmission = new Submission(
-      fireKey,
-      fireKey,
-      "001",
-      "Parent Submission",
-      userAlias,
-      "Parent submission description"
-    );
+    const parentSubmission = new Submission({
+      recency: "999999999999",
+      slug: "parent-submission",
+      uniqueKey: "001",
+      fireKey: fireKey,
+      entryParentKey: fireKey,
+      entryParentType: Fire.INDEX_KEY,
+      entryType: Submission.INDEX_KEY,
+      name: "Parent Submission",
+      contributor: userAlias,
+      description: "Parent submission description"
+    });
 
     const submissionDto = new SubmissionDto({
+      slug: "comment-submission",
       name: "Comment on parent",
-      fire: fireKey,
-      entryParent: parentSubmission.getCompositeKey(),
-      parentEntryType: Submission.INDEX_KEY, // Reply to submission, parent is a Submission
+      fire: fireSlug,
+      entryParentKey: parentSubmission.getCompositeKey(),
       contributor: userRef,
       description: "This is a comment",
       uniqueKey: randomUniqueKey()
@@ -167,18 +170,17 @@ describe("contributeSubmission chaincode call", () => {
     // Then
     expect(result.Status).toBe(1);
     const submission = result.Data as Submission;
-    expect(submission.entryParent).toBe(parentSubmission.getCompositeKey());
-    expect(submission.fire).toBe(fireKey);
+    expect(submission.entryParentKey).toBe(parentSubmission.getCompositeKey());
+    expect(submission.fireKey).toBe(fireKey);
     expect(submission.name).toBe("Comment on parent");
   });
 
   test("submission with minimal data", async () => {
     // Given
     const submissionDto = new SubmissionDto({
+      slug: "minimal-submission",
       name: "Minimal Submission",
-      fire: fireKey,
-      entryParent: fireKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
+      fire: fireSlug,
       uniqueKey: randomUniqueKey()
     }).signed(user.privateKey);
 
@@ -219,10 +221,9 @@ describe("contributeSubmission chaincode call", () => {
   test("submission with empty name should fail validation", async () => {
     // Given
     const submissionDto = new SubmissionDto({
+      slug: "empty-name-test",
       name: "",
-      fire: fireKey,
-      entryParent: fireKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
+      fire: fireSlug,
       uniqueKey: randomUniqueKey()
     });
 
@@ -235,10 +236,9 @@ describe("contributeSubmission chaincode call", () => {
   test("submission with empty fire should fail validation", async () => {
     // Given
     const submissionDto = new SubmissionDto({
+      slug: "empty-fire-test",
       name: "Test Submission",
       fire: "",
-      entryParent: fireKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
       uniqueKey: randomUniqueKey()
     });
 
@@ -253,10 +253,9 @@ describe("contributeSubmission chaincode call", () => {
     const longDescription = "A".repeat(10000); // Very long description
 
     const submissionDto = new SubmissionDto({
+      slug: "long-description-submission",
       name: "Long Description Submission",
-      fire: fireKey,
-      entryParent: fireKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
+      fire: fireSlug,
       contributor: userRef,
       description: longDescription,
       uniqueKey: randomUniqueKey()

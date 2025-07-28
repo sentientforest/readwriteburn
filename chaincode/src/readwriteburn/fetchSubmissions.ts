@@ -132,6 +132,14 @@ export async function fetchSubmissionsByParentEntry(
     return bp.submissionKey;
   });
 
+  // Handle case where there are no child submissions
+  if (submissionKeys.length === 0) {
+    return new FetchSubmissionsResDto({
+      results: [],
+      nextPageBookmark: submissionsByParentNextPageBookmark
+    });
+  }
+
   const childSubmissions = await getObjectsByKeys(ctx, Submission, submissionKeys);
 
   const children: SubmissionWithChildren[] = [];

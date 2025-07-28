@@ -28,21 +28,24 @@ describe("countVotes chaincode call", () => {
   const user2Alias = asValidUserAlias(user2.identityKey);
 
   // Create test submission
-  const submission = new Submission(
-    "test-fire-key",
-    "test-fire-key",
-    Fire.INDEX_KEY,
-    "001",
-    "Test Submission",
-    user1Alias,
-    "Test submission description"
-  );
+  const submission = new Submission({
+    recency: "999999999999",
+    slug: "test-submission",
+    uniqueKey: "001",
+    fireKey: "test-fire-key",
+    entryParentKey: "test-fire-key",
+    entryParentType: Fire.INDEX_KEY,
+    entryType: Submission.INDEX_KEY,
+    name: "Test Submission",
+    contributor: user1Alias,
+    description: "Test submission description"
+  });
 
   test("successful vote counting for single vote", async () => {
     // Given
     const vote = new Vote(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey(),
       "vote-001",
       user1Alias,
@@ -69,7 +72,7 @@ describe("countVotes chaincode call", () => {
     // Verify VoteCount was created
     const voteCountKey = VoteCount.getCompositeKeyFromParts(VoteCount.INDEX_KEY, [
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey()
     ]);
 
@@ -118,7 +121,7 @@ describe("countVotes chaincode call", () => {
     // Given
     const vote1 = new Vote(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey(),
       "vote-001",
       user1Alias,
@@ -127,7 +130,7 @@ describe("countVotes chaincode call", () => {
 
     const vote2 = new Vote(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey(),
       "vote-002",
       user2Alias,
@@ -154,7 +157,7 @@ describe("countVotes chaincode call", () => {
     // Verify VoteCount aggregated correctly
     const voteCountKey = VoteCount.getCompositeKeyFromParts(VoteCount.INDEX_KEY, [
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey()
     ]);
 
@@ -191,14 +194,14 @@ describe("countVotes chaincode call", () => {
     // Given - Pre-existing VoteCount
     const existingVoteCount = new VoteCount(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey(),
       new BigNumber("150")
     );
 
     const existingRanking = new VoteRanking(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       new BigNumber("150"),
       submission.getCompositeKey()
     );
@@ -206,7 +209,7 @@ describe("countVotes chaincode call", () => {
 
     const newVote = new Vote(
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey(),
       "vote-003",
       user1Alias,
@@ -293,7 +296,7 @@ describe("countVotes chaincode call", () => {
     for (let i = 0; i < 1000; i++) {
       const vote = new Vote(
         Submission.INDEX_KEY,
-        submission.fire,
+        submission.fireKey,
         submission.getCompositeKey(),
         `vote-${i.toString().padStart(3, "0")}`,
         user1Alias,
@@ -323,7 +326,7 @@ describe("countVotes chaincode call", () => {
     // Verify final vote count
     const voteCountKey = VoteCount.getCompositeKeyFromParts(VoteCount.INDEX_KEY, [
       Submission.INDEX_KEY,
-      submission.fire,
+      submission.fireKey,
       submission.getCompositeKey()
     ]);
 
