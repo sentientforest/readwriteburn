@@ -14,7 +14,11 @@ import { plainToInstance } from "class-transformer";
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
 import { Fire } from "./api/Fire";
 import { Submission, SubmissionByFire, SubmissionByParentEntry } from "./api/Submission";
-import { FetchSubmissionsDto, FetchSubmissionsResDto, SubmissionWithChildren } from "./api/dtos";
+import {
+  FetchSubmissionsDto,
+  FetchSubmissionsResDto,
+  SubmissionWithChildren
+} from "./api/dtos";
 
 describe("fetchSubmissions chaincode call", () => {
   const fireKey = "test-fire-key";
@@ -47,23 +51,30 @@ describe("fetchSubmissions chaincode call", () => {
     description: "A reply to the top level submission"
   });
 
-  // SubmissionByFire and SubmissionByParentEntry don't have constructors, so set properties directly
-  const submissionByFire = new SubmissionByFire();
-  submissionByFire.fireKey = fireKey;
-  submissionByFire.recency = topLevelSubmission.recency;
-  submissionByFire.submissionKey = topLevelSubmission.getCompositeKey();
+  // Create index objects using plainToInstance to ensure proper composite keys
+  const submissionByFire = plainToInstance(SubmissionByFire, {
+    fireKey: fireKey,
+    recency: topLevelSubmission.recency,
+    submissionKey: topLevelSubmission.getCompositeKey()
+  });
 
-  const submissionByParent = new SubmissionByParentEntry();
-  submissionByParent.parentKey = topLevelSubmission.getCompositeKey();
-  submissionByParent.recency = nestedSubmission.recency;
-  submissionByParent.submissionKey = nestedSubmission.getCompositeKey();
+  const submissionByParent = plainToInstance(SubmissionByParentEntry, {
+    parentKey: topLevelSubmission.getCompositeKey(),
+    recency: nestedSubmission.recency,
+    submissionKey: nestedSubmission.getCompositeKey()
+  });
 
   test("fetchSubmissions with no specific criteria", async () => {
     const dto = new FetchSubmissionsDto({});
 
     const { ctx, contract } = fixture<GalaChainContext, ReadWriteBurnContract>(
       ReadWriteBurnContract
-    ).savedState(topLevelSubmission, nestedSubmission, submissionByFire, submissionByParent);
+    ).savedState(
+      topLevelSubmission,
+      nestedSubmission,
+      submissionByFire,
+      submissionByParent
+    );
 
     const response = await contract.FetchSubmissions(ctx, dto);
 
@@ -71,8 +82,12 @@ describe("fetchSubmissions chaincode call", () => {
     expect(response.Data).toBeDefined();
     // Adjust expectations based on actual behavior - there might be additional objects
     expect(response.Data!.results.length).toBeGreaterThanOrEqual(2);
-    expect(response.Data!.results.some(r => r.slug === "top-level-submission")).toBeTruthy();
-    expect(response.Data!.results.some(r => r.slug === "nested-submission")).toBeTruthy();
+    expect(
+      response.Data!.results.some((r) => r.slug === "top-level-submission")
+    ).toBeTruthy();
+    expect(
+      response.Data!.results.some((r) => r.slug === "nested-submission")
+    ).toBeTruthy();
   });
 
   test("fetchSubmissions by fire key", async () => {
@@ -82,7 +97,12 @@ describe("fetchSubmissions chaincode call", () => {
 
     const { ctx, contract } = fixture<GalaChainContext, ReadWriteBurnContract>(
       ReadWriteBurnContract
-    ).savedState(topLevelSubmission, nestedSubmission, submissionByFire, submissionByParent);
+    ).savedState(
+      topLevelSubmission,
+      nestedSubmission,
+      submissionByFire,
+      submissionByParent
+    );
 
     const response = await contract.FetchSubmissions(ctx, dto);
 
@@ -101,7 +121,12 @@ describe("fetchSubmissions chaincode call", () => {
 
     const { ctx, contract } = fixture<GalaChainContext, ReadWriteBurnContract>(
       ReadWriteBurnContract
-    ).savedState(topLevelSubmission, nestedSubmission, submissionByFire, submissionByParent);
+    ).savedState(
+      topLevelSubmission,
+      nestedSubmission,
+      submissionByFire,
+      submissionByParent
+    );
 
     const response = await contract.FetchSubmissions(ctx, dto);
 
@@ -121,7 +146,12 @@ describe("fetchSubmissions chaincode call", () => {
 
     const { ctx, contract } = fixture<GalaChainContext, ReadWriteBurnContract>(
       ReadWriteBurnContract
-    ).savedState(topLevelSubmission, nestedSubmission, submissionByFire, submissionByParent);
+    ).savedState(
+      topLevelSubmission,
+      nestedSubmission,
+      submissionByFire,
+      submissionByParent
+    );
 
     const response = await contract.FetchSubmissions(ctx, dto);
 
