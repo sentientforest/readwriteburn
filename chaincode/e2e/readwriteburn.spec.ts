@@ -306,7 +306,9 @@ describe("Read Write Burn Contract", () => {
 
     const submissionResult = response.Data as Submission;
 
-    commentChainKey = submissionResult.getCompositeKey();
+    const { recency, slug, uniqueKey } = submissionResult;
+
+    commentChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [recency, slug, uniqueKey]);
   });
 
   test("Upvote a comment", async () => {
