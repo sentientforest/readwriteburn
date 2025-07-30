@@ -13,6 +13,7 @@ import { Submission } from "./api/Submission";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
+  ContributeSubmissionResDto,
   CountVotesDto,
   FetchFiresDto,
   FetchFiresResDto,
@@ -62,7 +63,7 @@ export class ReadWriteBurnContract extends GalaContract {
    * @returns Promise resolving to the created fire with associated metadata
    *
    * @remarks
-   * This is a Submit transaction that requires fee payment and creates:
+   * This is a Submit transaction that can be configured to require a fee payment and creates:
    * - A Fire object with the specified metadata
    * - FireStarter association linking the creator to the fire
    * - FireAuthority entries for designated authorities
@@ -124,7 +125,7 @@ export class ReadWriteBurnContract extends GalaContract {
   public async ContributeSubmission(
     ctx: GalaChainContext,
     dto: ContributeSubmissionDto
-  ): Promise<Submission> {
+  ): Promise<ContributeSubmissionResDto> {
     return contributeSubmission(ctx, dto);
   }
 

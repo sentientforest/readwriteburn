@@ -132,6 +132,7 @@ export class FetchFiresDto extends ChainCallDTO {
 }
 
 export interface IFireResDto {
+  fireKey: string;
   metadata: Fire;
   starter: FireStarter;
   authorities: FireAuthority[];
@@ -139,6 +140,10 @@ export interface IFireResDto {
 }
 
 export class FireResDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  fireKey: string;
+
   @ValidateNested()
   @Type(() => Fire)
   metadata: Fire;
@@ -158,6 +163,7 @@ export class FireResDto extends ChainCallDTO {
   constructor(args: unknown) {
     super();
     const data: IFireResDto = args as IFireResDto;
+    this.fireKey = data?.fireKey;
     this.metadata = data?.metadata;
     this.starter = data?.starter ?? "";
     this.authorities = data?.authorities ?? [];
@@ -166,7 +172,7 @@ export class FireResDto extends ChainCallDTO {
 }
 
 export interface IFetchFiresResDto {
-  results: Fire[];
+  results: FireResDto[];
   nextPageBookmark?: string | undefined;
 }
 
@@ -174,7 +180,7 @@ export class FetchFiresResDto extends ChainCallDTO {
   @JSONSchema({ description: "List of results." })
   @ValidateNested({ each: true })
   @Type(() => Fire)
-  results: Fire[];
+  results: FireResDto[];
 
   @JSONSchema({ description: "Next page bookmark." })
   @IsOptional()
@@ -277,6 +283,27 @@ export class ContributeSubmissionDto extends SubmitCallDTO {
     this.submission = data?.submission;
     this.fee = data?.fee;
     this.uniqueKey = data?.uniqueKey;
+  }
+}
+
+export interface IContributeSubmissionResDto {
+  submission: Submission;
+  submissionKey: string;
+}
+
+export class ContributeSubmissionResDto extends ChainCallDTO {
+  @IsNotEmpty()
+  @IsString()
+  submissionKey: string;
+
+  @ValidateNested()
+  @Type(() => Submission)
+  submission: Submission;
+
+  constructor(data: IContributeSubmissionResDto) {
+    super();
+    this.submission = data?.submission;
+    this.submissionKey = data?.submissionKey;
   }
 }
 
