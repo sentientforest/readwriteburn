@@ -1,6 +1,6 @@
 # Data Model Updates: Server & Client Alignment
 
-**Date**: January 29, 2025  
+**Date**: July 29, 2025  
 **Scope**: Align server and client applications with updated chaincode data models  
 **Focus**: Fire, Submission, and Sub-comment functionality (vertical slice)  
 
@@ -48,20 +48,46 @@ Following significant chaincode data model changes, we need to update the server
 }
 ```
 
-### 2. Submission Parent Logic (High Priority)
+**Known Issue**: `controllers/submissions.ts:79` attempts `submissionResult.getCompositeKey()` on chaincode response. 
+**Investigation Required**: Verify if chaincode responses are class instances or plain objects.
 
-**Issue**: Missing automatic Fire parent assignment
-**Impact**: Submissions may not properly inherit Fire parent when undefined
+### 2. DTO Mismatch Resolution (High Priority)
+
+**Issue**: Server and chaincode have mismatched DTO definitions
+**Impact**: Type validation failures and incorrect data passing
+
+**Root Cause Analysis**:
+- Server `SubmissionDto` requires `entryParent: string` and `parentEntryType: string`
+- Chaincode `ISubmissionDto` has optional `entryParentKey?: string` and `fire: string` (slug, not key)
+- **Chaincode automatically handles parent assignment** in `contributeSubmission.ts:66-69`
 
 **Files to Update**:
-- `controllers/submissions.ts` (submission creation logic)
+- `server/src/types.ts` (DTO definitions)
+- `server/src/controllers/submissions.ts` (DTO construction)
 
-**Changes**:
+**Critical Correction**: 
+The server should NOT implement parent assignment logic. The chaincode handles this automatically:
 ```typescript
-// Auto-set entryParent to Fire when undefined
-if (!submissionDto.entryParent) {
-  submissionDto.entryParent = submissionDto.fire;
-  submissionDto.parentEntryType = Fire.INDEX_KEY;
+// In chaincode contributeSubmission.ts:
+if (entryParentKey !== undefined) {
+  // Parent is a submission
+} else {
+  entryParentKey = fireKey;        // Auto-assign to fire
+  entryParentType = Fire.INDEX_KEY;
+}
+```
+
+**Server Changes Required**:
+```typescript
+// Update server SubmissionDto to match chaincode
+export class SubmissionDto extends ChainCallDTO {
+  @IsNotEmpty() @IsString() name: string;
+  @IsNotEmpty() @IsString() fire: string;           // Fire slug
+  @IsOptional() @IsString() entryParentKey?: string; // Optional, matches chaincode
+  @IsOptional() @IsString() contributor?: string;
+  @IsOptional() @IsString() description?: string;
+  @IsOptional() @IsString() url?: string;
+  // Remove parentEntryType - chaincode calculates this
 }
 ```
 
@@ -77,14 +103,18 @@ GET /api/fires/:slug/submissions?depth=1    // Top-level only
 GET /api/fires/:slug/submissions?depth=all  // Include nested
 ```
 
-### 4. Database Schema Verification (Medium Priority)
+### 4. Database Chain Key Storage (Low Priority)
 
-**Issue**: Uncertain if `chain_key` column exists for proper storage
-**Impact**: Chain keys may not persist correctly
+**Issue**: Verification needed for chain key persistence
+**Impact**: Chain keys may not persist correctly  
 
-**Files to Update**:
-- `migrations.ts` (add migration if needed)
-- Verify `subfires` and `submissions` tables have `chain_key` columns
+**Current Status**: Database schema already includes `chain_key` columns:
+- `db.ts:103-104`: `INSERT ... chain_key` for fires
+- `db.ts:352`: `chain_key, chain_id` columns for submissions
+- Migration system exists and is functional
+
+**Action Required**: Verification only - no changes needed
+**Files to Review**: `migrations.ts`, `db.ts` (existing implementation)
 
 ### 5. Vote Processing Updates (Low Priority - Future Phase)
 
@@ -169,15 +199,16 @@ const voteDto = {
    - Modify stores to use server-provided keys
    - Fix composite key construction in voting components
 
-### Phase 2: Submission Logic (Week 2)
-1. **Server Submission Parent Logic**
-   - Implement auto-parent assignment to Fire
+### Phase 2: DTO Alignment & Submission Logic (Week 2)
+1. **Server DTO Standardization** 
+   - Update server SubmissionDto to match chaincode interface
+   - Remove server-side parent assignment logic (let chaincode handle)
    - Add nested submission API endpoints
    - Test submission creation and retrieval
 
 2. **Client Parent Relationship Fixes**
-   - Standardize Fire vs Submission parent handling
-   - Update NewSubmission component for proper parent assignment
+   - Update client to use optional entryParentKey field
+   - Remove any client-side parent logic (chaincode handles)
    - Test submission creation and reply functionality
 
 ### Phase 3: Nested Display & Polish (Week 3)
@@ -229,6 +260,25 @@ const voteDto = {
 - ✅ Proper error handling for all edge cases
 - ✅ Performance acceptable for reasonable nesting depths
 
+## Technical Corrections & Unknowns
+
+### Critical Error Corrections Made
+1. **Server Parent Assignment Logic**: REMOVED - Chaincode handles this automatically in `contributeSubmission.ts:66-69`
+2. **Database Schema Uncertainty**: RESOLVED - Chain key storage already implemented in `db.ts`
+3. **DTO Mismatch Priority**: ELEVATED - This is the root cause of many integration issues
+
+### Unknowns Requiring Investigation
+1. **Server DTO Validation**: How does the server handle optional `entryParentKey` in existing validation pipeline?
+2. **Client State Migration**: What happens to existing client state when DTO structure changes?
+3. **Chaincode Response Format**: Do server responses from chaincode calls include proper method calls like `getCompositeKey()`?
+4. **Error Handling Gaps**: How should server handle chaincode validation errors for parent assignment?
+
+### Investigation Action Items
+- [ ] Test current server behavior with undefined `entryParentKey` 
+- [ ] Verify chaincode response objects include method calls
+- [ ] Check existing client error handling for DTO validation failures
+- [ ] Confirm database foreign key constraints for fire slug references
+
 ## Risk Mitigation
 
 ### Database Schema Risks
@@ -266,4 +316,10 @@ Once Fire/Submission functionality is stable, implement:
 
 ---
 
-**Next Steps**: Begin Phase 1 with server API response enhancement, followed immediately by client chain key handling updates.
+**Next Steps**: 
+1. **Immediate**: Investigate unknown items above to validate corrected analysis
+2. **Phase 1**: Fix DTO mismatch between server and chaincode (highest priority)
+3. **Phase 1**: Add chain key identifiers to API responses 
+4. **Phase 2**: Update client to handle corrected DTO structure
+
+**Critical**: Do NOT implement server-side parent assignment logic - the chaincode handles this automatically.
