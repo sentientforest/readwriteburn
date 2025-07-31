@@ -7,7 +7,15 @@ import {
   takeUntilUndefined
 } from "@gala-chain/chaincode";
 
-import { Fire, FireAuthority, FireModerator, FireStarter, FetchFiresDto, FetchFiresResDto, FireResDto } from "./api";
+import {
+  FetchFiresDto,
+  FetchFiresResDto,
+  Fire,
+  FireAuthority,
+  FireModerator,
+  FireResDto,
+  FireStarter
+} from "./api";
 
 /**
  * Retrieve fires (community topics) with pagination support
@@ -34,7 +42,9 @@ export async function fetchFires(ctx: GalaChainContext, dto: FetchFiresDto) {
     dto.limit
   );
 
-  const responses = await Promise.all(results.map((fire) => fetchFireMetadata(ctx, fire)));
+  const responses = await Promise.all(
+    results.map((fire) => fetchFireMetadata(ctx, fire))
+  );
 
   return new FetchFiresResDto({
     results: responses,
@@ -42,13 +52,19 @@ export async function fetchFires(ctx: GalaChainContext, dto: FetchFiresDto) {
   });
 }
 
-export async function fetchFireMetadata(ctx: GalaChainContext, metadata: Fire): Promise<FireResDto> {
+export async function fetchFireMetadata(
+  ctx: GalaChainContext,
+  metadata: Fire
+): Promise<FireResDto> {
   const fireKey = metadata.getCompositeKey();
 
   const starter: FireStarter = await getObjectByKey(
     ctx,
     FireStarter,
-    ChainObject.getCompositeKeyFromParts(FireStarter.INDEX_KEY, [metadata.starter, fireKey])
+    ChainObject.getCompositeKeyFromParts(FireStarter.INDEX_KEY, [
+      metadata.starter,
+      fireKey
+    ])
   );
 
   const authorities = await getObjectsByPartialCompositeKey(
