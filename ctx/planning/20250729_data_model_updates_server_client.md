@@ -336,54 +336,252 @@ const voteDto = new CastVoteAuthorizationDto({
 - `SubmissionList.vue` (nested display logic)
 - `ThreadedSubmission.vue` (child submission handling)
 
-## Implementation Plan
+## REVISED Implementation Plan
 
-### Phase 1: Core Infrastructure (Week 1)
-1. **Server API Response Enhancement**
-   - Add chain key identifiers to Fire and Submission responses
-   - Update database queries to include chain keys
-   - Test API responses include proper composite keys
+**⚠️ CRITICAL PM ASSESSMENT: The original plan had dependency violations and missing critical path analysis. This revision prioritizes correctness and smooth development flow.**
 
-2. **Client Chain Key Handling**
-   - Update API response types to include chain keys
-   - Modify stores to use server-provided keys
-   - Fix composite key construction in voting components
+### Pre-Phase: Investigation & Risk Mitigation (Days 1-2)
+**Owner**: Senior Backend Engineer + PM
+**Blockers**: Must complete before any development begins
 
-### Phase 2: DTO Alignment & Submission Logic (Week 2)
-1. **Server DTO Standardization**
-   - Update server SubmissionDto to match chaincode interface
-   - Remove server-side parent assignment logic (let chaincode handle)
-   - Add nested submission API endpoints
-   - Test submission creation and retrieval
+**Critical Unknowns to Resolve**:
+1. **Fee Verification Timeline**: Current fires.ts has fee verification disabled (lines 120-127)
+   - **Decision Required**: Re-enable now or defer to separate sprint?
+   - **Impact**: If deferred, entire fee authorization flow can be stubbed
+   - **Risk**: Changes to fee flow could require rework of DTO implementation
 
-2. **Client Parent Relationship Fixes**
-   - Update client to use optional entryParentKey field
-   - Remove any client-side parent logic (chaincode handles)
-   - Test submission creation and reply functionality
+2. **Backwards Compatibility Requirements**: 
+   - **Question**: Are there existing client instances that cannot be updated simultaneously?
+   - **Impact**: Determines if we need API versioning or can do breaking changes
+   - **Risk**: Could double development effort if compatibility layers needed
 
-### Phase 3: Nested Display & Polish (Week 3)
-1. **Server Nested Submission Support**
-   - Complete nested submission API endpoints
-   - Add depth parameter support for submission fetching
-   - Performance optimization for deep nesting
+3. **Database Migration Strategy**:
+   - **Question**: Can we do schema changes in production or need zero-downtime approach?
+   - **Decision Required**: Database deployment strategy
+   - **Risk**: Could block entire server rollout
 
-2. **Client Nested Display**
-   - Update SubmissionList for nested submissions
-   - Enhance ThreadedSubmission for proper threading
-   - UI polish and UX improvements
+**Investigation Tasks**:
+- [ ] Test current fee authorization flow end-to-end
+- [ ] Inventory existing client deployments and update capabilities
+- [ ] Validate database migration approach in staging environment
+- [ ] Confirm chaincode response format hasn't changed since tests were updated
 
-### Phase 4: Integration Testing (Week 4)
-1. **End-to-End Testing**
-   - Fire creation and management
-   - Top-level submission creation
-   - Sub-comment/reply creation
-   - Nested submission display
-   - Cross-component integration
+### Phase 1: Foundation Layer (Days 3-7)
+**Critical Path**: All client work blocks on server completion
+**Owner**: Backend Engineer (primary), PM (validation)
 
-2. **Performance & Polish**
-   - API response optimization
-   - Client-side caching improvements
-   - Error handling and edge cases
+**🔥 High Priority - Server Database Response Parsing**
+1. **Update Database Service Methods** (Day 3)
+   - Modify `dbService.createSubfire()` to accept `chainKey` parameter
+   - Modify `dbService.saveSubmission()` to accept separate `submission` and `chainKey` parameters
+   - **Validation**: Unit tests for both methods
+   - **Risk**: Database layer changes could break existing functionality
+
+2. **Update Controller Response Handling** (Day 4)
+   - Fix fires.ts lines 158-172 to properly parse `FireResDto`
+   - Fix submissions.ts lines 71-74 to properly parse `ContributeSubmissionResDto`
+   - **Validation**: Integration tests with mock chaincode responses
+   - **Risk**: Incorrect parsing breaks fire/submission creation
+
+3. **Import Chaincode DTOs** (Day 5)
+   - Update server/src/types.ts to import chaincode DTOs directly
+   - Remove duplicate DTO definitions
+   - **Validation**: TypeScript compilation succeeds, no type errors
+   - **Risk**: Import path changes could break build
+
+4. **Server API Testing** (Days 6-7)
+   - End-to-end testing of fire creation with new response structure
+   - End-to-end testing of submission creation with new response structure
+   - **Gate**: Server must be fully functional before Phase 2 begins
+
+### Phase 2: Client Integration (Days 8-12)
+**Dependency**: Cannot begin until Phase 1 server testing complete
+**Owner**: Frontend Engineer, PM (coordination)
+
+**Client API Alignment**
+1. **Update Client API Types** (Days 8-9)
+   - Add `chainKey` fields to `FireResponse` and `SubmissionResponse` interfaces
+   - Update API client to handle new response structures
+   - **Validation**: TypeScript compilation, no type errors
+
+2. **Update Client Components** (Days 10-11)
+   - Modify FireStarter.vue to create `FireStarterAuthorizationDto`
+   - Modify submission components to create `ContributeSubmissionAuthorizationDto`
+   - Update voting components to use server-provided chain keys
+   - **Validation**: Component tests pass, no runtime errors
+
+3. **Client-Server Integration Testing** (Day 12)
+   - End-to-end testing of complete fire creation flow
+   - End-to-end testing of complete submission creation flow
+   - **Gate**: Basic fire/submission functionality must work before Phase 3
+
+### Phase 3: Advanced Features (Days 13-17)
+**Dependency**: Core functionality must be stable
+**Owner**: Full-stack team coordination required
+
+1. **Nested Submission API** (Days 13-14)
+   - Implement server endpoints for threaded submissions
+   - Add depth parameter support
+   - **Validation**: API tests for nested submission retrieval
+
+2. **Client Threading Display** (Days 15-16)
+   - Update components for nested submission display
+   - Implement threading UI logic
+   - **Validation**: UI tests for threaded discussions
+
+3. **Integration & Polish** (Day 17)
+   - Cross-component testing
+   - Error handling improvements
+   - Performance validation
+
+### Phase 4: Production Readiness (Days 18-20)
+**Owner**: Full team + DevOps
+
+1. **Production Deployment Preparation** (Day 18)
+   - Database migration scripts tested in staging
+   - Server deployment package validated
+   - Client build process verified
+
+2. **Final Integration Testing** (Day 19)
+   - Complete end-to-end testing in staging environment
+   - Performance testing under load
+   - Error scenario testing
+
+3. **Go-Live & Monitoring** (Day 20)
+   - Coordinated deployment
+   - Real-time monitoring
+   - Rollback procedures ready
+
+## Resource Requirements
+
+**Team Structure Required**:
+- **1 Senior Backend Engineer**: Database & API work (Phases 1-3)
+- **1 Frontend Engineer**: Client integration work (Phases 2-3)  
+- **1 QA Engineer**: Testing throughout all phases
+- **1 PM**: Coordination, risk management, blockers resolution
+
+**Skills Critical**:
+- GalaChain/Hyperledger Fabric experience (backend engineer)
+- Vue.js + TypeScript experience (frontend engineer)
+- Database migration experience (backend engineer or DBA)
+
+## Risk Management & Contingencies
+
+### High-Risk Items with Mitigation
+
+1. **Fee Verification Complexity**
+   - **Risk**: Fee authorization flow more complex than anticipated
+   - **Mitigation**: Stub fee verification if investigation shows complexity
+   - **Trigger**: If Pre-Phase investigation takes >2 days
+
+2. **Database Migration Issues**
+   - **Risk**: Production migration fails or causes downtime
+   - **Mitigation**: Practice migrations in staging, have rollback scripts ready
+   - **Trigger**: Any migration failure in staging
+
+3. **Client Breaking Changes**
+   - **Risk**: Existing clients break when server updates deploy
+   - **Mitigation**: API versioning if backwards compatibility required
+   - **Trigger**: Pre-Phase investigation reveals existing client dependencies
+
+### Rollback Strategy
+
+**Phase 1 Rollback**: Revert database service changes, restore original controller logic
+**Phase 2 Rollback**: Client can continue using original server APIs
+**Phase 3 Rollback**: Disable new nested API endpoints, revert to flat submission display
+
+## Decision Points Requiring PM/Tech Lead Approval
+
+1. **Day 2**: Fee verification approach (enable now vs defer)
+2. **Day 7**: Go/No-Go for Phase 2 (server functionality must be validated)
+3. **Day 12**: Go/No-Go for Phase 3 (basic client integration must work)
+4. **Day 17**: Go/No-Go for production deployment preparation
+
+## Project Constraints & Critical Assumptions
+
+### Assumptions That Could Invalidate Plan
+
+**⚠️ THESE ASSUMPTIONS MUST BE VALIDATED DURING PRE-PHASE**
+
+1. **Chaincode Stability Assumption**
+   - **Assumption**: Chaincode data models and response structures won't change during implementation
+   - **Risk**: If chaincode changes, could require complete rework
+   - **Validation Required**: Confirm chaincode development is frozen for this sprint
+
+2. **Database Migration Assumption**
+   - **Assumption**: Current database already has all required `chain_key` columns via migrations
+   - **Risk**: Production database may be out of sync with migration scripts
+   - **Validation Required**: Audit production database schema before any deployment
+
+3. **Client Deployment Assumption**
+   - **Assumption**: All client instances can be updated simultaneously with server
+   - **Risk**: If gradual rollout required, need API versioning
+   - **Validation Required**: Confirm client deployment strategy
+
+4. **Fee Verification Scope Assumption**
+   - **Assumption**: Fee verification can remain disabled or be easily re-enabled
+   - **Risk**: Re-enabling fees could require significant DTO flow changes
+   - **Validation Required**: Test fee verification flow end-to-end
+
+### Technical Constraints
+
+1. **GalaChain Integration Constraint**
+   - **Limitation**: Server must maintain exact DTO compatibility with chaincode
+   - **Impact**: Cannot modify DTO structures without chaincode coordination
+   - **Mitigation**: Import chaincode DTOs directly to maintain type safety
+
+2. **Database Schema Constraint**
+   - **Limitation**: SQLite doesn't support DROP COLUMN operations safely
+   - **Impact**: Old columns remain in database, migrations are append-only
+   - **Mitigation**: Plan assumes existing migrations are correct
+
+3. **TypeScript Strict Mode Constraint**
+   - **Limitation**: All components use strict TypeScript compilation
+   - **Impact**: Any type mismatches will cause build failures
+   - **Mitigation**: Incremental testing at each phase
+
+### Questions Requiring Senior Technical Decision
+
+**Cannot proceed with confidence until these are answered:**
+
+1. **Fee Authorization Architecture**
+   - **Question**: Is the three-tier fee flow (Client → Server → Assets Channel → Chaincode) correct?
+   - **Current State**: Implementation exists but is disabled
+   - **Decision Needed**: Architecture validation before implementing client compound DTOs
+
+2. **Error Handling Strategy**
+   - **Question**: How should server handle chaincode validation errors in new response format?
+   - **Current State**: Error handling assumes simple response objects
+   - **Decision Needed**: Error parsing strategy for compound response DTOs
+
+3. **API Versioning Strategy**
+   - **Question**: Do we need to maintain backwards compatibility with existing API clients?
+   - **Current State**: Unknown if breaking changes are acceptable
+   - **Decision Needed**: API versioning approach (v1/v2 endpoints vs breaking changes)
+
+4. **Performance Requirements**
+   - **Question**: What are the performance requirements for nested submission fetching?
+   - **Current State**: No defined performance criteria
+   - **Decision Needed**: Query optimization strategy for deep threading
+
+### Scope Limitations
+
+**Items explicitly OUT OF SCOPE for this implementation:**
+
+1. **Vote Processing Updates**: Deferred to separate voting phase sprint
+2. **Fire Hierarchy**: Flattened architecture, no nested fire support
+3. **Real-time Updates**: WebSocket/SSE implementation deferred
+4. **Advanced UI Features**: Search, filtering, pagination deferred to future sprints
+
+### Success Metrics
+
+**Quantifiable success criteria:**
+
+1. **Functional**: All existing fire/submission creation functionality works with new response format
+2. **Performance**: API response times remain within 10% of current baseline
+3. **Quality**: Zero critical bugs in core functionality after Phase 2
+4. **Integration**: Client-server integration tests have 100% pass rate
+5. **Deployment**: Zero-downtime deployment achieved for server updates
 
 ## Success Criteria
 
@@ -468,10 +666,47 @@ Once Fire/Submission functionality is stable, implement:
 
 ---
 
-**Next Steps**:
-1. **Immediate**: Investigate unknown items above to validate corrected analysis
-2. **Phase 1**: Fix DTO mismatch between server and chaincode (highest priority)
-3. **Phase 1**: Add chain key identifiers to API responses
-4. **Phase 2**: Update client to handle corrected DTO structure
+## PM EXECUTIVE SUMMARY
 
-**Critical**: Do NOT implement server-side parent assignment logic - the chaincode handles this automatically.
+### Critical Issues Resolved in This Revision
+
+1. **Dependency Order Fixed**: Original plan had client and server work in parallel despite server blocking client
+2. **Critical Path Identified**: Database response parsing must happen first or everything fails
+3. **Risk Management Added**: Unknown variables could derail project without pre-phase investigation
+4. **Resource Planning Added**: Team structure and skills requirements clarified
+5. **Decision Points Explicit**: Clear go/no-go gates prevent runaway development
+
+### Major Plan Changes from Original
+
+- **Added Pre-Phase Investigation**: 2 days to resolve unknowns before development
+- **Resequenced Phases**: Server-first approach with explicit client dependencies
+- **Added Rollback Strategy**: Each phase has clear revert procedures
+- **Resource Requirements**: Specific team structure and skills needed
+- **Decision Gates**: PM approval required at key milestones
+
+### Project Confidence Assessment
+
+- **High Confidence**: Database schema ready, chaincode interface stable
+- **Medium Confidence**: Server DTO alignment, basic client integration
+- **Low Confidence**: Fee verification complexity, nested submission performance
+- **Unknown**: Backwards compatibility requirements, deployment constraints
+
+### Immediate Action Items for PM
+
+1. **Day 1**: Resolve fee verification scope decision with technical lead
+2. **Day 1**: Confirm team availability and skills match requirements
+3. **Day 2**: Validate all critical assumptions in Pre-Phase investigation
+4. **Day 7**: First major go/no-go decision point for client work
+
+### Success Likelihood
+
+**With Proper Pre-Phase Investigation**: 85% confidence in successful delivery
+**Without Pre-Phase Investigation**: 40% confidence due to unresolved unknowns
+
+**Critical Success Factors**:
+- Fee verification scope decision resolved early
+- Database migrations validated in staging
+- Server DTO parsing fixed before client work begins
+- Clear API versioning strategy if backwards compatibility needed
+
+**Critical**: Do NOT proceed to Phase 1 development until all Pre-Phase investigation tasks are complete. The unknowns identified pose significant project risk.
