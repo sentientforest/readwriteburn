@@ -144,7 +144,7 @@ GET /api/fires/:slug/submissions?depth=all  // Include nested
    const fireResult = chainResponse.data as any; // FireResDto
    const fireMetadata = fireResult.metadata || fireResult;
    const created = dbService.createSubfire(fireMetadata);
-   
+
    // Should be - proper FireResDto handling
    const fireResult = chainResponse.data as FireResDto;
    const chainKey = fireResult.fireKey;           // Use provided chain key
@@ -156,7 +156,7 @@ GET /api/fires/:slug/submissions?depth=all  // Include nested
    // Current - incorrect approach
    const submissionResult = chainResponse.data as any; // Submission object
    const created = dbService.saveSubmission(submissionResult);
-   
+
    // Should be - proper ContributeSubmissionResDto handling
    const submissionResult = chainResponse.data as ContributeSubmissionResDto;
    const chainKey = submissionResult.submissionKey;     // Use provided chain key
@@ -177,11 +177,11 @@ const created = dbService.createSubfire(fireResult.metadata, fireResult.fireKey)
 ```
 
 **server/src/controllers/submissions.ts** (lines 71-74):
-```typescript  
+```typescript
 // Update submission creation response handling
 const submissionResult = chainResponse.data as ContributeSubmissionResDto;
 const created = dbService.saveSubmission(
-  submissionResult.submission, 
+  submissionResult.submission,
   submissionResult.submissionKey
 );
 ```
@@ -201,7 +201,7 @@ createSubfire: (fireMetadata: Fire, chainKey: string): FireDto => {
 
 **server/src/db.ts** (lines 248-384):
 ```typescript
-// Update saveSubmission signature  
+// Update saveSubmission signature
 saveSubmission: (submission: Submission, chainKey: string): SubmissionResDto => {
   // Use provided chainKey instead of calling getCompositeKey()
   const insertSubmission = getDb().prepare(`
@@ -349,16 +349,19 @@ const voteDto = new CastVoteAuthorizationDto({
    - **Decision Required**: Re-enable now or defer to separate sprint?
    - **Impact**: If deferred, entire fee authorization flow can be stubbed
    - **Risk**: Changes to fee flow could require rework of DTO implementation
+   - **Answer**: Re-enable now
 
-2. **Backwards Compatibility Requirements**: 
+2. **Backwards Compatibility Requirements**:
    - **Question**: Are there existing client instances that cannot be updated simultaneously?
    - **Impact**: Determines if we need API versioning or can do breaking changes
    - **Risk**: Could double development effort if compatibility layers needed
+   - **Answer**: No, this application is not yet in production. API versioning can be deferred
 
 3. **Database Migration Strategy**:
    - **Question**: Can we do schema changes in production or need zero-downtime approach?
    - **Decision Required**: Database deployment strategy
    - **Risk**: Could block entire server rollout
+   - **Answer**: This application is not in production. Change the schema at will.
 
 **Investigation Tasks**:
 - [ ] Test current fee authorization flow end-to-end
@@ -456,7 +459,7 @@ const voteDto = new CastVoteAuthorizationDto({
 
 **Team Structure Required**:
 - **1 Senior Backend Engineer**: Database & API work (Phases 1-3)
-- **1 Frontend Engineer**: Client integration work (Phases 2-3)  
+- **1 Frontend Engineer**: Client integration work (Phases 2-3)
 - **1 QA Engineer**: Testing throughout all phases
 - **1 PM**: Coordination, risk management, blockers resolution
 
