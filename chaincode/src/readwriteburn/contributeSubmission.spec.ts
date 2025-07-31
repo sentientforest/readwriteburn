@@ -15,7 +15,11 @@ import { plainToInstance } from "class-transformer";
 import { ReadWriteBurnContract } from "./ReadWriteBurnContract";
 import { Fire } from "./api/Fire";
 import { Submission } from "./api/Submission";
-import { ContributeSubmissionDto, SubmissionDto } from "./api/dtos";
+import {
+  ContributeSubmissionDto,
+  ContributeSubmissionResDto,
+  SubmissionDto
+} from "./api/dtos";
 
 describe("contributeSubmission chaincode call", () => {
   const admin = randomUser();
@@ -66,9 +70,13 @@ describe("contributeSubmission chaincode call", () => {
 
     // Then
     expect(result.Status).toBe(1); // Success
-    expect(result.Data).toBeInstanceOf(Submission);
+    expect(result.Data).toBeInstanceOf(ContributeSubmissionResDto);
 
-    const submission = result.Data as Submission;
+    const response = result.Data as ContributeSubmissionResDto;
+    expect(response.submission).toBeInstanceOf(Submission);
+    expect(response.submissionKey).toBeDefined();
+
+    const submission = response.submission;
     expect(submission.name).toBe("Test Submission");
     expect(submission.fireKey).toBe(fireKey);
     expect(submission.entryParentKey).toBe(fireKey);
@@ -169,7 +177,8 @@ describe("contributeSubmission chaincode call", () => {
 
     // Then
     expect(result.Status).toBe(1);
-    const submission = result.Data as Submission;
+    const response = result.Data as ContributeSubmissionResDto;
+    const submission = response.submission;
     expect(submission.entryParentKey).toBe(parentSubmission.getCompositeKey());
     expect(submission.fireKey).toBe(fireKey);
     expect(submission.name).toBe("Comment on parent");
@@ -211,7 +220,8 @@ describe("contributeSubmission chaincode call", () => {
 
     // Then
     expect(result.Status).toBe(1);
-    const submission = result.Data as Submission;
+    const response = result.Data as ContributeSubmissionResDto;
+    const submission = response.submission;
     expect(submission.name).toBe("Minimal Submission");
     expect(submission.contributor).toBeUndefined();
     expect(submission.description).toBeUndefined();
@@ -288,7 +298,8 @@ describe("contributeSubmission chaincode call", () => {
 
     // Then
     expect(result.Status).toBe(1);
-    const submission = result.Data as Submission;
+    const response = result.Data as ContributeSubmissionResDto;
+    const submission = response.submission;
     expect(submission.description).toBe(longDescription);
   });
 });
