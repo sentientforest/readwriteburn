@@ -131,18 +131,90 @@ GET /api/fires/:slug/submissions?depth=1    // Top-level only
 GET /api/fires/:slug/submissions?depth=all  // Include nested
 ```
 
-### 4. Database Chain Key Storage (Low Priority)
+### 4. Database Chain Key Storage and Response Parsing (High Priority)
 
-**Issue**: Verification needed for chain key persistence
-**Impact**: Chain keys may not persist correctly
+**Issue**: Database layer needs significant updates to handle new chaincode response structures
+**Impact**: Server cannot properly store or retrieve chain keys and metadata from enhanced responses
 
-**Current Status**: Database schema already includes `chain_key` columns:
-- `db.ts:103-104`: `INSERT ... chain_key` for fires
-- `db.ts:352`: `chain_key, chain_id` columns for submissions
-- Migration system exists and is functional
+**Critical Problems Identified**:
 
-**Action Required**: Verification only - no changes needed
-**Files to Review**: `migrations.ts`, `db.ts` (existing implementation)
+1. **Fire Controller Response Parsing** (lines 158-172):
+   ```typescript
+   // Current - incorrect approach
+   const fireResult = chainResponse.data as any; // FireResDto
+   const fireMetadata = fireResult.metadata || fireResult;
+   const created = dbService.createSubfire(fireMetadata);
+   
+   // Should be - proper FireResDto handling
+   const fireResult = chainResponse.data as FireResDto;
+   const chainKey = fireResult.fireKey;           // Use provided chain key
+   const fireMetadata = fireResult.metadata;     // Extract Fire object
+   ```
+
+2. **Submission Controller Response Parsing** (lines 71-74):
+   ```typescript
+   // Current - incorrect approach
+   const submissionResult = chainResponse.data as any; // Submission object
+   const created = dbService.saveSubmission(submissionResult);
+   
+   // Should be - proper ContributeSubmissionResDto handling
+   const submissionResult = chainResponse.data as ContributeSubmissionResDto;
+   const chainKey = submissionResult.submissionKey;     // Use provided chain key
+   const submission = submissionResult.submission;      // Extract Submission object
+   ```
+
+3. **Database Storage Methods Need Chain Key Parameters**:
+   - `dbService.createSubfire()` expects `getCompositeKey()` method but should accept direct `fireKey`
+   - `dbService.saveSubmission()` expects single object but should accept `submissionKey` + `submission`
+
+**Files Requiring Updates**:
+
+**server/src/controllers/fires.ts** (lines 158-172):
+```typescript
+// Update fire creation response handling
+const fireResult = chainResponse.data as FireResDto;
+const created = dbService.createSubfire(fireResult.metadata, fireResult.fireKey);
+```
+
+**server/src/controllers/submissions.ts** (lines 71-74):
+```typescript  
+// Update submission creation response handling
+const submissionResult = chainResponse.data as ContributeSubmissionResDto;
+const created = dbService.saveSubmission(
+  submissionResult.submission, 
+  submissionResult.submissionKey
+);
+```
+
+**server/src/db.ts** (lines 91-141):
+```typescript
+// Update createSubfire signature
+createSubfire: (fireMetadata: Fire, chainKey: string): FireDto => {
+  // Use provided chainKey instead of calling getCompositeKey()
+  const insertSubfire = getDb().prepare(`
+    INSERT OR REPLACE INTO subfires (slug, name, description, chain_key)
+    VALUES (?, ?, ?, ?)
+  `);
+  insertSubfire.run(slug, name, description, chainKey); // Direct usage
+}
+```
+
+**server/src/db.ts** (lines 248-384):
+```typescript
+// Update saveSubmission signature  
+saveSubmission: (submission: Submission, chainKey: string): SubmissionResDto => {
+  // Use provided chainKey instead of calling getCompositeKey()
+  const insertSubmission = getDb().prepare(`
+    INSERT OR REPLACE INTO submissions (..., chain_key, ...)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertSubmission.run(..., chainKey, ...); // Direct usage
+}
+```
+
+**Database Schema Status**: ✅ Already supports chain keys (migrations v2-v4)
+**Migration Requirements**: None - schema is ready
+**Priority**: High - current parsing approach will fail with new response structures
 
 ### 5. Vote Processing Updates (Low Priority - Future Phase)
 
