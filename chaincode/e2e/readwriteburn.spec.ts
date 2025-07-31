@@ -24,6 +24,7 @@ import { plainToInstance } from "class-transformer";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
+  ContributeSubmissionResDto,
   CountVotesDto,
   FetchFiresDto,
   FetchFiresResDto,
@@ -124,6 +125,7 @@ describe("Read Write Burn Contract", () => {
     const moderator: FireModerator = new FireModerator(expectedFireKey, starter);
 
     const data: IFireResDto = {
+      fireKey: expectedFireKey,
       metadata: expectedMetadata,
       starter: startedBy,
       authorities: [authority],
@@ -140,8 +142,7 @@ describe("Read Write Burn Contract", () => {
     const metadataResult = response.Data?.metadata as Fire;
     const { slug, name, description } = metadataResult;
     fireSlug = slug;
-    fireChainKey =
-      new Fire(slug, name, starter, description).getCompositeKey() ?? "";
+    fireChainKey = new Fire(slug, name, starter, description).getCompositeKey() ?? "";
 
     expect(fireChainKey).toEqual(expectedFireKey);
   });
@@ -184,11 +185,18 @@ describe("Read Write Burn Contract", () => {
 
     expect(response.Data).toBeDefined();
 
-    const submissionResult = response.Data as Submission;
+    const responseData = response.Data as ContributeSubmissionResDto;
+    const submissionResult = responseData.submission;
+    submissionChainKey = responseData.submissionKey;
 
+    // Verify the submission key matches expected format
     const { recency, slug, uniqueKey } = submissionResult;
-
-    submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [recency, slug, uniqueKey]);
+    const expectedKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      recency,
+      slug,
+      uniqueKey
+    ]);
+    expect(submissionChainKey).toEqual(expectedKey);
   });
 
   test("CastVote", async () => {
@@ -304,11 +312,18 @@ describe("Read Write Burn Contract", () => {
 
     expect(response.Data).toBeDefined();
 
-    const submissionResult = response.Data as Submission;
+    const responseData = response.Data as ContributeSubmissionResDto;
+    const submissionResult = responseData.submission;
+    commentChainKey = responseData.submissionKey;
 
+    // Verify the comment key matches expected format
     const { recency, slug, uniqueKey } = submissionResult;
-
-    commentChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [recency, slug, uniqueKey]);
+    const expectedKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      recency,
+      slug,
+      uniqueKey
+    ]);
+    expect(commentChainKey).toEqual(expectedKey);
   });
 
   test("Upvote a comment", async () => {
@@ -361,7 +376,7 @@ interface ReadWriteBurnContractAPI {
   FetchFires(dto: FetchFiresDto): Promise<GalaChainResponse<FetchFiresResDto>>;
   ContributeSubmission(
     dto: ContributeSubmissionDto
-  ): Promise<GalaChainResponse<Submission>>;
+  ): Promise<GalaChainResponse<ContributeSubmissionResDto>>;
   FetchSubmissions(
     dto: FetchSubmissionsDto
   ): Promise<GalaChainResponse<FetchSubmissionsResDto>>;
@@ -388,7 +403,7 @@ function readwriteburnContractAPI(
     },
     ContributeSubmission(dto: ContributeSubmissionDto) {
       return client.submitTransaction("ContributeSubmission", dto) as Promise<
-        GalaChainResponse<Submission>
+        GalaChainResponse<ContributeSubmissionResDto>
       >;
     },
     FetchSubmissions(dto: FetchSubmissionsDto) {
