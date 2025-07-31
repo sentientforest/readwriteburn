@@ -24,6 +24,7 @@ import { plainToInstance } from "class-transformer";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
+  ContributeSubmissionResDto,
   CountVotesDto,
   FetchFiresDto,
   FetchFiresResDto,
@@ -62,6 +63,7 @@ describe("Read Write Burn Contract", () => {
   let user: ChainUser;
   let user2: ChainUser;
   let fireChainKey: string;
+  let fireSlug: string;
   let submissionChainKey: string;
   let commentChainKey: string;
   let uncountedVotes: IVoteResult[] = [];
@@ -110,7 +112,6 @@ describe("Read Write Burn Contract", () => {
     const starter = asValidUserAlias(user.identityKey);
 
     const expectedMetadata = new Fire(
-      fire.entryParent,
       fire.slug,
       fire.name,
       asValidUserAlias(fire.starter),
@@ -124,6 +125,7 @@ describe("Read Write Burn Contract", () => {
     const moderator: FireModerator = new FireModerator(expectedFireKey, starter);
 
     const data: IFireResDto = {
+      fireKey: expectedFireKey,
       metadata: expectedMetadata,
       starter: startedBy,
       authorities: [authority],
@@ -138,9 +140,9 @@ describe("Read Write Burn Contract", () => {
     expect(response).toEqual(transactionSuccess(expectedResult));
 
     const metadataResult = response.Data?.metadata as Fire;
-    const { entryParent, slug, name, description } = metadataResult;
-    fireChainKey =
-      new Fire(entryParent, slug, name, starter, description).getCompositeKey() ?? "";
+    const { slug, name, description } = metadataResult;
+    fireSlug = slug;
+    fireChainKey = new Fire(slug, name, starter, description).getCompositeKey() ?? "";
 
     expect(fireChainKey).toEqual(expectedFireKey);
   });
@@ -148,10 +150,9 @@ describe("Read Write Burn Contract", () => {
   test("ContributeSubmission", async () => {
     // Given
     const submission = new SubmissionDto({
+      slug: `test-submission-${randomUniqueKey()}`,
       name: `test submission ${randomUniqueKey()}`,
-      fire: fireChainKey,
-      entryParent: fireChainKey,
-      parentEntryType: Fire.INDEX_KEY, // Top-level submission, parent is a Fire
+      fire: fireSlug,
       contributor: "contributor",
       url: "url",
       description: "",
@@ -184,17 +185,18 @@ describe("Read Write Burn Contract", () => {
 
     expect(response.Data).toBeDefined();
 
-    const submissionResult = response.Data as Submission;
+    const responseData = response.Data as ContributeSubmissionResDto;
+    const submissionResult = responseData.submission;
+    submissionChainKey = responseData.submissionKey;
 
-    const { fire, entryParent, id, name } = submissionResult;
-
-    submissionChainKey = new Submission(
-      fire,
-      entryParent,
-      Fire.INDEX_KEY,
-      id,
-      name
-    ).getCompositeKey();
+    // Verify the submission key matches expected format
+    const { recency, slug, uniqueKey } = submissionResult;
+    const expectedKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      recency,
+      slug,
+      uniqueKey
+    ]);
+    expect(submissionChainKey).toEqual(expectedKey);
   });
 
   test("CastVote", async () => {
@@ -274,10 +276,10 @@ describe("Read Write Burn Contract", () => {
   test("Comment on Submission (sub-submission or parent/child submission", async () => {
     // Given
     const submission = new SubmissionDto({
+      slug: `test-comment-${randomUniqueKey()}`,
       name: `test comment ${randomUniqueKey()}`,
-      fire: fireChainKey,
-      entryParent: submissionChainKey,
-      parentEntryType: Submission.INDEX_KEY, // Comment on submission, parent is a Submission
+      fire: fireSlug,
+      entryParentKey: submissionChainKey,
       contributor: "contributor",
       url: "url",
       description: "",
@@ -310,17 +312,18 @@ describe("Read Write Burn Contract", () => {
 
     expect(response.Data).toBeDefined();
 
-    const submissionResult = response.Data as Submission;
+    const responseData = response.Data as ContributeSubmissionResDto;
+    const submissionResult = responseData.submission;
+    commentChainKey = responseData.submissionKey;
 
-    const { fire, entryParent, id, name } = submissionResult;
-
-    commentChainKey = new Submission(
-      fire,
-      entryParent,
-      Submission.INDEX_KEY,
-      id,
-      name
-    ).getCompositeKey();
+    // Verify the comment key matches expected format
+    const { recency, slug, uniqueKey } = submissionResult;
+    const expectedKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
+      recency,
+      slug,
+      uniqueKey
+    ]);
+    expect(commentChainKey).toEqual(expectedKey);
   });
 
   test("Upvote a comment", async () => {
@@ -358,8 +361,7 @@ describe("Read Write Burn Contract", () => {
 
   test("Fetch only top-level submissions for a given category/fire", async () => {
     const dto = new FetchSubmissionsDto({
-      fire: fireChainKey,
-      entryParent: fireChainKey
+      fireKey: fireChainKey
     });
 
     const response = await client.readwriteburn.FetchSubmissions(dto);
@@ -374,7 +376,7 @@ interface ReadWriteBurnContractAPI {
   FetchFires(dto: FetchFiresDto): Promise<GalaChainResponse<FetchFiresResDto>>;
   ContributeSubmission(
     dto: ContributeSubmissionDto
-  ): Promise<GalaChainResponse<Submission>>;
+  ): Promise<GalaChainResponse<ContributeSubmissionResDto>>;
   FetchSubmissions(
     dto: FetchSubmissionsDto
   ): Promise<GalaChainResponse<FetchSubmissionsResDto>>;
@@ -401,7 +403,7 @@ function readwriteburnContractAPI(
     },
     ContributeSubmission(dto: ContributeSubmissionDto) {
       return client.submitTransaction("ContributeSubmission", dto) as Promise<
-        GalaChainResponse<Submission>
+        GalaChainResponse<ContributeSubmissionResDto>
       >;
     },
     FetchSubmissions(dto: FetchSubmissionsDto) {

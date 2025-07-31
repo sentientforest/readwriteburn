@@ -52,12 +52,7 @@ describe("fireStarter chaincode call", () => {
 
     const starter = asValidUserAlias(user.identityKey);
 
-    const expectedMetadata = new Fire(
-      fire.slug,
-      fire.name,
-      starter,
-      fire.description
-    );
+    const expectedMetadata = new Fire(fire.slug, fire.name, starter, fire.description);
 
     const fireKey = expectedMetadata.getCompositeKey();
 
@@ -66,6 +61,7 @@ describe("fireStarter chaincode call", () => {
     const moderator: FireModerator = new FireModerator(fireKey, starter);
 
     const data: IFireResDto = {
+      fireKey,
       metadata: expectedMetadata,
       starter: startedBy,
       authorities: [authority],

@@ -8,7 +8,7 @@ import {
 import { plainToInstance } from "class-transformer";
 
 import { Fire, Submission, SubmissionByFire, SubmissionByParentEntry } from "./api";
-import { ContributeSubmissionDto } from "./api/dtos";
+import { ContributeSubmissionDto, ContributeSubmissionResDto } from "./api/dtos";
 
 /**
  * Create a new submission within a fire
@@ -30,7 +30,7 @@ import { ContributeSubmissionDto } from "./api/dtos";
 export async function contributeSubmission(
   ctx: GalaChainContext,
   dto: ContributeSubmissionDto
-): Promise<Submission> {
+): Promise<ContributeSubmissionResDto> {
   const { slug, uniqueKey, fire, name, contributor, description, url } = dto.submission;
 
   const fireKey = ChainObject.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire]);
@@ -114,5 +114,7 @@ export async function contributeSubmission(
     await putChainObject(ctx, submissionByFire);
   }
 
-  return submission;
+  const response = new ContributeSubmissionResDto({ submission, submissionKey });
+
+  return response;
 }

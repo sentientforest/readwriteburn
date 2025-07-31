@@ -30,7 +30,7 @@ describe("fetchVotes chaincode call", () => {
     contributor: user1Alias,
     description: "First Submission"
   });
-   
+
   const submission2 = new Submission({
     recency: "002",
     slug: "submission-2",

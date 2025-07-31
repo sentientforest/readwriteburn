@@ -75,6 +75,7 @@ export async function fireStarter(
   const startedBy = new FireStarter(starterAlias, fireKey);
 
   const fireRes: IFireResDto = {
+    fireKey: fireKey,
     metadata: fire,
     starter: startedBy,
     authorities: [],

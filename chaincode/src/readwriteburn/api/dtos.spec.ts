@@ -14,6 +14,7 @@ import { Submission } from "./Submission";
 import {
   CastVoteDto,
   ContributeSubmissionDto,
+  ContributeSubmissionResDto,
   CountVotesDto,
   FetchFiresDto,
   FetchFiresResDto,
@@ -171,6 +172,7 @@ describe("readwriteburn DTOs", () => {
     const moderator: FireModerator = new FireModerator(fireKey, starter);
 
     const data: IFireResDto = {
+      fireKey,
       metadata: fire,
       starter: startedBy,
       authorities: [authority],
@@ -203,6 +205,7 @@ describe("readwriteburn DTOs", () => {
     const moderator: FireModerator = new FireModerator(fireKey, starter);
 
     const data: IFireResDto = {
+      fireKey,
       metadata: fire,
       starter: startedBy,
       authorities: [authority],
@@ -228,8 +231,21 @@ describe("readwriteburn DTOs", () => {
       "Test description summary text"
     );
 
+    const fireKey = fire.getCompositeKey();
+    const startedBy = new FireStarter(starter, fireKey);
+    const authority: FireAuthority = new FireAuthority(fireKey, starter);
+    const moderator: FireModerator = new FireModerator(fireKey, starter);
+
+    const fireResDto = new FireResDto({
+      fireKey,
+      metadata: fire,
+      starter: startedBy,
+      authorities: [authority],
+      moderators: [moderator]
+    });
+
     const dto: FetchFiresResDto = new FetchFiresResDto({
-      results: [fire],
+      results: [fireResDto],
       nextPageBookmark: ""
     });
 
@@ -401,6 +417,37 @@ describe("readwriteburn DTOs", () => {
     expect(validationResult).toEqual([]);
     expect(dto.submission.name).toEqual("Contribution Test");
     expect(dto.fee).toBeDefined();
+  });
+
+  test("ContributeSubmissionResDto", async () => {
+    // Given
+    const submission = new Submission({
+      recency: "999999999999",
+      slug: "test-submission",
+      uniqueKey: "001",
+      fireKey: "test-fire-key",
+      entryParentKey: "test-fire-key",
+      entryParentType: Fire.INDEX_KEY,
+      entryType: Submission.INDEX_KEY,
+      name: "Test Submission",
+      contributor: userAlias,
+      description: "Test submission description"
+    });
+
+    const submissionKey = submission.getCompositeKey();
+
+    const dto = new ContributeSubmissionResDto({
+      submission,
+      submissionKey
+    });
+
+    // When
+    const validationResult = await dto.validate();
+
+    // Then
+    expect(validationResult).toEqual([]);
+    expect(dto.submission.name).toEqual("Test Submission");
+    expect(dto.submissionKey).toEqual(submissionKey);
   });
 
   test("FetchVotesResDto", async () => {
