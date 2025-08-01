@@ -30,9 +30,9 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     // Build the DTO for chaincode call
     const dto = await createValidDTO(FetchVotesDto, {
       entryType: mappedEntryType,
-      fire: fire as string || undefined,
-      submission: submission as string || undefined,
-      bookmark: bookmark as string || undefined,
+      fire: (fire as string) || undefined,
+      submission: (submission as string) || undefined,
+      bookmark: (bookmark as string) || undefined,
       limit: limit ? parseInt(limit as string, 10) : undefined
     });
 
@@ -51,14 +51,14 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
     }
 
     const result = chainResponse.data;
-    
+
     if (!result) {
       res.status(500).json({
         error: "No data returned from chaincode"
       });
       return;
     }
-    
+
     // Transform the chaincode response to match client expectations
     const transformedResponse = {
       results: result.results.map((voteResult: VoteResult) => ({
@@ -72,7 +72,7 @@ export async function fetchVotes(req: Request, res: Response): Promise<void> {
       })),
       nextPageBookmark: result.nextPageBookmark
     };
-    
+
     res.json(transformedResponse);
   } catch (error) {
     console.error("Error fetching votes:", error);
@@ -196,11 +196,11 @@ export async function getVoteCounts(req: Request, res: Response): Promise<void> 
 export async function processAllVotes(req: Request, res: Response): Promise<void> {
   try {
     const { fire, submission } = req.body;
-    
+
     const { processAllVotes: processVotes } = await import("../services/voteProcessor.js");
-    
+
     const result = await processVotes(fire, submission);
-    
+
     if (result.success) {
       res.json({
         success: true,
@@ -214,7 +214,6 @@ export async function processAllVotes(req: Request, res: Response): Promise<void
         details: result.error
       });
     }
-
   } catch (error) {
     console.error("Error in automatic vote processing:", error);
     res.status(500).json({
@@ -231,12 +230,11 @@ export async function processAllVotes(req: Request, res: Response): Promise<void
 export async function getVoteStats(req: Request, res: Response): Promise<void> {
   try {
     const { fire, submission } = req.query;
-    
+
     const { getVoteStats: getStatsFromProcessor } = await import("../services/voteProcessor.js");
     const stats = await getStatsFromProcessor(fire as string, submission as string);
-    
+
     res.json(stats);
-    
   } catch (error) {
     console.error("Error getting vote stats:", error);
     res.status(500).json({
@@ -254,9 +252,8 @@ export async function getVoteServiceStatus(req: Request, res: Response): Promise
   try {
     const { getVoteCountingStatus } = await import("../services/voteProcessor.js");
     const status = getVoteCountingStatus();
-    
+
     res.json(status);
-    
   } catch (error) {
     console.error("Error getting vote service status:", error);
     res.status(500).json({
@@ -273,7 +270,7 @@ export async function getVoteServiceStatus(req: Request, res: Response): Promise
 export async function toggleVoteService(req: Request, res: Response): Promise<void> {
   try {
     const { enabled } = req.body;
-    
+
     if (typeof enabled !== "boolean") {
       res.status(400).json({
         error: "Invalid request body",
@@ -281,18 +278,17 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
       });
       return;
     }
-    
+
     const { setVoteCountingEnabled, getVoteCountingStatus } = await import("../services/voteProcessor.js");
-    
+
     setVoteCountingEnabled(enabled);
     const status = getVoteCountingStatus();
-    
+
     res.json({
       success: true,
       message: `Vote counting ${enabled ? "enabled" : "disabled"}`,
       status
     });
-    
   } catch (error) {
     console.error("Error toggling vote service:", error);
     res.status(500).json({
@@ -309,16 +305,15 @@ export async function toggleVoteService(req: Request, res: Response): Promise<vo
 export async function startVoteService(req: Request, res: Response): Promise<void> {
   try {
     const { startVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
-    
+
     startVoteCounting();
     const status = getVoteCountingStatus();
-    
+
     res.json({
       success: true,
       message: "Vote counting service started",
       status
     });
-    
   } catch (error) {
     console.error("Error starting vote service:", error);
     res.status(500).json({
@@ -335,16 +330,15 @@ export async function startVoteService(req: Request, res: Response): Promise<voi
 export async function stopVoteService(req: Request, res: Response): Promise<void> {
   try {
     const { stopVoteCounting, getVoteCountingStatus } = await import("../services/voteProcessor.js");
-    
+
     stopVoteCounting();
     const status = getVoteCountingStatus();
-    
+
     res.json({
       success: true,
       message: "Vote counting service stopped",
       status
     });
-    
   } catch (error) {
     console.error("Error stopping vote service:", error);
     res.status(500).json({

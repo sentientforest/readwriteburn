@@ -41,7 +41,7 @@ export async function submitToChaincode<T>(
       headers: {
         "Content-Type": "application/json"
       },
-      body: typeof dto.serialize === 'function' ? dto.serialize() : JSON.stringify(dto)
+      body: typeof dto.serialize === "function" ? dto.serialize() : JSON.stringify(dto)
     });
 
     if (!response.ok) {
@@ -112,7 +112,7 @@ export async function evaluateChaincode<T>(
       headers: {
         "Content-Type": "application/json"
       },
-      body: typeof dto.serialize === 'function' ? dto.serialize() : JSON.stringify(dto)
+      body: typeof dto.serialize === "function" ? dto.serialize() : JSON.stringify(dto)
     });
 
     if (!response.ok) {

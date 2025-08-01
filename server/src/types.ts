@@ -1,5 +1,4 @@
 import {
-  asValidUserRef,
   ChainCallDTO,
   ChainKey,
   ChainObject,
@@ -10,10 +9,33 @@ import {
   IsUserRef,
   SubmitCallDTO,
   UserAlias,
-  UserRef
+  UserRef,
+  asValidUserRef
 } from "@gala-chain/api";
 import { Exclude, Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
+import {
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested
+} from "class-validator";
+
+// Define response DTO interfaces to match chaincode responses
+export interface FireResDto {
+  fireKey: string;
+  metadata: any; // Fire object
+  starter: any; // FireStarter object
+  authorities: any[]; // FireAuthority[]
+  moderators: any[]; // FireModerator[]
+}
+
+export interface ContributeSubmissionResDto {
+  submission: any; // Submission object
+  submissionKey: string;
+}
 
 export interface AssociativeId {
   id: string;
@@ -40,7 +62,7 @@ export interface TokenInstanceKey {
  * serving as containers for related submissions and discussions.
  * Each fire has a unique slug identifier and can have multiple authorities
  * and moderators for content governance.
- * 
+ *
  * Note: Fires are always top-level - no hierarchical organization.
  * Use Submissions for threaded discussions within a Fire.
  *
@@ -78,12 +100,7 @@ export class Fire extends ChainObject {
    * @param starter - User reference of the creator
    * @param description - Optional description
    */
-  constructor(
-    slug: string,
-    name: string,
-    starter: UserAlias,
-    description: string | undefined
-  ) {
+  constructor(slug: string, name: string, starter: UserAlias, description: string | undefined) {
     super();
     this.slug = slug;
     this.name = name;
@@ -359,7 +376,6 @@ export class ContributeSubmissionAuthorizationDto extends ChainCallDTO {
   @Type(() => FeeAuthorizationDto)
   public fee?: FeeAuthorizationDto;
 }
-
 
 export class VoteDto extends ChainCallDTO {
   @IsNotEmpty()

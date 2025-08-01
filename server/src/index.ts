@@ -89,11 +89,13 @@ app.post("/api/:channel/:contract/:method", proxy);
 
 app.listen(port, () => {
   console.log(`${process.env.PROJECT_ID ?? "Server"} is running on port ${port}`);
-  
+
   // Start vote counting service if enabled
-  import("./services/voteProcessor.js").then(({ startVoteCounting }) => {
-    startVoteCounting();
-  }).catch(error => {
-    console.error("Failed to start vote counting service:", error);
-  });
+  import("./services/voteProcessor.js")
+    .then(({ startVoteCounting }) => {
+      startVoteCounting();
+    })
+    .catch((error) => {
+      console.error("Failed to start vote counting service:", error);
+    });
 });

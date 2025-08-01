@@ -1,8 +1,8 @@
 import { createValidDTO } from "@gala-chain/api";
 
+import { getAdminPrivateKey, randomUniqueKey } from "../controllers/identities";
 import { CountVotesDto, FetchVotesDto, FetchVotesResDto, VoteResult } from "../types";
 import { evaluateChaincode, submitToChaincode } from "../utils/chaincode";
-import { getAdminPrivateKey, randomUniqueKey } from "../controllers/identities";
 
 // Global state for vote processing
 let isProcessing = false;
@@ -17,7 +17,11 @@ const MAX_PAGES_PER_RUN = parseInt(process.env.VOTE_MAX_PAGES_PER_RUN || "10");
 /**
  * Process uncounted votes in a single batch
  */
-async function processSingleBatch(fire?: string, submission?: string, bookmark?: string): Promise<{
+async function processSingleBatch(
+  fire?: string,
+  submission?: string,
+  bookmark?: string
+): Promise<{
   processed: number;
   nextBookmark?: string;
   hasMore: boolean;
@@ -102,7 +106,7 @@ async function runVoteCounting(): Promise<void> {
     while (pagesProcessed < MAX_PAGES_PER_RUN) {
       try {
         const batchResult = await processSingleBatch(undefined, undefined, bookmark);
-        
+
         totalProcessed += batchResult.processed;
         pagesProcessed++;
 
@@ -117,7 +121,6 @@ async function runVoteCounting(): Promise<void> {
         if (!bookmark) {
           break;
         }
-
       } catch (batchError) {
         console.error(`Error processing vote batch ${pagesProcessed + 1}:`, batchError);
         // Continue to next page on error
@@ -126,8 +129,9 @@ async function runVoteCounting(): Promise<void> {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`Vote counting completed: processed ${totalProcessed} votes in ${pagesProcessed} pages (${duration}ms)`);
-
+    console.log(
+      `Vote counting completed: processed ${totalProcessed} votes in ${pagesProcessed} pages (${duration}ms)`
+    );
   } catch (error) {
     console.error("Error in vote counting run:", error);
   } finally {
@@ -145,16 +149,16 @@ export function startVoteCounting(): void {
   }
 
   console.log(`Starting vote counting service with ${VOTE_COUNTING_INTERVAL}ms interval`);
-  
+
   // Run immediately once, then on interval
   if (voteCountingEnabled) {
-    runVoteCounting().catch(error => {
+    runVoteCounting().catch((error) => {
       console.error("Error in initial vote counting run:", error);
     });
   }
 
   voteCountingInterval = setInterval(() => {
-    runVoteCounting().catch(error => {
+    runVoteCounting().catch((error) => {
       console.error("Error in vote counting interval:", error);
     });
   }, VOTE_COUNTING_INTERVAL);
@@ -203,7 +207,10 @@ export function getVoteCountingStatus(): {
 /**
  * Manual vote processing for API endpoint (processes all pages)
  */
-export async function processAllVotes(fire?: string, submission?: string): Promise<{
+export async function processAllVotes(
+  fire?: string,
+  submission?: string
+): Promise<{
   success: boolean;
   totalProcessed: number;
   pagesProcessed: number;
@@ -231,7 +238,7 @@ export async function processAllVotes(fire?: string, submission?: string): Promi
     while (true) {
       try {
         const batchResult = await processSingleBatch(fire, submission, bookmark);
-        
+
         totalProcessed += batchResult.processed;
         pagesProcessed++;
 
@@ -247,10 +254,9 @@ export async function processAllVotes(fire?: string, submission?: string): Promi
           // No more pages
           break;
         }
-
       } catch (batchError) {
         console.error(`Error processing vote batch ${pagesProcessed + 1}:`, batchError);
-        
+
         // Stop on error for manual processing
         if (pagesProcessed === 0) {
           throw batchError;
@@ -266,7 +272,6 @@ export async function processAllVotes(fire?: string, submission?: string): Promi
       totalProcessed,
       pagesProcessed
     };
-
   } catch (error) {
     console.error("Error in manual vote processing:", error);
     return {
@@ -283,7 +288,10 @@ export async function processAllVotes(fire?: string, submission?: string): Promi
 /**
  * Get statistics about uncounted votes
  */
-export async function getVoteStats(fire?: string, submission?: string): Promise<{
+export async function getVoteStats(
+  fire?: string,
+  submission?: string
+): Promise<{
   uncountedVotes: number;
   hasMoreVotes: boolean;
   estimatedTotal: string | number;
