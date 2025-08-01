@@ -213,6 +213,14 @@ async function submitForm() {
       throw new Error(errorData.error || "Failed to create submission");
     }
 
+    const result = await response.json();
+    console.log("Submission created successfully:", result);
+    
+    // Server now returns enhanced response with chainKey
+    if (result.chainKey) {
+      console.log("Submission chain key received:", result.chainKey);
+    }
+
     success.value = "Submission created successfully!";
     // Reset form
     form.value = {

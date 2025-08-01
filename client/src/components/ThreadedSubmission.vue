@@ -180,20 +180,21 @@ async function submitVote() {
 
   isVoting.value = true;
   try {
-    // Construct fire chain key
+    // Use server-provided chain key instead of constructing manually
+    if (!props.submission.chainKey) {
+      throw new Error("Submission missing chain key from server");
+    }
+
+    // For parent, use fire chain key for top-level submissions,
+    // or parent submission chain key for replies
     const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
     const entryParent = props.submission.entryParent ?? fireChainKey;
-    const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
-      fireChainKey,
-      entryParent,
-      props.submission.id,
-      props.submission.name
-    ]);
-    // Create VoteDto
+    
+    // Create VoteDto using server-provided chain key
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY, // Voting on a submission
       entryParent: entryParent, // The fire this submission belongs to
-      entry: submissionChainKey, // The submission being voted on
+      entry: props.submission.chainKey, // Use server-provided chain key
       quantity: new BigNumber(voteQuantity.value), // Use the raw vote amount
       uniqueKey: randomUniqueKey()
     });

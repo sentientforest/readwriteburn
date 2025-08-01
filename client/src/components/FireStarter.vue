@@ -406,6 +406,11 @@ async function confirmFireCreation() {
     const result = await response.json();
     console.log("Fire created successfully:", result);
 
+    // Server now returns enhanced response with chainKey
+    if (result.chainKey) {
+      console.log("Fire chain key received:", result.chainKey);
+    }
+
     // Navigate to the new fire
     router.push(`/f/${pendingFireDto.value.slug}`);
   } catch (err) {

@@ -18,6 +18,7 @@ export interface FireResponse {
   authorities: string[];
   moderators: string[];
   entryParent?: string; // For hierarchy support
+  chainKey: string; // Chain composite key from server
 }
 
 export interface FireCreateRequest {
@@ -47,6 +48,7 @@ export interface SubmissionResponse {
   updated_at?: string;
   votes?: number;
   entryParent?: string; // For threaded discussions
+  chainKey: string; // Chain composite key from server
 }
 
 export interface SubmissionCreateRequest {
