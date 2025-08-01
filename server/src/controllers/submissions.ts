@@ -7,6 +7,7 @@ import {
   CastVoteDto,
   ContributeSubmissionAuthorizationDto,
   ContributeSubmissionDto,
+  ContributeSubmissionResDto,
   FireDto
 } from "../types";
 import { submitToChaincode } from "../utils/chaincode";
@@ -67,16 +68,18 @@ export async function createSubmission(req: Request, res: Response, next: NextFu
 
     console.log("Chaincode submission successful:", chainResponse.data);
 
-    // 5. Extract Submission object from chaincode response
-    const submissionResult = chainResponse.data as any; // Submission object
+    // 5. Extract Submission object and chain key from chaincode response
+    const submissionResult = chainResponse.data as ContributeSubmissionResDto;
+    const chainKey = submissionResult.submissionKey;
+    const submission = submissionResult.submission;
 
     // 6. Save to database with chain metadata
-    const created = dbService.saveSubmission(submissionResult);
+    const created = dbService.saveSubmission(submission, chainKey);
 
     console.log("Submission created successfully:", {
-      id: submissionResult.id,
-      name: submissionResult.name,
-      chainKey: submissionResult.getCompositeKey ? submissionResult.getCompositeKey() : "unknown"
+      id: submission.id,
+      name: submission.name,
+      chainKey: chainKey
     });
 
     res.status(201).json(created);

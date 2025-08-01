@@ -44,7 +44,7 @@ describe("Database Service", () => {
         moderators: [asValidUserRef("client|mod1"), asValidUserRef("client|mod2")]
       });
 
-      const result = dbService.createSubfire(subfire);
+      const result = dbService.createSubfire(subfire, "test-chain-key-1");
 
       assert(result !== null);
       assert.strictEqual(result.name, subfire.name);
@@ -63,7 +63,7 @@ describe("Database Service", () => {
         moderators: [asValidUserRef("client|mod1")]
       });
 
-      const created: FireDto = dbService.createSubfire(fire);
+      const created: FireDto = dbService.createSubfire(fire, "test-chain-key-2");
       const result: FireDto | null = dbService.getSubfire(created.slug);
 
       assert(result !== null);
@@ -86,7 +86,7 @@ describe("Database Service", () => {
         moderators: [asValidUserRef("client|mod1")]
       });
 
-      const created = dbService.createSubfire(fire);
+      const created = dbService.createSubfire(fire, "test-chain-key-3");
 
       const updated = new FireDto({
         slug: "test-subfire-update-new",
@@ -115,7 +115,7 @@ describe("Database Service", () => {
         moderators: [asValidUserRef("client|mod1")]
       });
 
-      const created: FireDto = dbService.createSubfire(fire);
+      const created: FireDto = dbService.createSubfire(fire, "test-chain-key-2");
       // Create and then delete a submission to test cascade
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
         name: "Test Submission",
@@ -124,7 +124,7 @@ describe("Database Service", () => {
         parentEntryType: "RWBF"
       });
 
-      const savedSubmission = dbService.saveSubmission(submission);
+      const savedSubmission = dbService.saveSubmission(submission, "test-submission-key-1");
       // Delete the submission first
       dbService.deleteSubmission(savedSubmission.id);
       // Now delete the subfire
@@ -149,7 +149,7 @@ describe("Database Service", () => {
         authorities: [],
         moderators: []
       });
-      const fire = dbService.createSubfire(dto);
+      const fire = dbService.createSubfire(dto, "test-chain-key-4");
       testSubfireId = fire.slug;
     });
 
@@ -164,7 +164,7 @@ describe("Database Service", () => {
         parentEntryType: "RWBF"
       });
 
-      const result = dbService.saveSubmission(submission);
+      const result = dbService.saveSubmission(submission, "test-submission-key-2");
 
       assert(result !== null);
       assert.strictEqual(result.name, submission.name);
@@ -185,7 +185,7 @@ describe("Database Service", () => {
         parentEntryType: "RWBF"
       });
 
-      const created = dbService.saveSubmission(submission);
+      const created = dbService.saveSubmission(submission, "test-submission-key-3");
       const result = dbService.getSubmission(created.id);
 
       assert(result !== null);
@@ -204,7 +204,7 @@ describe("Database Service", () => {
         parentEntryType: "RWBF"
       });
 
-      const created = dbService.saveSubmission(submission);
+      const created = dbService.saveSubmission(submission, "test-submission-key-3");
       const voteResult = dbService.voteSubmission(created.id);
       const updated = dbService.getSubmission(created.id);
 
@@ -227,8 +227,8 @@ describe("Database Service", () => {
         parentEntryType: "RWBF"
       });
 
-      dbService.saveSubmission(submission1);
-      dbService.saveSubmission(submission2);
+      dbService.saveSubmission(submission1, "test-submission-key-4");
+      dbService.saveSubmission(submission2, "test-submission-key-5");
 
       const results = dbService.getSubmissionsBySubfire(testSubfireId);
 

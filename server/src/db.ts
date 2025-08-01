@@ -88,16 +88,22 @@ export function initializeDatabase() {
 export const dbService = {
   closeDatabase,
   // Subfire methods
-  createSubfire: (fireData: FireDto | any): FireDto => {
-    // Handle both FireDto and Fire chaincode objects
-    const slug = fireData.slug;
-    const name = fireData.name;
-    const description = fireData.description || "";
-    const authorities = fireData.authorities || [];
-    const moderators = fireData.moderators || [];
-    const chainKey = fireData.getCompositeKey ? fireData.getCompositeKey() : null;
+  createSubfire: (fireMetadata: any, chainKey: string): FireDto => {
+    // Extract Fire metadata properties
+    const slug = fireMetadata.slug;
+    const name = fireMetadata.name;
+    const description = fireMetadata.description || "";
+    const authorities = fireMetadata.authorities || [];
+    const moderators = fireMetadata.moderators || [];
 
-    console.log("Creating subfire in database:", { slug, name, description, authorities, moderators, chainKey });
+    console.log("Creating subfire in database:", {
+      slug,
+      name,
+      description,
+      authorities,
+      moderators,
+      chainKey
+    });
 
     const insertSubfire = getDb().prepare(`
       INSERT OR REPLACE INTO subfires (slug, name, description, chain_key)
@@ -115,7 +121,10 @@ export const dbService = {
 
     getDb().transaction(() => {
       const result = insertSubfire.run(slug, name, description, chainKey);
-      console.log("Subfire insert result:", { changes: result.changes, lastInsertRowid: result.lastInsertRowid });
+      console.log("Subfire insert result:", {
+        changes: result.changes,
+        lastInsertRowid: result.lastInsertRowid
+      });
 
       // Clear existing roles and re-add
       deleteRoles.run(slug);
@@ -230,9 +239,13 @@ export const dbService = {
   },
 
   getSubfireByChainKey: (chainKey: string): FireDto | null => {
-    const fire = getDb().prepare(`
+    const fire = getDb()
+      .prepare(
+        `
       SELECT * FROM subfires WHERE chain_key = ?
-    `).get(chainKey);
+    `
+      )
+      .get(chainKey);
 
     if (!fire) {
       return null;
@@ -284,23 +297,22 @@ export const dbService = {
   },
 
   // Submission methods
-  saveSubmission: (submissionData: SubmissionDto | any): SubmissionResDto => {
-    // Handle both SubmissionDto and chaincode Submission objects
-    const name = submissionData.name;
-    const contributor = submissionData.contributor || "";
-    const description = submissionData.description || "";
-    const url = submissionData.url || "";
-    const fire = submissionData.fire;
-    const entryParent = submissionData.entryParent || fire;
-    const parentEntryType = submissionData.parentEntryType || "RWBF"; // Default to Fire parent
-    const chainKey = submissionData.getCompositeKey ? submissionData.getCompositeKey() : null;
-    const chainId = submissionData.id || null; // Chaincode ID (timestamp-based)
+  saveSubmission: (submission: any, chainKey: string): SubmissionResDto => {
+    // Extract Submission object properties
+    const name = submission.name;
+    const contributor = submission.contributor || "";
+    const description = submission.description || "";
+    const url = submission.url || "";
+    const fire = submission.fire;
+    const entryParent = submission.entryParent || fire;
+    const parentEntryType = submission.parentEntryType || "RWBF"; // Default to Fire parent
+    const chainId = submission.id || null; // Chaincode ID (timestamp-based)
 
     // Extract fire slug from chaincode key for database foreign key
     // Fire chain key format: binary composite key with null separators
     let fireSlug = fire;
-    
-    if (typeof fire === 'string' && fire.includes('RWBF')) {
+
+    if (typeof fire === "string" && fire.includes("RWBF")) {
       // First, try to find an existing fire in the database that matches
       const existingFire = dbService.getSubfireByChainKey(fire);
       if (existingFire) {
@@ -308,21 +320,21 @@ export const dbService = {
       } else {
         // Parse the binary composite key format: \x00RWBF\x00{entryParent}\x00{fireSlug}\x00
         // Split by null bytes and find the parts
-        const parts = fire.split('\x00').filter(part => part.length > 0);
+        const parts = fire.split("\x00").filter((part) => part.length > 0);
         console.log("Parsing composite key parts:", parts);
-        
+
         // Find RWBF index
-        const rwbfIndex = parts.findIndex(part => part === 'RWBF');
+        const rwbfIndex = parts.findIndex((part) => part === "RWBF");
         if (rwbfIndex >= 0 && parts.length > rwbfIndex + 1) {
           // The fire slug should be the last non-empty part
           // For format: RWBF, entryParent, fireSlug
           // If entryParent is empty, it's: RWBF, fireSlug
           const possibleSlug = parts[parts.length - 1];
-          if (possibleSlug && possibleSlug !== 'RWBF') {
+          if (possibleSlug && possibleSlug !== "RWBF") {
             fireSlug = possibleSlug;
           }
         }
-        
+
         console.warn("Could not find fire with chain key in database, parsed slug:", {
           fire,
           parts,
@@ -340,7 +352,6 @@ export const dbService = {
       entryParent,
       parentEntryType
     });
-
 
     // Generate content hash
     const { hash, timestamp } = hashSubmissionContent(name, description, url);

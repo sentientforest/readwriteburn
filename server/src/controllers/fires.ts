@@ -13,14 +13,15 @@ import { NextFunction, Request, Response } from "express";
 import assert from "node:assert";
 
 import { dbService } from "../db";
-import { 
-  CastVoteAuthorizationDto, 
-  CastVoteDto, 
-  FetchFiresDto, 
-  FetchFiresResDto, 
-  FireDto, 
-  FireStarterAuthorizationDto, 
-  FireStarterDto 
+import {
+  CastVoteAuthorizationDto,
+  CastVoteDto,
+  FetchFiresDto,
+  FetchFiresResDto,
+  FireDto,
+  FireResDto,
+  FireStarterAuthorizationDto,
+  FireStarterDto
 } from "../types";
 import { evaluateChaincode, submitToChaincode } from "../utils/chaincode";
 import { getAdminPrivateKey, randomUniqueKey } from "./identities";
@@ -117,25 +118,39 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
       )
     );
 
-    // For now, skip fee validation to focus on basic integration
-    // TODO: Re-enable fee validation once basic flow works
-    // const feeQty = await fireStarterFee(fire);
-    // if (fee && fee.quantity.isLessThan(feeQty)) {
-    //   const msg = `Chain requires fee of ${feeQty.toString()}, fire starter only authorized: ${fee.quantity.toString()}`;
-    //   console.log(msg);
-    //   return res.status(400).json({ error: msg });
-    // }
+    // Re-enabled fee verification as per development plan
+    let feeVerification: FeeVerificationDto | undefined;
 
-    // let feeVerification: FeeVerificationDto;
+    if (fee) {
+      console.log("Processing fee authorization...");
+      try {
+        const feeAuthorizationRes = await authorizeFee(fee);
+
+        // Transform FeeAuthorizationResDto to FeeVerificationDto
+        feeVerification = {
+          authorization: feeAuthorizationRes.authorization,
+          authority: feeAuthorizationRes.authority,
+          created: feeAuthorizationRes.created,
+          txId: feeAuthorizationRes.txId,
+          quantity: feeAuthorizationRes.quantity,
+          feeAuthorizationKey: feeAuthorizationRes.feeAuthorizationKey,
+          uniqueKey: feeAuthorizationRes.uniqueKey || `fee-verification-${randomUniqueKey()}`
+        } as FeeVerificationDto;
+
+        console.log("Fee authorization successful");
+      } catch (error) {
+        console.error("Fee authorization failed:", error);
+        return res.status(400).json({
+          error: `Fee authorization failed: ${error}`
+        });
+      }
+    }
 
     const serverDto = await createValidDTO(FireStarterDto, {
       fire: fire,
+      fee: feeVerification,
       uniqueKey: `readwriteburn-${randomUniqueKey()}`
     });
-
-    // if (feeVerification !== undefined) {
-    //   serverDto.fee = feeVerification;
-    // }
 
     const serverAdminKey = getAdminPrivateKey();
 
@@ -155,20 +170,29 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
     console.log("Chaincode submission successful:", JSON.stringify(chainResponse.data, null, 2));
 
     // Extract Fire metadata from chaincode response
-    const fireResult = chainResponse.data as any; // FireResDto
-    
-    // The response might be the Fire object directly or wrapped in metadata
-    const fireMetadata = fireResult.metadata || fireResult;
-    
-    console.log("Fire metadata to save:", JSON.stringify(fireMetadata, null, 2));
+    const fireResult = chainResponse.data as FireResDto;
+    const chainKey = fireResult.fireKey;
+    const fireMetadata = fireResult.metadata;
 
-    // Save Fire metadata to database for quick lookups
-    const created = dbService.createSubfire(fireMetadata);
+    console.log(
+      "Fire response data:",
+      JSON.stringify(
+        {
+          fireKey: chainKey,
+          metadata: fireMetadata
+        },
+        null,
+        2
+      )
+    );
+
+    // Save Fire metadata to database with provided chain key
+    const created = dbService.createSubfire(fireMetadata, chainKey);
 
     console.log("Fire created successfully:", {
       slug: created.slug,
       name: created.name,
-      chainKey: fireMetadata.getCompositeKey ? fireMetadata.getCompositeKey() : "unknown"
+      chainKey: chainKey
     });
 
     res.status(201).json(created);
@@ -197,13 +221,13 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
     if (chainResponse.success && chainResponse.data) {
       console.log("Successfully fetched fires from chaincode:", JSON.stringify(chainResponse.data, null, 2));
       const fetchResult = chainResponse.data as any; // FetchFiresResDto
-      
+
       // Ensure we have the correct response structure
       const response = {
         results: fetchResult.results || fetchResult,
         nextPageBookmark: fetchResult.nextPageBookmark
       };
-      
+
       res.json(response);
     } else {
       console.warn("Chaincode fetch failed, falling back to database:", chainResponse.error);
