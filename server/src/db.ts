@@ -191,7 +191,8 @@ export const dbService = {
     return {
       ...fire,
       authorities,
-      moderators
+      moderators,
+      chainKey: (fire as any).chain_key
     } as FireDto;
   },
 
@@ -274,7 +275,8 @@ export const dbService = {
     return {
       ...fire,
       authorities,
-      moderators
+      moderators,
+      chainKey: (fire as any).chain_key
     } as FireDto;
   },
 
@@ -476,7 +478,9 @@ export const dbService = {
         s.content_hash,
         s.hash_verified,
         s.content_timestamp,
-        s.moderation_status
+        s.moderation_status,
+        s.chain_key,
+        s.entry_parent
       FROM submissions s
       LEFT JOIN votes v ON s.id = v.submission_id
       JOIN subfires sf ON s.subfire_id = sf.slug

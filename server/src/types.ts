@@ -353,6 +353,10 @@ export interface SubmissionResDto {
   content_timestamp?: number;
   moderation_status?: string;
   created_at?: string;
+  // Chain key from database
+  chain_key?: string;
+  // Alias for client compatibility
+  chainKey?: string;
 }
 
 export class ContributeSubmissionDto extends ChainCallDTO {

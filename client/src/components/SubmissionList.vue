@@ -211,7 +211,7 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
     // For parent, we need the fire's chain key for top-level submissions,
     // or the parent submission's chain key for replies
     const isTopLevel = !submission.entryParent;
-    const fireChainKey = ChainObject.getCompositeKeyFromParts(Fire.INDEX_KEY, [subfireSlug]);
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", subfireSlug]);
     const actualParent = isTopLevel ? fireChainKey : submission.entryParent;
     
     // Create VoteDto using server-provided chain key
