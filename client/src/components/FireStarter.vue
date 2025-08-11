@@ -404,15 +404,30 @@ async function confirmFireCreation() {
     }
 
     const result = await response.json();
-    console.log("Fire created successfully:", result);
 
     // Server now returns enhanced response with chainKey
     if (result.chainKey) {
       console.log("Fire chain key received:", result.chainKey);
     }
 
-    // Navigate to the new fire
-    router.push(`/f/${pendingFireDto.value.slug}`);
+    // Add the new fire to the store before navigation
+    if (result) {
+      const { useFiresStore } = await import("../stores");
+      const firesStore = useFiresStore();
+      firesStore.addFire(result);
+      // Also ensure fires are refreshed
+      await firesStore.fetchFires(true);
+    }
+
+    // Navigate to the new fire using the form data slug (most reliable)
+    const fireSlug = formData.value.slug;
+    
+    if (!fireSlug) {
+      error.value = "Fire creation succeeded but navigation failed - no slug found";
+      return;
+    }
+    
+    await router.push(`/f/${fireSlug}`);
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to create fire";
     console.error("Fire creation error:", err);

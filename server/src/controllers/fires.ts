@@ -262,7 +262,12 @@ export async function readFire(req: Request, res: Response, next: NextFunction) 
     if (!subfire) {
       return res.status(404).json({ error: "Subfire not found" });
     }
-    res.json(subfire);
+    // Transform response to include chainKey field for client compatibility
+    const response = {
+      ...subfire,
+      chainKey: subfire.chainKey || subfire.chain_key
+    };
+    res.json(response);
   } catch (error) {
     next(error);
   }
