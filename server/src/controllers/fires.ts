@@ -195,7 +195,13 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
       chainKey: chainKey
     });
 
-    res.status(201).json(created);
+    // Transform response to include chainKey field for client compatibility
+    const response = {
+      ...created,
+      chainKey: created.chainKey || created.chain_key || chainKey
+    };
+
+    res.status(201).json(response);
   } catch (error) {
     console.error("Fire creation error:", error);
     next(error);
@@ -233,9 +239,14 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
       console.warn("Chaincode fetch failed, falling back to database:", chainResponse.error);
       // Fall back to database if chaincode is unavailable
       const subfires = dbService.getAllSubfires();
-      console.log("Database fallback - found subfires:", JSON.stringify(subfires, null, 2));
+      // Transform to include chainKey for client compatibility
+      const transformedSubfires = subfires.map(fire => ({
+        ...fire,
+        chainKey: fire.chainKey || fire.chain_key
+      }));
+      console.log("Database fallback - found subfires:", JSON.stringify(transformedSubfires, null, 2));
       res.json({
-        results: subfires,
+        results: transformedSubfires,
         nextPageBookmark: undefined
       });
     }
