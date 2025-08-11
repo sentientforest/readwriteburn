@@ -77,12 +77,18 @@ export async function createSubmission(req: Request, res: Response, next: NextFu
     const created = dbService.saveSubmission(submission, chainKey);
 
     console.log("Submission created successfully:", {
-      id: submission.id,
-      name: submission.name,
+      id: created.id,
+      name: created.name,
       chainKey: chainKey
     });
 
-    res.status(201).json(created);
+    // 7. Transform response to include chainKey field for client compatibility
+    const response = {
+      ...created,
+      chainKey: created.chain_key || chainKey
+    };
+
+    res.status(201).json(response);
   } catch (error) {
     console.error("Submission creation error:", error);
     next(error);
@@ -101,7 +107,12 @@ export async function listSubmissions(req: Request, res: Response, next: NextFun
 export async function listSubmissionsByFire(req: Request, res: Response, next: NextFunction) {
   try {
     const submissions = dbService.getSubmissionsBySubfire(req.params.slug);
-    res.json(submissions);
+    // Transform responses to include chainKey field for client compatibility
+    const transformedSubmissions = submissions.map(sub => ({
+      ...sub,
+      chainKey: sub.chain_key
+    }));
+    res.json(transformedSubmissions);
   } catch (error) {
     next(error);
   }
@@ -113,7 +124,12 @@ export async function readSubmission(req: Request, res: Response, next: NextFunc
     if (!submission) {
       return res.status(404).json({ error: "Submission not found" });
     }
-    res.json(submission);
+    // Transform response to include chainKey field for client compatibility
+    const response = {
+      ...submission,
+      chainKey: submission.chain_key
+    };
+    res.json(response);
   } catch (error) {
     next(error);
   }

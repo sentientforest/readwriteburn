@@ -16,10 +16,10 @@
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-2xl font-bold text-gray-900">{{ currentFire.name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">{{ currentFire.name || currentFire.metadata?.name }}</h1>
           </div>
 
-          <p v-if="currentFire.description" class="text-gray-600 mb-4">{{ currentFire.description }}</p>
+          <p v-if="currentFire.description || currentFire.metadata?.description" class="text-gray-600 mb-4">{{ currentFire.description || currentFire.metadata?.description }}</p>
 
           <!-- Vote Messages -->
           <div v-if="voteError" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
@@ -32,7 +32,7 @@
           <div class="flex items-center gap-4 text-sm text-gray-500">
             <div class="flex items-center gap-1">
               <UserIcon class="h-4 w-4" />
-              <span>Started by {{ formatAddress(currentFire.starter) }}</span>
+              <span>Started by {{ currentFire.starter?.identity || currentFire.metadata?.starter ? formatAddress(currentFire.starter?.identity || currentFire.metadata?.starter) : 'Unknown' }}</span>
             </div>
             <div class="flex items-center gap-1">
               <CalendarIcon class="h-4 w-4" />
@@ -70,7 +70,7 @@
           </div>
 
           <router-link
-            :to="`/f/${currentFire.slug}/submit`"
+            :to="`/f/${getCurrentFireSlug()}/submit`"
             class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center gap-2"
           >
             <PlusIcon class="h-4 w-4" />
@@ -141,14 +141,29 @@ const voteSuccess = ref("");
 const allFires = computed(() => firesStore.fires);
 const currentFire = computed(() => {
   const slug = props.fireSlug || (route.params.slug as string);
-  return allFires.value.find((fire) => fire.slug === slug) || null;
+  if (!slug) return null;
+  
+  // Try to find in allFires first
+  const fireFromAll = allFires.value.find((fire) => fire.slug === slug);
+  if (fireFromAll) return fireFromAll;
+  
+  // Fallback to store's currentFire if slug matches
+  const storeFire = firesStore.currentFire;
+  if (storeFire && storeFire.slug === slug) return storeFire;
+  
+  return null;
 });
 
 
 // Methods
+function getCurrentFireSlug(): string | null {
+  const fire = currentFire.value;
+  if (!fire) return null;
+  return fire.slug || fire.metadata?.slug || null;
+}
 
 function formatAddress(address: string): string {
-  if (address.length <= 10) return address;
+  if (!address || address.length <= 10) return address || 'Unknown';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
@@ -180,13 +195,16 @@ async function submitFireVote() {
       throw new Error(`No client software connected`);
     }
 
+    const fireSlug = getCurrentFireSlug();
+    if (!fireSlug) return;
+    
     // Create Fire composite key - simplified structure with just slug
-    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [currentFire.value.slug]);
+    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug]);
     
     // Create VoteDto for Fire voting
     const voteDto = new VoteDto({
       entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
-      entryParent: currentFire.value.slug, // Fire slug as parent (simplified hierarchy)
+      entryParent: fireSlug, // Fire slug as parent (simplified hierarchy)
       entry: fireCompositeKey, // The fire we're voting on
       quantity: new BigNumber(fireVoteQty.value),
       uniqueKey: randomUniqueKey()
@@ -205,7 +223,7 @@ async function submitFireVote() {
     console.log("Sending fire vote authorization to server:", authDto);
 
     // Send to server
-    const response = await fetch(`${apiBase}/api/fires/${currentFire.value.slug}/vote`, {
+    const response = await fetch(`${apiBase}/api/fires/${fireSlug}/vote`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -246,12 +264,22 @@ watch(
     if (newSlug) {
       await loadFireStats();
     }
-  }
+  },
+  { immediate: true }
 );
+
+// Function to load fire stats
+async function loadFireStats() {
+  const slug = props.fireSlug || (route.params.slug as string);
+  if (slug && !currentFire.value) {
+    await firesStore.fetchFireBySlug(slug);
+  }
+}
 
 // Load initial data
 onMounted(async () => {
   await firesStore.fetchFires();
+  await loadFireStats();
 });
 </script>
 

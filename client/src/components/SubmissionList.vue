@@ -203,24 +203,22 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
 
     // Create submission composite key with the new structure
     // Need to determine parentEntryType: if entryParent is null, it's a top-level submission (Fire parent)
-    // If entryParent exists, it's a reply to another submission (Submission parent)
+    // Use server-provided chain key instead of constructing manually
+    if (!submission.chainKey) {
+      throw new Error("Submission missing chain key from server");
+    }
+
+    // For parent, we need the fire's chain key for top-level submissions,
+    // or the parent submission's chain key for replies
     const isTopLevel = !submission.entryParent;
-    const parentEntryType = isTopLevel ? Fire.INDEX_KEY : Submission.INDEX_KEY;
-    const actualParent = submission.entryParent ?? subfireSlug; // Fire slug for top-level, submission ID for replies
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", subfireSlug]);
+    const actualParent = isTopLevel ? fireChainKey : submission.entryParent;
     
-    const submissionChainKey = Submission.getCompositeKeyFromParts(Submission.INDEX_KEY, [
-      subfireSlug, // fire slug
-      actualParent, // parent entry (fire slug for top-level, submission ID for replies)
-      parentEntryType, // Fire.INDEX_KEY for top-level, Submission.INDEX_KEY for replies
-      submission.id,
-      submission.name
-    ]);
-    
-    // Create VoteDto for submission voting
+    // Create VoteDto using server-provided chain key
     const voteDto = new VoteDto({
       entryType: Submission.INDEX_KEY,
-      entryParent: actualParent, // Use the same parent logic as composite key
-      entry: submissionChainKey,
+      entryParent: actualParent,
+      entry: submission.chainKey, // Use server-provided chain key
       quantity: new BigNumber(submission.userVoteQty),
       uniqueKey: randomUniqueKey()
     });

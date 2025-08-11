@@ -10,7 +10,8 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3001
+    port: 3001,
+    historyApiFallback: true
   },
   define: {
     // Ensure environment variables are properly typed
