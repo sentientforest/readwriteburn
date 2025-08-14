@@ -118,10 +118,10 @@ describe("Database Service", () => {
       const created: FireDto = dbService.createSubfire(fire, "test-chain-key-2");
       // Create and then delete a submission to test cascade
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: "test-submission-1",
         name: "Test Submission",
         fire: created.slug,
-        entryParent: created.slug,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key-1"
       });
 
       const savedSubmission = dbService.saveSubmission(submission, "test-submission-key-1");
@@ -155,13 +155,13 @@ describe("Database Service", () => {
 
     it("should create a submission", async () => {
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: `test-submission-${Date.now()}`,
         name: "Test Submission",
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
         fire: `${testSubfireId}`,
-        entryParent: `${testSubfireId}`,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key"
       });
 
       const result = dbService.saveSubmission(submission, "test-submission-key-2");
@@ -176,13 +176,13 @@ describe("Database Service", () => {
 
     it("should get a submission by id", async () => {
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: `test-submission-${Date.now()}`,
         name: "Test Submission",
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
         fire: `${testSubfireId}`,
-        entryParent: `${testSubfireId}`,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key"
       });
 
       const created = dbService.saveSubmission(submission, "test-submission-key-3");
@@ -195,13 +195,13 @@ describe("Database Service", () => {
 
     it("should vote on a submission", async () => {
       const submission: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: `test-submission-${Date.now()}`,
         name: "Test Submission",
         description: "A test submission",
         contributor: "tester",
         url: "http://test.com",
         fire: `${testSubfireId}`,
-        entryParent: `${testSubfireId}`,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key"
       });
 
       const created = dbService.saveSubmission(submission, "test-submission-key-3");
@@ -214,17 +214,17 @@ describe("Database Service", () => {
 
     it("should get submissions by subfire", async () => {
       const submission1: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: "test-submission-1",
         name: "Test Submission 1",
         fire: `${testSubfireId}`,
-        entryParent: `${testSubfireId}`,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key-1"
       });
 
       const submission2: SubmissionDto = await createValidDTO(SubmissionDto, {
+        slug: "test-submission-2", 
         name: "Test Submission 2",
         fire: `${testSubfireId}`,
-        entryParent: `${testSubfireId}`,
-        parentEntryType: "RWBF"
+        uniqueKey: "test-unique-key-2"
       });
 
       dbService.saveSubmission(submission1, "test-submission-key-4");

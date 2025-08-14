@@ -193,7 +193,7 @@ export const dbService = {
       authorities,
       moderators,
       chainKey: (fire as any).chain_key
-    } as FireDto;
+    } as unknown as FireDto;
   },
 
   getAllSubfires: (): FireDto[] => {
@@ -277,7 +277,7 @@ export const dbService = {
       authorities,
       moderators,
       chainKey: (fire as any).chain_key
-    } as FireDto;
+    } as unknown as FireDto;
   },
 
   deleteSubfire: (slug: string): boolean => {

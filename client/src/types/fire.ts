@@ -118,31 +118,36 @@ export class FireStarterAuthorizationDto extends ChainCallDTO {
 }
 
 export interface ISubmissionDto {
-  name: string;
+  slug: string;
+  uniqueKey: string;
+  entryParentKey?: string;
   fire: string;
-  entryParent: string;
-  parentEntryType: string;
+  name: string;
   contributor?: string;
   description?: string;
   url?: string;
-  uniqueKey?: string;
 }
 
 export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  slug: string;
+
+  @IsNotEmpty()
+  @IsString()
+  uniqueKey: string;
+
+  @IsOptional()
+  @IsString()
+  entryParentKey?: string;
 
   @IsNotEmpty()
   @IsString()
   fire: string;
 
-  @IsString()
-  entryParent: string;
-
   @IsNotEmpty()
   @IsString()
-  parentEntryType: string;
+  name: string;
 
   @IsOptional()
   @IsString()
@@ -158,14 +163,14 @@ export class SubmissionDto extends ChainCallDTO {
 
   constructor(data: ISubmissionDto) {
     super();
-    this.name = data?.name;
+    this.slug = data?.slug;
+    this.uniqueKey = data?.uniqueKey;
+    this.entryParentKey = data?.entryParentKey;
     this.fire = data?.fire;
-    this.entryParent = data?.entryParent || "";
-    this.parentEntryType = data?.parentEntryType;
+    this.name = data?.name;
     this.contributor = data?.contributor;
     this.description = data?.description;
     this.url = data?.url;
-    this.uniqueKey = data?.uniqueKey;
   }
 }
 

@@ -312,18 +312,19 @@ export class FetchFiresResDto extends ChainCallDTO {
 export class SubmissionDto extends ChainCallDTO {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  slug: string;
+
+  @IsOptional()
+  @IsString()
+  entryParentKey?: string;
 
   @IsNotEmpty()
   @IsString()
   fire: string;
 
-  @IsString()
-  entryParent: string;
-
   @IsNotEmpty()
   @IsString()
-  parentEntryType: string;
+  name: string;
 
   @IsOptional()
   @IsString()
