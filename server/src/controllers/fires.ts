@@ -198,7 +198,7 @@ export async function fireStarter(req: Request, res: Response, next: NextFunctio
     // Transform response to include chainKey field for client compatibility
     const response = {
       ...created,
-      chainKey: created.chainKey || created.chain_key || chainKey
+      chainKey: (created as any).chainKey || (created as any).chain_key || chainKey
     };
 
     res.status(201).json(response);
@@ -242,7 +242,7 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
       // Transform to include chainKey for client compatibility
       const transformedSubfires = subfires.map(fire => ({
         ...fire,
-        chainKey: fire.chainKey || fire.chain_key
+        chainKey: (fire as any).chainKey || (fire as any).chain_key
       }));
       console.log("Database fallback - found subfires:", JSON.stringify(transformedSubfires, null, 2));
       res.json({
@@ -265,7 +265,7 @@ export async function readFire(req: Request, res: Response, next: NextFunction) 
     // Transform response to include chainKey field for client compatibility
     const response = {
       ...subfire,
-      chainKey: subfire.chainKey || subfire.chain_key
+      chainKey: (subfire as any).chainKey || (subfire as any).chain_key
     };
     res.json(response);
   } catch (error) {
