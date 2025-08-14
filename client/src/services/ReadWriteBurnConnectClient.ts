@@ -178,31 +178,31 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
         // Use our static EIP712 types instead of dynamic generation
         const domain = { name: "GalaChain" };
 
-        // Define EIP712 types for Submission
+        // Define EIP712 types for Submission (matching chaincode structure)
         const types = {
           Submission: [
-            { name: "name", type: "string" },
+            { name: "slug", type: "string" },
+            { name: "uniqueKey", type: "string" },
+            { name: "entryParentKey", type: "string" },
             { name: "fire", type: "string" },
-            { name: "entryParent", type: "string" },
-            { name: "parentEntryType", type: "string" },
+            { name: "name", type: "string" },
             { name: "contributor", type: "string" },
             { name: "description", type: "string" },
             { name: "url", type: "string" },
-            { name: "uniqueKey", type: "string" },
             { name: "prefix", type: "string" }
           ]
         };
 
         // Prepare the message with proper structure
         const message: any = {
-          name: submissionDto.name,
+          slug: submissionDto.slug,
+          uniqueKey: submissionDto.uniqueKey,
+          entryParentKey: submissionDto.entryParentKey || "",
           fire: submissionDto.fire,
-          entryParent: submissionDto.entryParent || "",
-          parentEntryType: submissionDto.parentEntryType || "RWBF",
+          name: submissionDto.name,
           contributor: submissionDto.contributor || "",
           description: submissionDto.description || "",
           url: submissionDto.url || "",
-          uniqueKey: submissionDto.uniqueKey,
           prefix: prefix
         };
 
@@ -347,14 +347,14 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
             { name: "prefix", type: "string" }
           ],
           submission: [
-            { name: "name", type: "string" },
+            { name: "slug", type: "string" },
+            { name: "uniqueKey", type: "string" },
+            { name: "entryParentKey", type: "string" },
             { name: "fire", type: "string" },
-            { name: "entryParent", type: "string" },
-            { name: "parentEntryType", type: "string" },
+            { name: "name", type: "string" },
             { name: "contributor", type: "string" },
             { name: "description", type: "string" },
-            { name: "url", type: "string" },
-            { name: "uniqueKey", type: "string" }
+            { name: "url", type: "string" }
           ]
         };
 
@@ -382,14 +382,14 @@ export class ReadWriteBurnConnectClient extends BrowserConnectClient {
         // Prepare the message with proper structure
         const message: any = {
           submission: {
-            name: contributeSubmissionDto.submission.name,
+            slug: contributeSubmissionDto.submission.slug,
+            uniqueKey: contributeSubmissionDto.submission.uniqueKey,
+            entryParentKey: contributeSubmissionDto.submission.entryParentKey || "",
             fire: contributeSubmissionDto.submission.fire,
-            entryParent: contributeSubmissionDto.submission.entryParent || "",
-            parentEntryType: contributeSubmissionDto.submission.parentEntryType || "RWBF",
+            name: contributeSubmissionDto.submission.name,
             contributor: contributeSubmissionDto.submission.contributor || "",
             description: contributeSubmissionDto.submission.description || "",
-            url: contributeSubmissionDto.submission.url || "",
-            uniqueKey: contributeSubmissionDto.submission.uniqueKey
+            url: contributeSubmissionDto.submission.url || ""
           },
           uniqueKey: contributeSubmissionDto.uniqueKey,
           prefix

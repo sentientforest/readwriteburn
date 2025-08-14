@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { ChainObject } from "@gala-chain/api";
+import { SigningType } from "@gala-chain/connect";
 import { sha256 } from "@noble/hashes/sha256";
 import { bytesToHex } from "@noble/hashes/utils";
 import { computed, getCurrentInstance, onMounted, ref, watch } from "vue";
@@ -66,7 +67,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useFiresStore } from "../stores/fires";
 import { useUserStore } from "../stores/user";
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
-import { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } from "../types/fire";
+import { ContributeSubmissionAuthorizationDto, ContributeSubmissionDto, Fire, SubmissionDto } from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
@@ -169,29 +170,31 @@ async function submitForm() {
   try {
     const fireSlug = subfireSlug;
     
-    // Determine parent and parent type for new flat structure
-    // If replying to a submission, parent is the submission slug and type is Submission.INDEX_KEY
-    // If top-level submission, parent is the fire slug and type is Fire.INDEX_KEY
+    // Generate a unique slug for the submission
+    const submissionSlug = `submission-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Determine parent key for new structure
+    // If replying to a submission, use the submission's chain key
+    // If top-level submission, entryParentKey is undefined (chaincode will use fire key)
     const isReply = !!replyToId;
-    const entryParent = isReply ? replyToId : fireSlug; // Parent slug (not composite key)
-    const parentEntryType = isReply ? "RWBS" : "RWBF"; // Submission.INDEX_KEY or Fire.INDEX_KEY
+    const entryParentKey = isReply ? replyToId : undefined; // Use submission chain key for replies
 
-    // Create SubmissionDto with new structure
+    // Create SubmissionDto with structure matching chaincode
     const submissionDto = new SubmissionDto({
+      slug: submissionSlug,
+      uniqueKey: randomUniqueKey(),
+      entryParentKey: entryParentKey, // Optional parent key for threading
+      fire: fireSlug, // Target fire slug
       name: form.value.name,
-      description: form.value.description || "",
-      url: form.value.url || "",
-      fire: fireSlug, // Just the fire slug, not composite key
-      entryParent: entryParent, // Parent slug
-      parentEntryType: parentEntryType, // Type of parent (Fire or Submission)
       contributor: userStore.address,
-      uniqueKey: randomUniqueKey()
+      description: form.value.description || "",
+      url: form.value.url || ""
     });
 
     console.log("Signing submission:", submissionDto);
 
-    // Sign the submission DTO
-    const signedSubmission = await metamaskClient.value?.signSubmission(submissionDto);
+    // Sign the submission DTO with explicit signing type (matching fire signing)
+    const signedSubmission = await metamaskClient.value?.signSubmission(submissionDto, SigningType.SIGN_TYPED_DATA);
 
     // Create authorization DTO (no fee for now)
     const authDto = new ContributeSubmissionAuthorizationDto({
