@@ -204,7 +204,7 @@ async function submitFireVote() {
     // Create VoteDto for Fire voting
     const voteDto = new VoteDto({
       entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
-      entryParent: fireSlug, // Fire slug as parent (simplified hierarchy)
+      entryParent: "", // Empty string for top-level content (fires have no parent)
       entry: fireCompositeKey, // The fire we're voting on
       quantity: new BigNumber(fireVoteQty.value),
       uniqueKey: randomUniqueKey()

@@ -187,7 +187,7 @@ async function submitVote() {
 
     // For parent, use fire chain key for top-level submissions,
     // or parent submission chain key for replies
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [props.fireSlug]);
     const entryParent = props.submission.entryParent ?? fireChainKey;
     
     // Create VoteDto using server-provided chain key
