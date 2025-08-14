@@ -248,14 +248,11 @@ async function submitForm() {
 // Fetch parent submission if replying
 onMounted(async () => {
   if (replyToId) {
-    try {
-      const response = await fetch(`${apiBase}/api/submissions/${replyToId}`);
-      if (response.ok) {
-        replyToSubmission.value = await response.json();
-      }
-    } catch (error) {
-      console.error("Error fetching parent submission:", error);
-    }
+    // TODO: replyToId is now a chain key, not a database ID
+    // Need to either create a new API endpoint to fetch by chain key
+    // or modify the URL structure to include both database ID and chain key
+    // For now, skip fetching parent submission details
+    console.log("Reply mode - parent chain key:", replyToId);
   }
 });
 </script>
