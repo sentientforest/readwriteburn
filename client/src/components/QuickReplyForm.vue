@@ -168,17 +168,20 @@ async function handleSubmit() {
     const { ContributeSubmissionAuthorizationDto, Fire, SubmissionDto } = await import("../types/fire");
     const { randomUniqueKey } = await import("../utils");
 
-    // Create SubmissionDto with new flat structure
-    // This is a reply to a submission, so parent is submission ID and type is Submission.INDEX_KEY
+    // Generate a unique slug for the reply submission
+    const replySlug = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create SubmissionDto with structure matching chaincode
+    // This is a reply to a submission, so entryParentKey is the parent submission's chain key
     const submissionDto = new SubmissionDto({
+      slug: replySlug,
+      uniqueKey: randomUniqueKey(),
+      entryParentKey: props.parentSubmissionId, // Parent submission chain key for threading
+      fire: props.fireSlug, // Target fire slug
       name: formData.value.name.trim(),
-      description: formData.value.description.trim() || "",
-      url: formData.value.url.trim() || "",
-      fire: props.fireSlug, // Just the fire slug, not composite key
-      entryParent: props.parentSubmissionId, // Parent submission ID
-      parentEntryType: "RWBS", // Submission.INDEX_KEY since this is a reply to a submission
       contributor: userStore.address,
-      uniqueKey: randomUniqueKey()
+      description: formData.value.description.trim() || "",
+      url: formData.value.url.trim() || ""
     });
 
     console.log("Signing reply submission:", submissionDto);

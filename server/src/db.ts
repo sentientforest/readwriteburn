@@ -300,59 +300,43 @@ export const dbService = {
 
   // Submission methods
   saveSubmission: (submission: any, chainKey: string): SubmissionResDto => {
-    // Extract Submission object properties
+    // Extract Submission object properties (chaincode structure)
     const name = submission.name;
     const contributor = submission.contributor || "";
     const description = submission.description || "";
     const url = submission.url || "";
-    const fire = submission.fire;
-    const entryParent = submission.entryParent || fire;
-    const parentEntryType = submission.parentEntryType || "RWBF"; // Default to Fire parent
-    const chainId = submission.id || null; // Chaincode ID (timestamp-based)
+    const fire = submission.fire; // This might be undefined 
+    const fireKey = submission.fireKey; // This is the composite key like '\x00RWBF\x001\x00'
+    const entryParent = submission.entryParentKey || fireKey; // Use entryParentKey if present, fallback to fireKey
+    const parentEntryType = submission.entryParentType || "RWBF"; // Default to Fire parent
+    const chainId = submission.recency || null; // Chaincode uses recency for ID
 
-    // Extract fire slug from chaincode key for database foreign key
-    // Fire chain key format: binary composite key with null separators
-    let fireSlug = fire;
-
-    if (typeof fire === "string" && fire.includes("RWBF")) {
-      // First, try to find an existing fire in the database that matches
-      const existingFire = dbService.getSubfireByChainKey(fire);
-      if (existingFire) {
-        fireSlug = existingFire.slug;
-      } else {
-        // Parse the binary composite key format: \x00RWBF\x00{entryParent}\x00{fireSlug}\x00
-        // Split by null bytes and find the parts
-        const parts = fire.split("\x00").filter((part) => part.length > 0);
-        console.log("Parsing composite key parts:", parts);
-
-        // Find RWBF index
-        const rwbfIndex = parts.findIndex((part) => part === "RWBF");
-        if (rwbfIndex >= 0 && parts.length > rwbfIndex + 1) {
-          // The fire slug should be the last non-empty part
-          // For format: RWBF, entryParent, fireSlug
-          // If entryParent is empty, it's: RWBF, fireSlug
-          const possibleSlug = parts[parts.length - 1];
-          if (possibleSlug && possibleSlug !== "RWBF") {
-            fireSlug = possibleSlug;
-          }
-        }
-
-        console.warn("Could not find fire with chain key in database, parsed slug:", {
-          fire,
-          parts,
-          extractedSlug: fireSlug
-        });
+    // Extract fire slug from fireKey composite key: '\x00RWBF\x001\x00'
+    let fireSlug = fire; // Try fire field first
+    if (!fireSlug && fireKey) {
+      // Parse the binary composite key format: \x00RWBF\x00{fireSlug}\x00
+      const parts = fireKey.split("\x00").filter((part: string) => part.length > 0);
+      console.log("Parsing fireKey composite parts:", parts);
+      
+      // Find RWBF index and get the fire slug (should be after RWBF)
+      const rwbfIndex = parts.findIndex((part: string) => part === "RWBF");
+      if (rwbfIndex >= 0 && parts.length > rwbfIndex + 1) {
+        fireSlug = parts[rwbfIndex + 1]; // Fire slug is right after RWBF
       }
     }
 
     console.log("Saving submission to database:", {
       name,
       fire,
+      fireKey,
       fireSlug,
       chainKey,
       chainId,
       entryParent,
-      parentEntryType
+      parentEntryType,
+      contributor,
+      description,
+      url
     });
 
     // Generate content hash

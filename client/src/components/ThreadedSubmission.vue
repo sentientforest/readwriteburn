@@ -81,7 +81,7 @@
             <button class="text-primary-600 hover:text-primary-700" @click="toggleReplyForm">Reply</button>
 
             <router-link
-              :to="`/f/${fireSlug}/reply?replyTo=${submission.id}`"
+              :to="`/f/${fireSlug}/reply?replyTo=${encodeURIComponent(submission.chainKey)}`"
               class="text-primary-600 hover:text-primary-700"
             >
               Reply (new page)
@@ -102,7 +102,7 @@
       <!-- Reply Form -->
       <div v-if="showReplyForm" class="mt-4 pt-4 border-t border-gray-200">
         <QuickReplyForm
-          :parent-submission-id="submission.id.toString()"
+          :parent-submission-id="submission.chainKey"
           :fire-slug="fireSlug"
           @reply-posted="handleReplyPosted"
           @cancel="showReplyForm = false"
@@ -187,7 +187,7 @@ async function submitVote() {
 
     // For parent, use fire chain key for top-level submissions,
     // or parent submission chain key for replies
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, ["", props.fireSlug]);
+    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [props.fireSlug]);
     const entryParent = props.submission.entryParent ?? fireChainKey;
     
     // Create VoteDto using server-provided chain key
