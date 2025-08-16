@@ -10,11 +10,12 @@ import {
   moderateSubmission,
   verifySubmissionContent
 } from "./controllers/content";
-import { deleteFire, fireStarter, listFires, readFire, updateFire, voteOnFire } from "./controllers/fires";
+import { deleteFire, fireStarter, getFireChainKey, listFires, readFire, updateFire, voteOnFire } from "./controllers/fires";
 import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
 import {
   createSubmission,
+  getSubmissionChainKey,
   listSubmissions,
   listSubmissionsByFire,
   readSubmission,
@@ -56,12 +57,14 @@ app.get("/api/fires/:slug", readFire);
 app.put("/api/fires/:slug", updateFire);
 app.delete("/api/fires/:slug", deleteFire);
 app.post("/api/fires/:slug/vote", voteOnFire);
+app.get("/api/fires/:slug/chain-key", getFireChainKey);
 
 // Submission routes
 app.get("/api/submissions", listSubmissions);
 app.get("/api/submissions/:id", readSubmission);
 app.post("/api/submissions", createSubmission);
 app.post("/api/submissions/:id/vote", upvoteSubmission);
+app.get("/api/submissions/:id/chain-key", getSubmissionChainKey);
 app.get("/api/fires/:slug/submissions", listSubmissionsByFire);
 
 // Content verification and moderation routes

@@ -384,3 +384,28 @@ export async function voteOnFire(req: Request, res: Response, next: NextFunction
     next(error);
   }
 }
+
+export async function getFireChainKey(req: Request, res: Response, next: NextFunction) {
+  try {
+    const fireSlug = req.params.slug;
+    
+    // First check if fire exists in database
+    const fire = dbService.getSubfire(fireSlug);
+    if (!fire) {
+      return res.status(404).json({ error: "Fire not found" });
+    }
+
+    // Return the composite chain key for this fire
+    // Fire composite key format: \x00RWBF\x00{fireSlug}\x00
+    const fireChainKey = `\x00RWBF\x00${fireSlug}\x00`;
+    
+    res.json({
+      fireSlug: fireSlug,
+      chainKey: fireChainKey,
+      indexKey: "RWBF"
+    });
+  } catch (error) {
+    console.error("Error getting fire chain key:", error);
+    next(error);
+  }
+}
