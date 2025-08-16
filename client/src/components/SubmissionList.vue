@@ -115,15 +115,12 @@
 </template>
 
 <script setup lang="ts">
-import BigNumber from "bignumber.js";
 import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
-import { ReadWriteBurnConnectClient } from "../services/ReadWriteBurnConnectClient";
+import { VoteService } from "@/services";
 import { useUserStore } from "../stores/user";
 import type { SubmissionResponse } from "../types/api";
-import { CastVoteAuthorizationDto, Fire, Submission, VoteDto } from "../types/fire";
-import { randomUniqueKey } from "../utils";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import FireHierarchy from "./FireHierarchy.vue";
 import ThreadedSubmission from "./ThreadedSubmission.vue";
@@ -133,11 +130,16 @@ interface ExtendedSubmissionResDto extends SubmissionResponse {
 }
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
-const burnCostVote = ref(new BigNumber(import.meta.env.VITE_BURN_COST_VOTE ?? 1));
 
 // Access global metamaskClient
 const instance = getCurrentInstance();
 const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
+
+// Create vote service instance
+const voteService = computed(() => {
+  if (!metamaskClient.value) return null;
+  return new VoteService(apiBase, metamaskClient.value);
+});
 
 const route = useRoute();
 const subfireSlug = route.params.slug as string;
@@ -187,69 +189,23 @@ async function fetchSubmissions() {
 }
 
 async function submitVote(submission: ExtendedSubmissionResDto) {
-  if (!submission.userVoteQty || isProcessing.value || !userStore.address) return;
+  if (!submission.userVoteQty || isProcessing.value || !userStore.address || !voteService.value) return;
 
   isProcessing.value = true;
   submitError.value = "";
   success.value = "";
 
   try {
-    // Create ReadWriteBurn client
-    const rwbClient = metamaskClient.value;
-
-    if (!rwbClient) {
-      throw new Error(`No client software connected`);
-    }
-
-    // Create submission composite key with the new structure
-    // Need to determine parentEntryType: if entryParent is null, it's a top-level submission (Fire parent)
-    // Use server-provided chain key instead of constructing manually
-    if (!submission.chainKey) {
-      throw new Error("Submission missing chain key from server");
-    }
-
-    // For parent, we need the fire's chain key for top-level submissions,
-    // or the parent submission's chain key for replies
-    const isTopLevel = !submission.entryParent;
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [subfireSlug]);
-    const actualParent = isTopLevel ? fireChainKey : submission.entryParent;
+    console.log("Submitting submission vote using VoteService...");
     
-    // Create VoteDto using server-provided chain key
-    const voteDto = new VoteDto({
-      entryType: Submission.INDEX_KEY,
-      entryParent: actualParent,
-      entry: submission.chainKey, // Use server-provided chain key
-      quantity: new BigNumber(submission.userVoteQty),
-      uniqueKey: randomUniqueKey()
-    });
+    // Use the VoteService to handle the entire voting process
+    const result = await voteService.value.voteOnSubmission(submission.id, submission.userVoteQty);
 
-    console.log("Signing vote:", voteDto);
-
-    // Sign the VoteDto
-    const signedVote = await rwbClient.signVote(voteDto);
-
-    // Create authorization DTO for server
-    const authDto = new CastVoteAuthorizationDto({
-      vote: signedVote
-    });
-
-    console.log("Sending vote authorization to server:", authDto);
-
-    // Send to server
-    const response = await fetch(`${apiBase}/api/submissions/${submission.id}/vote`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(authDto)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to submit vote");
+    if (!result.success) {
+      throw new Error(result.error || result.message);
     }
 
-    success.value = "Vote submitted successfully!";
+    success.value = result.message;
     submission.userVoteQty = null;
     await fetchSubmissions(); // Refresh the list
   } catch (error) {
