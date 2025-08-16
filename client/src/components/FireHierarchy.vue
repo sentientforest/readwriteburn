@@ -108,8 +108,7 @@ import { useRoute, useRouter } from "vue-router";
 import BigNumber from "bignumber.js";
 
 import FireTreeNode from "./FireTreeNode.vue";
-import { CastVoteAuthorizationDto, Fire, VoteDto } from "../types/fire";
-import { randomUniqueKey } from "../utils";
+import { VoteService } from "@/services";
 
 const route = useRoute();
 const router = useRouter();
@@ -123,6 +122,12 @@ const instance = getCurrentInstance();
 const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
+
+// Create vote service instance
+const voteService = computed(() => {
+  if (!metamaskClient.value) return null;
+  return new VoteService(apiBase, metamaskClient.value);
+});
 
 // Props
 interface Props {
@@ -181,62 +186,28 @@ function formatDate(dateString: string): string {
 
 
 async function submitFireVote() {
-  if (!fireVoteQty.value || isVoting.value || !userStore.address || !currentFire.value) return;
+  if (!fireVoteQty.value || isVoting.value || !userStore.address || !currentFire.value || !voteService.value) return;
 
   isVoting.value = true;
   voteError.value = "";
   voteSuccess.value = "";
 
   try {
-    // Create ReadWriteBurn client
-    const rwbClient = metamaskClient.value;
-
-    if (!rwbClient) {
-      throw new Error(`No client software connected`);
-    }
-
     const fireSlug = getCurrentFireSlug();
-    if (!fireSlug) return;
-    
-    // Create Fire composite key - simplified structure with just slug
-    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug]);
-    
-    // Create VoteDto for Fire voting
-    const voteDto = new VoteDto({
-      entryType: Fire.INDEX_KEY, // Use Fire's INDEX_KEY ("RWBF") instead of Submission's
-      entryParent: "", // Empty string for top-level content (fires have no parent)
-      entry: fireCompositeKey, // The fire we're voting on
-      quantity: new BigNumber(fireVoteQty.value),
-      uniqueKey: randomUniqueKey()
-    });
-
-    console.log("Signing fire vote:", voteDto);
-
-    // Sign the VoteDto
-    const signedVote = await rwbClient.signVote(voteDto);
-
-    // Create authorization DTO for server
-    const authDto = new CastVoteAuthorizationDto({
-      vote: signedVote
-    });
-
-    console.log("Sending fire vote authorization to server:", authDto);
-
-    // Send to server
-    const response = await fetch(`${apiBase}/api/fires/${fireSlug}/vote`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(authDto)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to submit fire vote");
+    if (!fireSlug) {
+      throw new Error("Fire slug not found");
     }
 
-    voteSuccess.value = "Fire vote submitted successfully!";
+    console.log("Submitting fire vote using VoteService...");
+    
+    // Use the VoteService to handle the entire voting process
+    const result = await voteService.value.voteOnFire(fireSlug, fireVoteQty.value);
+
+    if (!result.success) {
+      throw new Error(result.error || result.message);
+    }
+
+    voteSuccess.value = result.message;
     fireVoteQty.value = null;
     await firesStore.fetchFires(); // Refresh the fire list
     

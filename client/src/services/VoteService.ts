@@ -40,7 +40,14 @@ export class VoteService {
    */
   async voteOnFire(fireSlug: string, quantity: number): Promise<VoteResponse> {
     try {
-      const voteDto = this.createFireVoteDto(fireSlug, quantity);
+      // Fetch fire chain key from server
+      const chainKeyResponse = await fetch(`${this.apiBase}/api/fires/${fireSlug}/chain-key`);
+      if (!chainKeyResponse.ok) {
+        throw new Error("Failed to fetch fire chain key");
+      }
+      
+      const chainKeyData = await chainKeyResponse.json();
+      const voteDto = this.createFireVoteDto(chainKeyData.chainKey, quantity);
       return await this.submitVote(voteDto, `/api/fires/${fireSlug}/vote`);
     } catch (error) {
       return {
@@ -55,19 +62,22 @@ export class VoteService {
    * Submit a vote for a submission
    */
   async voteOnSubmission(
-    submissionChainKey: string,
     submissionDatabaseId: number,
-    fireSlug: string,
-    isTopLevel: boolean,
-    quantity: number,
-    entryParent?: string
+    quantity: number
   ): Promise<VoteResponse> {
     try {
+      // Fetch submission chain key and metadata from server
+      const chainKeyResponse = await fetch(`${this.apiBase}/api/submissions/${submissionDatabaseId}/chain-key`);
+      if (!chainKeyResponse.ok) {
+        throw new Error("Failed to fetch submission chain key");
+      }
+      
+      const chainKeyData = await chainKeyResponse.json();
       const voteDto = this.createSubmissionVoteDto(
-        submissionChainKey,
-        fireSlug,
-        isTopLevel,
-        entryParent,
+        chainKeyData.chainKey,
+        chainKeyData.fireSlug,
+        chainKeyData.isTopLevel,
+        chainKeyData.entryParent,
         quantity
       );
       return await this.submitVote(voteDto, `/api/submissions/${submissionDatabaseId}/vote`);
@@ -83,13 +93,11 @@ export class VoteService {
   /**
    * Create a standardized VoteDto for fire voting
    */
-  private createFireVoteDto(fireSlug: string, quantity: number): VoteDto {
-    const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug]);
-    
+  private createFireVoteDto(fireChainKey: string, quantity: number): VoteDto {
     return new VoteDto({
       entryType: Fire.INDEX_KEY, // "RWBF"
       entryParent: "", // Empty string for top-level content (fires have no parent)
-      entry: fireCompositeKey, // The fire we're voting on
+      entry: fireChainKey, // Use server-provided chain key
       quantity: new BigNumber(quantity),
       uniqueKey: randomUniqueKey()
     });
@@ -108,8 +116,8 @@ export class VoteService {
     // Determine the correct parent reference
     let actualParent: string;
     if (isTopLevel) {
-      // Top-level submissions: parent is the fire chain key
-      actualParent = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fireSlug]);
+      // Top-level submissions: parent is the fire chain key (server should provide this)
+      actualParent = `\\x00RWBF\\x00${fireSlug}\\x00`;
     } else {
       // Reply submissions: parent is the parent submission's chain key
       actualParent = entryParent || "";

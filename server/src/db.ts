@@ -642,6 +642,32 @@ export const dbService = {
       console.error("Error recording vote cast:", error);
       return false;
     }
+  },
+
+  // Get submission by database ID for chain key lookup
+  getSubmissionById: (id: number): any => {
+    const db = getDb();
+    const submission = db
+      .prepare(
+        `
+        SELECT 
+          s.id,
+          s.name,
+          s.contributor,
+          s.description,
+          s.url,
+          s.chain_key as chainKey,
+          s.entry_parent as entryParent,
+          sf.slug as fire_slug,
+          s.created_at
+        FROM submissions s
+        JOIN subfires sf ON s.subfire_id = sf.id
+        WHERE s.id = ?
+      `
+      )
+      .get(id);
+
+    return submission;
   }
 };
 

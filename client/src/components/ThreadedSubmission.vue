@@ -129,11 +129,9 @@
 import { useUserStore } from "@/stores";
 import type { SubmissionResponse } from "@/types/api";
 import { ChevronRightIcon } from "@heroicons/vue/24/outline";
-import BigNumber from "bignumber.js";
-import { computed, ref } from "vue";
+import { computed, getCurrentInstance, ref } from "vue";
 
-import { CastVoteAuthorizationDto, Fire, Submission, VoteDto } from "../types/fire";
-import { randomUniqueKey } from "../utils";
+import { VoteService } from "@/services";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import QuickReplyForm from "./QuickReplyForm.vue";
 
@@ -153,6 +151,18 @@ const emit = defineEmits<{
 }>();
 
 const userStore = useUserStore();
+
+// Access global metamaskClient
+const instance = getCurrentInstance();
+const metamaskClient = computed(() => instance?.appContext.config.globalProperties.$metamaskClient);
+
+const apiBase = import.meta.env.VITE_PROJECT_API;
+
+// Create vote service instance
+const voteService = computed(() => {
+  if (!metamaskClient.value) return null;
+  return new VoteService(apiBase, metamaskClient.value);
+});
 
 // State
 const voteQuantity = ref<number | null>(null);
@@ -175,54 +185,18 @@ function toggleReplies() {
 }
 
 async function submitVote() {
-  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated || !userStore.metamaskClient)
+  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated || !voteService.value)
     return;
 
   isVoting.value = true;
   try {
-    // Use server-provided chain key instead of constructing manually
-    if (!props.submission.chainKey) {
-      throw new Error("Submission missing chain key from server");
-    }
-
-    // For parent, use fire chain key for top-level submissions,
-    // or parent submission chain key for replies
-    const fireChainKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [props.fireSlug]);
-    const entryParent = props.submission.entryParent ?? fireChainKey;
+    console.log("Submitting submission vote using VoteService...");
     
-    // Create VoteDto using server-provided chain key
-    const voteDto = new VoteDto({
-      entryType: Submission.INDEX_KEY, // Voting on a submission
-      entryParent: entryParent, // The fire this submission belongs to
-      entry: props.submission.chainKey, // Use server-provided chain key
-      quantity: new BigNumber(voteQuantity.value), // Use the raw vote amount
-      uniqueKey: randomUniqueKey()
-    });
+    // Use the VoteService to handle the entire voting process
+    const result = await voteService.value.voteOnSubmission(props.submission.id, voteQuantity.value);
 
-    console.log("Signing vote:", voteDto);
-
-    // Sign the vote DTO
-    const signedVote = await userStore.metamaskClient.signVote(voteDto);
-
-    // Create authorization DTO (no fee for now)
-    const authDto = new CastVoteAuthorizationDto({
-      vote: signedVote
-    });
-
-    console.log("Sending vote authorization:", authDto);
-
-    const apiBase = import.meta.env.VITE_PROJECT_API;
-    const response = await fetch(`${apiBase}/api/submissions/${props.submission.id}/vote`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(authDto)
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to submit vote");
+    if (!result.success) {
+      throw new Error(result.error || result.message);
     }
 
     voteQuantity.value = null;

@@ -212,3 +212,29 @@ export async function upvoteSubmission(req: Request, res: Response, next: NextFu
     next(error);
   }
 }
+
+export async function getSubmissionChainKey(req: Request, res: Response, next: NextFunction) {
+  try {
+    const submissionId = parseInt(req.params.id);
+    
+    // Get submission from database
+    const submission = dbService.getSubmissionById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: "Submission not found" });
+    }
+
+    // Return the chain key that's already stored in the database
+    // along with helpful metadata for client-side operations
+    res.json({
+      submissionId: submissionId,
+      chainKey: submission.chainKey,
+      indexKey: "RWBS", // Submission index key
+      fireSlug: submission.fire_slug,
+      entryParent: submission.entryParent,
+      isTopLevel: !submission.entryParent
+    });
+  } catch (error) {
+    console.error("Error getting submission chain key:", error);
+    next(error);
+  }
+}
