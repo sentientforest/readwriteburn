@@ -92,7 +92,10 @@ const isCurrentFire = computed(() => props.fire.slug === props.currentFireSlug);
 const childFires = computed(() => {
   // Child fires have entryParent set to their parent's composite key
   // For top-level fires, the composite key is [slug, slug]
-  const parentCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [props.fire.slug, props.fire.slug]);
+  const parentCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [
+    props.fire.slug,
+    props.fire.slug
+  ]);
   return props.allFires.filter((fire) => fire.entryParent === parentCompositeKey);
 });
 
@@ -133,7 +136,7 @@ function checkIfInPath(targetSlug: string, parentSlug: string, allFires: FireRes
     if (current.entryParent === parentCompositeKey) {
       return true;
     }
-    
+
     // Find parent fire by matching its composite key with current's entryParent
     current = allFires.find((fire) => {
       const fireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [fire.slug, fire.slug]);

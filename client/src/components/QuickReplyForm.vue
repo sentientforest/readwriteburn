@@ -170,7 +170,7 @@ async function handleSubmit() {
 
     // Generate a unique slug for the reply submission
     const replySlug = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Create SubmissionDto with structure matching chaincode
     // This is a reply to a submission, so entryParentKey is the parent submission's chain key
     const submissionDto = new SubmissionDto({

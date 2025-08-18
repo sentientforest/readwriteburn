@@ -3,7 +3,7 @@
     <div class="mb-6">
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Fires</h2>
       <p class="text-gray-600 text-sm sm:text-base">Discover communities and join the conversation</p>
-      
+
       <!-- Error and Success Messages -->
       <div v-if="submitError" class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
         <p class="text-red-700 text-sm">{{ submitError }}</p>
@@ -92,8 +92,8 @@
                 </div>
                 <button
                   :disabled="!voteQuantities[getFireSlug(fire) || ''] || isProcessing || !userStore.address"
-                  @click.stop="submitVoteForFire(fire)"
                   class="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  @click.stop="submitVoteForFire(fire)"
                 >
                   {{ isProcessing ? "..." : "Vote" }}
                 </button>
@@ -109,7 +109,7 @@
                 {{ fire.description || fire.metadata?.description }}
               </p>
             </div>
-            
+
             <!-- Navigate Arrow -->
             <svg
               class="h-5 w-5 text-gray-400 ml-3 flex-shrink-0"
@@ -135,11 +135,11 @@
 </template>
 
 <script setup lang="ts">
+import { VoteService } from "@/services";
 import { useFiresStore } from "@/stores";
 import { useUserStore } from "@/stores/user";
 import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { VoteService } from "@/services";
 
 interface ExtendedFireResponse {
   slug: string;
@@ -172,10 +172,13 @@ const voteService = computed(() => {
 });
 
 // Computed properties from store
-const fires = computed(() => firesStore.fires.map(fire => ({
-  ...fire,
-  userVoteQty: voteQuantities.value[getFireSlug(fire) || ''] || null
-})) as ExtendedFireResponse[]);
+const fires = computed(
+  () =>
+    firesStore.fires.map((fire) => ({
+      ...fire,
+      userVoteQty: voteQuantities.value[getFireSlug(fire) || ""] || null
+    })) as ExtendedFireResponse[]
+);
 const loading = computed(() => firesStore.loading);
 const loadError = computed(() => !!firesStore.error);
 
@@ -186,7 +189,7 @@ function getFireSlug(fire: ExtendedFireResponse): string | null {
 function selectFire(fire: ExtendedFireResponse) {
   const slug = getFireSlug(fire);
   if (!slug) {
-    console.error('Fire missing slug:', fire);
+    console.error("Fire missing slug:", fire);
     return;
   }
   router.push(`/f/${slug}`);
@@ -195,7 +198,7 @@ function selectFire(fire: ExtendedFireResponse) {
 async function submitVoteForFire(fire: ExtendedFireResponse) {
   const slug = getFireSlug(fire);
   if (!slug) return;
-  
+
   const voteQty = voteQuantities.value[slug];
   if (!voteQty || isProcessing.value || !userStore.address || !voteService.value) return;
 
@@ -205,7 +208,7 @@ async function submitVoteForFire(fire: ExtendedFireResponse) {
 
   try {
     console.log("Submitting fire vote using VoteService...");
-    
+
     // Use the VoteService to handle the entire voting process
     const result = await voteService.value.voteOnFire(slug, voteQty);
 
@@ -217,15 +220,16 @@ async function submitVoteForFire(fire: ExtendedFireResponse) {
     // Clear the vote quantity for this fire
     delete voteQuantities.value[slug];
     await firesStore.fetchFires(); // Refresh the list
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       success.value = "";
     }, 3000);
   } catch (error) {
     console.error("Error submitting fire vote:", error);
-    submitError.value = error instanceof Error ? error.message : "Failed to submit fire vote. Please try again.";
-    
+    submitError.value =
+      error instanceof Error ? error.message : "Failed to submit fire vote. Please try again.";
+
     // Clear error message after 5 seconds
     setTimeout(() => {
       submitError.value = "";

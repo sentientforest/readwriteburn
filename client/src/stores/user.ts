@@ -126,8 +126,12 @@ export const useUserStore = defineStore("user", () => {
   }
 
   async function registerUser() {
-    console.log("Attempting user registration...", { hasMetamaskClient: !!metamaskClient.value, hasPublicKey: !!publicKey.value, publicKey: publicKey.value });
-    
+    console.log("Attempting user registration...", {
+      hasMetamaskClient: !!metamaskClient.value,
+      hasPublicKey: !!publicKey.value,
+      publicKey: publicKey.value
+    });
+
     if (!metamaskClient.value || !publicKey.value) {
       console.log("Registration skipped - missing requirements");
       return false;

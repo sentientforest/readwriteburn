@@ -67,7 +67,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useFiresStore } from "../stores/fires";
 import { useUserStore } from "../stores/user";
 import type { SubmissionCreateRequest, SubmissionResponse } from "../types/api";
-import { ContributeSubmissionAuthorizationDto, ContributeSubmissionDto, Fire, SubmissionDto } from "../types/fire";
+import {
+  ContributeSubmissionAuthorizationDto,
+  ContributeSubmissionDto,
+  Fire,
+  SubmissionDto
+} from "../types/fire";
 import { randomUniqueKey } from "../utils";
 
 const apiBase = import.meta.env.VITE_PROJECT_API;
@@ -169,10 +174,10 @@ async function submitForm() {
 
   try {
     const fireSlug = subfireSlug;
-    
+
     // Generate a unique slug for the submission
     const submissionSlug = `submission-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Determine parent key for new structure
     // If replying to a submission, use the submission's chain key
     // If top-level submission, entryParentKey is undefined (chaincode will use fire key)
@@ -194,7 +199,10 @@ async function submitForm() {
     console.log("Signing submission:", submissionDto);
 
     // Sign the submission DTO with explicit signing type (matching fire signing)
-    const signedSubmission = await metamaskClient.value?.signSubmission(submissionDto, SigningType.SIGN_TYPED_DATA);
+    const signedSubmission = await metamaskClient.value?.signSubmission(
+      submissionDto,
+      SigningType.SIGN_TYPED_DATA
+    );
 
     // Create authorization DTO (no fee for now)
     const authDto = new ContributeSubmissionAuthorizationDto({
@@ -218,7 +226,7 @@ async function submitForm() {
 
     const result = await response.json();
     console.log("Submission created successfully:", result);
-    
+
     // Server now returns enhanced response with chainKey
     if (result.chainKey) {
       console.log("Submission chain key received:", result.chainKey);

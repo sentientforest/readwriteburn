@@ -221,7 +221,7 @@ describe("Database Service", () => {
       });
 
       const submission2: SubmissionDto = await createValidDTO(SubmissionDto, {
-        slug: "test-submission-2", 
+        slug: "test-submission-2",
         name: "Test Submission 2",
         fire: `${testSubfireId}`,
         uniqueKey: "test-unique-key-2"

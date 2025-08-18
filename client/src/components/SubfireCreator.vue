@@ -297,7 +297,10 @@ async function handleSubmit() {
     // Create subfire DTO
     // For subfires, entryParent should be the parent fire's composite key
     // The parent fire's composite key uses [parentSlug, parentSlug] pattern for top-level fires
-    const parentFireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [parentFireSlug, parentFireSlug]);
+    const parentFireCompositeKey = Fire.getCompositeKeyFromParts(Fire.INDEX_KEY, [
+      parentFireSlug,
+      parentFireSlug
+    ]);
     const subfireDto = {
       entryParent: parentFireCompositeKey, // Use parent fire's composite key for hierarchy
       slug: formData.value.slug,

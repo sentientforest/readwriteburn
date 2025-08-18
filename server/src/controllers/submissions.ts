@@ -108,7 +108,7 @@ export async function listSubmissionsByFire(req: Request, res: Response, next: N
   try {
     const submissions = dbService.getSubmissionsBySubfire(req.params.slug);
     // Transform responses to include chainKey field for client compatibility
-    const transformedSubmissions = submissions.map(sub => ({
+    const transformedSubmissions = submissions.map((sub) => ({
       ...sub,
       chainKey: sub.chain_key
     }));
@@ -216,7 +216,7 @@ export async function upvoteSubmission(req: Request, res: Response, next: NextFu
 export async function getSubmissionChainKey(req: Request, res: Response, next: NextFunction) {
   try {
     const submissionId = parseInt(req.params.id);
-    
+
     // Get submission from database
     const submission = dbService.getSubmissionById(submissionId);
     if (!submission) {

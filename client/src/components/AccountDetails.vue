@@ -15,7 +15,6 @@
 
 <script setup lang="ts">
 import { useUserStore } from "../stores/user";
-
 import BalanceDetails from "./BalanceDetails.vue";
 import BurnGala from "./BurnGala.vue";
 import TransferGala from "./TransferGala.vue";
