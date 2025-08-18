@@ -305,7 +305,7 @@ export const dbService = {
     const contributor = submission.contributor || "";
     const description = submission.description || "";
     const url = submission.url || "";
-    const fire = submission.fire; // This might be undefined 
+    const fire = submission.fire; // This might be undefined
     const fireKey = submission.fireKey; // This is the composite key like '\x00RWBF\x001\x00'
     const entryParent = submission.entryParentKey || fireKey; // Use entryParentKey if present, fallback to fireKey
     const parentEntryType = submission.entryParentType || "RWBF"; // Default to Fire parent
@@ -317,7 +317,7 @@ export const dbService = {
       // Parse the binary composite key format: \x00RWBF\x00{fireSlug}\x00
       const parts = fireKey.split("\x00").filter((part: string) => part.length > 0);
       console.log("Parsing fireKey composite parts:", parts);
-      
+
       // Find RWBF index and get the fire slug (should be after RWBF)
       const rwbfIndex = parts.findIndex((part: string) => part === "RWBF");
       if (rwbfIndex >= 0 && parts.length > rwbfIndex + 1) {

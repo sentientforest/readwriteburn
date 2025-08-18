@@ -34,7 +34,6 @@
         ></textarea>
       </div>
 
-
       <div class="form-section">
         <h3>Additional Authorities (optional)</h3>
         <div class="user-list">
@@ -92,9 +91,7 @@
           <p v-if="formData.selectedParentFire">
             <strong>Parent Fire:</strong> {{ getSelectedParentFireName() }}
           </p>
-          <p v-else>
-            <strong>Type:</strong> Top-level fire (no parent)
-          </p>
+          <p v-else><strong>Type:</strong> Top-level fire (no parent)</p>
         </div>
 
         <div class="fee-details">
@@ -195,7 +192,6 @@ function formatFee(amount: BigNumber): string {
   // Format BigNumber to readable GALA amount (assuming 8 decimals)
   return amount.dividedBy(new BigNumber(10).pow(8)).toFixed(2);
 }
-
 
 function cancelFireCreation() {
   showFeeConfirmation.value = false;
@@ -421,12 +417,12 @@ async function confirmFireCreation() {
 
     // Navigate to the new fire using the form data slug (most reliable)
     const fireSlug = formData.value.slug;
-    
+
     if (!fireSlug) {
       error.value = "Fire creation succeeded but navigation failed - no slug found";
       return;
     }
-    
+
     await router.push(`/f/${fireSlug}`);
   } catch (err) {
     error.value = err instanceof Error ? err.message : "Failed to create fire";
@@ -453,7 +449,6 @@ function parseFeeEstimation(dryRunResult: GalaChainResponse<DryRunResultDto>): A
 
   return fees;
 }
-
 </script>
 
 <style scoped>
@@ -500,7 +495,6 @@ select {
   border-radius: 4px;
   font-size: 1rem;
 }
-
 
 textarea {
   resize: vertical;

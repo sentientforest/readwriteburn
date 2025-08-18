@@ -16,10 +16,14 @@
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-2">
-            <h1 class="text-2xl font-bold text-gray-900">{{ currentFire.name || currentFire.metadata?.name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900">
+              {{ currentFire.name || currentFire.metadata?.name }}
+            </h1>
           </div>
 
-          <p v-if="currentFire.description || currentFire.metadata?.description" class="text-gray-600 mb-4">{{ currentFire.description || currentFire.metadata?.description }}</p>
+          <p v-if="currentFire.description || currentFire.metadata?.description" class="text-gray-600 mb-4">
+            {{ currentFire.description || currentFire.metadata?.description }}
+          </p>
 
           <!-- Vote Messages -->
           <div v-if="voteError" class="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
@@ -32,7 +36,14 @@
           <div class="flex items-center gap-4 text-sm text-gray-500">
             <div class="flex items-center gap-1">
               <UserIcon class="h-4 w-4" />
-              <span>Started by {{ currentFire.starter?.identity || currentFire.metadata?.starter ? formatAddress(currentFire.starter?.identity || currentFire.metadata?.starter) : 'Unknown' }}</span>
+              <span
+                >Started by
+                {{
+                  currentFire.starter?.identity || currentFire.metadata?.starter
+                    ? formatAddress(currentFire.starter?.identity || currentFire.metadata?.starter)
+                    : "Unknown"
+                }}</span
+              >
             </div>
             <div class="flex items-center gap-1">
               <CalendarIcon class="h-4 w-4" />
@@ -62,8 +73,8 @@
             </div>
             <button
               :disabled="!fireVoteQty || isVoting || !userStore.address"
-              @click="submitFireVote"
               class="px-3 py-1 text-xs bg-orange-600 text-white rounded hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              @click="submitFireVote"
             >
               {{ isVoting ? "..." : "Vote Fire" }}
             </button>
@@ -76,16 +87,14 @@
             <PlusIcon class="h-4 w-4" />
             New Submission
           </router-link>
-
         </div>
       </div>
     </div>
-
-
   </div>
 </template>
 
 <script setup lang="ts">
+import { VoteService } from "@/services";
 import { useFiresStore, useSubmissionsStore, useVotesStore } from "@/stores";
 import { useUserStore } from "@/stores/user";
 import type { FireResponse } from "@/types/api";
@@ -103,12 +112,11 @@ import {
   PlusIcon,
   UserIcon
 } from "@heroicons/vue/24/outline";
+import BigNumber from "bignumber.js";
 import { computed, getCurrentInstance, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import BigNumber from "bignumber.js";
 
 import FireTreeNode from "./FireTreeNode.vue";
-import { VoteService } from "@/services";
 
 const route = useRoute();
 const router = useRouter();
@@ -147,18 +155,17 @@ const allFires = computed(() => firesStore.fires);
 const currentFire = computed(() => {
   const slug = props.fireSlug || (route.params.slug as string);
   if (!slug) return null;
-  
+
   // Try to find in allFires first
   const fireFromAll = allFires.value.find((fire) => fire.slug === slug);
   if (fireFromAll) return fireFromAll;
-  
+
   // Fallback to store's currentFire if slug matches
   const storeFire = firesStore.currentFire;
   if (storeFire && storeFire.slug === slug) return storeFire;
-  
+
   return null;
 });
-
 
 // Methods
 function getCurrentFireSlug(): string | null {
@@ -168,7 +175,7 @@ function getCurrentFireSlug(): string | null {
 }
 
 function formatAddress(address: string): string {
-  if (!address || address.length <= 10) return address || 'Unknown';
+  if (!address || address.length <= 10) return address || "Unknown";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
@@ -184,9 +191,9 @@ function formatDate(dateString: string): string {
   }
 }
 
-
 async function submitFireVote() {
-  if (!fireVoteQty.value || isVoting.value || !userStore.address || !currentFire.value || !voteService.value) return;
+  if (!fireVoteQty.value || isVoting.value || !userStore.address || !currentFire.value || !voteService.value)
+    return;
 
   isVoting.value = true;
   voteError.value = "";
@@ -199,7 +206,7 @@ async function submitFireVote() {
     }
 
     console.log("Submitting fire vote using VoteService...");
-    
+
     // Use the VoteService to handle the entire voting process
     const result = await voteService.value.voteOnFire(fireSlug, fireVoteQty.value);
 
@@ -210,15 +217,16 @@ async function submitFireVote() {
     voteSuccess.value = result.message;
     fireVoteQty.value = null;
     await firesStore.fetchFires(); // Refresh the fire list
-    
+
     // Clear success message after 3 seconds
     setTimeout(() => {
       voteSuccess.value = "";
     }, 3000);
   } catch (error) {
     console.error("Error submitting fire vote:", error);
-    voteError.value = error instanceof Error ? error.message : "Failed to submit fire vote. Please try again.";
-    
+    voteError.value =
+      error instanceof Error ? error.message : "Failed to submit fire vote. Please try again.";
+
     // Clear error message after 5 seconds
     setTimeout(() => {
       voteError.value = "";

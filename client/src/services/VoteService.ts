@@ -1,9 +1,9 @@
-import BigNumber from "bignumber.js";
 import { CastVoteAuthorizationDto, Fire, Submission, VoteDto } from "@/types/fire";
 import { randomUniqueKey } from "@/utils";
+import BigNumber from "bignumber.js";
 
 export interface VoteTarget {
-  type: 'fire' | 'submission';
+  type: "fire" | "submission";
   slug?: string;
   chainKey?: string;
   fireSlug?: string;
@@ -45,7 +45,7 @@ export class VoteService {
       if (!chainKeyResponse.ok) {
         throw new Error("Failed to fetch fire chain key");
       }
-      
+
       const chainKeyData = await chainKeyResponse.json();
       const voteDto = this.createFireVoteDto(chainKeyData.chainKey, quantity);
       return await this.submitVote(voteDto, `/api/fires/${fireSlug}/vote`);
@@ -61,17 +61,16 @@ export class VoteService {
   /**
    * Submit a vote for a submission
    */
-  async voteOnSubmission(
-    submissionDatabaseId: number,
-    quantity: number
-  ): Promise<VoteResponse> {
+  async voteOnSubmission(submissionDatabaseId: number, quantity: number): Promise<VoteResponse> {
     try {
       // Fetch submission chain key and metadata from server
-      const chainKeyResponse = await fetch(`${this.apiBase}/api/submissions/${submissionDatabaseId}/chain-key`);
+      const chainKeyResponse = await fetch(
+        `${this.apiBase}/api/submissions/${submissionDatabaseId}/chain-key`
+      );
       if (!chainKeyResponse.ok) {
         throw new Error("Failed to fetch submission chain key");
       }
-      
+
       const chainKeyData = await chainKeyResponse.json();
       const voteDto = this.createSubmissionVoteDto(
         chainKeyData.chainKey,
@@ -125,7 +124,7 @@ export class VoteService {
     }
 
     return new VoteDto({
-      entryType: Submission.INDEX_KEY, // "RWBS" 
+      entryType: Submission.INDEX_KEY, // "RWBS"
       entryParent: actualParent,
       entry: submissionChainKey, // The submission we're voting on
       quantity: new BigNumber(quantity),
@@ -185,11 +184,11 @@ export class VoteService {
       return "User must be authenticated to vote";
     }
 
-    if (request.target.type === 'fire' && !request.target.slug) {
+    if (request.target.type === "fire" && !request.target.slug) {
       return "Fire slug is required for fire votes";
     }
 
-    if (request.target.type === 'submission' && !request.target.chainKey) {
+    if (request.target.type === "submission" && !request.target.chainKey) {
       return "Submission chain key is required for submission votes";
     }
 

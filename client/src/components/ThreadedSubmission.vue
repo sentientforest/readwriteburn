@@ -126,12 +126,12 @@
 </template>
 
 <script setup lang="ts">
+import { VoteService } from "@/services";
 import { useUserStore } from "@/stores";
 import type { SubmissionResponse } from "@/types/api";
 import { ChevronRightIcon } from "@heroicons/vue/24/outline";
 import { computed, getCurrentInstance, ref } from "vue";
 
-import { VoteService } from "@/services";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
 import QuickReplyForm from "./QuickReplyForm.vue";
 
@@ -185,13 +185,12 @@ function toggleReplies() {
 }
 
 async function submitVote() {
-  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated || !voteService.value)
-    return;
+  if (!voteQuantity.value || isVoting.value || !userStore.isAuthenticated || !voteService.value) return;
 
   isVoting.value = true;
   try {
     console.log("Submitting submission vote using VoteService...");
-    
+
     // Use the VoteService to handle the entire voting process
     const result = await voteService.value.voteOnSubmission(props.submission.id, voteQuantity.value);
 

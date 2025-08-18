@@ -10,7 +10,15 @@ import {
   moderateSubmission,
   verifySubmissionContent
 } from "./controllers/content";
-import { deleteFire, fireStarter, getFireChainKey, listFires, readFire, updateFire, voteOnFire } from "./controllers/fires";
+import {
+  deleteFire,
+  fireStarter,
+  getFireChainKey,
+  listFires,
+  readFire,
+  updateFire,
+  voteOnFire
+} from "./controllers/fires";
 import { registerEthUser, registerRandomEthUser } from "./controllers/identities";
 import { proxy } from "./controllers/proxy";
 import {

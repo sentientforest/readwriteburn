@@ -115,10 +115,10 @@
 </template>
 
 <script setup lang="ts">
+import { VoteService } from "@/services";
 import { computed, getCurrentInstance, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
-import { VoteService } from "@/services";
 import { useUserStore } from "../stores/user";
 import type { SubmissionResponse } from "../types/api";
 import ContentVerificationBadge from "./ContentVerificationBadge.vue";
@@ -197,7 +197,7 @@ async function submitVote(submission: ExtendedSubmissionResDto) {
 
   try {
     console.log("Submitting submission vote using VoteService...");
-    
+
     // Use the VoteService to handle the entire voting process
     const result = await voteService.value.voteOnSubmission(submission.id, submission.userVoteQty);
 

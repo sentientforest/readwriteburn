@@ -342,12 +342,7 @@ export class Fire extends ChainObject {
    * @param starter - User reference of the creator
    * @param description - Optional description
    */
-  constructor(
-    slug: string,
-    name: string,
-    starter: UserAlias,
-    description: string | undefined
-  ) {
+  constructor(slug: string, name: string, starter: UserAlias, description: string | undefined) {
     super();
     this.slug = slug;
     this.name = name;

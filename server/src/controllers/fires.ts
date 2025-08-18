@@ -240,7 +240,7 @@ export async function listFires(req: Request, res: Response, next: NextFunction)
       // Fall back to database if chaincode is unavailable
       const subfires = dbService.getAllSubfires();
       // Transform to include chainKey for client compatibility
-      const transformedSubfires = subfires.map(fire => ({
+      const transformedSubfires = subfires.map((fire) => ({
         ...fire,
         chainKey: (fire as any).chainKey || (fire as any).chain_key
       }));
@@ -388,7 +388,7 @@ export async function voteOnFire(req: Request, res: Response, next: NextFunction
 export async function getFireChainKey(req: Request, res: Response, next: NextFunction) {
   try {
     const fireSlug = req.params.slug;
-    
+
     // First check if fire exists in database
     const fire = dbService.getSubfire(fireSlug);
     if (!fire) {
@@ -398,7 +398,7 @@ export async function getFireChainKey(req: Request, res: Response, next: NextFun
     // Return the composite chain key for this fire
     // Fire composite key format: \\x00RWBF\\x00{fireSlug}\\x00
     const fireChainKey = `\\x00RWBF\\x00${fireSlug}\\x00`;
-    
+
     res.json({
       fireSlug: fireSlug,
       chainKey: fireChainKey,

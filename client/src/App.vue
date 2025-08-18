@@ -303,7 +303,6 @@ async function connectWallet() {
 }
 
 onMounted(async () => {
-
   // Set up keyboard navigation for mobile menu
   const mobileMenuElement = document.getElementById(mobileMenuId);
   if (mobileMenuElement) {
