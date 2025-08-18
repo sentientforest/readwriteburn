@@ -396,8 +396,8 @@ export async function getFireChainKey(req: Request, res: Response, next: NextFun
     }
 
     // Return the composite chain key for this fire
-    // Fire composite key format: \x00RWBF\x00{fireSlug}\x00
-    const fireChainKey = `\x00RWBF\x00${fireSlug}\x00`;
+    // Fire composite key format: \\x00RWBF\\x00{fireSlug}\\x00
+    const fireChainKey = `\\x00RWBF\\x00${fireSlug}\\x00`;
     
     res.json({
       fireSlug: fireSlug,

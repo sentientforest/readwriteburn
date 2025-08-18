@@ -116,7 +116,8 @@ export class VoteService {
     // Determine the correct parent reference
     let actualParent: string;
     if (isTopLevel) {
-      // Top-level submissions: parent is the fire chain key (server should provide this)
+      // Top-level submissions: parent is the fire chain key
+      // Construct fire composite key with escaped format
       actualParent = `\\x00RWBF\\x00${fireSlug}\\x00`;
     } else {
       // Reply submissions: parent is the parent submission's chain key
